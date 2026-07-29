@@ -44,7 +44,7 @@ _MAX_RANDOM = (1 << _RANDOM_BITS) - 1
 def _encode(value: int) -> str:
     """Encode a 128-bit int as exactly 26 Crockford base32 characters.
 
-    26 chars × 5 bits = 130 bits of capacity for 128 bits of data; the top
+    26 chars x 5 bits = 130 bits of capacity for 128 bits of data; the top
     2 bits are always zero, which is why every ULID starts with 0–7.
     Fixed width is essential: variable-length encoding would break
     lexicographic ordering.
@@ -128,3 +128,14 @@ def is_ulid(value: str) -> bool:
     """Cheap shape check (length + alphabet). Used by model validators in
     doc-02 schemas to reject malformed IDs at the boundary."""
     return len(value) == 26 and all(c in _DECODE for c in value.upper())
+
+def utc_now() -> datetime:
+    """The system's single definition of 'now': timezone-aware UTC.
+
+    Every model default and every stored timestamp uses this. Python's
+    naive `datetime.now()` is banned in this codebase — a naive datetime
+    is a bug that hasn't happened yet (it means 'whatever timezone the
+    host happens to be in', which differs between your laptop, the VPS,
+    and a future worker).
+    """
+    return datetime.now(timezone.utc)

@@ -2,7 +2,7 @@
 # jarvis-mk3/pyproject.toml
 #
 # Single source of truth for packaging, dependencies, and tool config.
-# Managed with `uv` (docs: 01 Stack).
+# Managed with `uv`.
 #
 # Dependency policy: each roadmap phase adds only the dependencies its code
 # actually imports. If a library is not imported anywhere yet, it does not
@@ -15,17 +15,18 @@ version = "0.1.0"
 description = "JARVIS MK3 - always-on personal AI: Core daemon + intermittent workers"
 requires-python = ">=3.12"
 
-# -- Phase 0 runtime dependencies ---------------------------------------------
+# -- Runtime dependencies -----------------------------------------------------
 dependencies = [
-    "pydantic>=2.7",           # every model, envelope, and schema (doc 02)
-    "pydantic-settings>=2.2",  # typed config from env/.env (doc 01 Stack)
-    "aiosqlite>=0.20",         # async SQLite access for the Core (doc 01 Stack)
+    "pydantic>=2.7",           # every model, envelope, and schema
+    "pydantic-settings>=2.2",  # typed config from env/.env
+    "aiosqlite>=0.20",         # async SQLite access for the Core
+    "anthropic>=0.40",         # phase 1: the LLM provider SDK
 ]
 
 [project.optional-dependencies]
-# Worker-only deps arrive in Phase 2 (websockets client, MCP host, etc.)
+# Worker-only deps arrive in phase 2 (websockets client, MCP host, etc.)
 worker = []
-# Voice deps arrive in Phase 6 (wake word, VAD, TTS)
+# Voice deps arrive in phase 6 (wake word, VAD, TTS)
 voice = []
 dev = [
     "pytest>=8.0",
@@ -39,16 +40,16 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-# src layout: the installable package is src/jarvis - imported as `jarvis`.
+# src layout: the installable package is src/jarvis -> imported as `jarvis`.
 packages = ["src/jarvis"]
 
-# -- Tool configuration (committed, per doc 07 convention 2) ------------------
+# -- Tool configuration -------------------------------------------------------
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-asyncio_mode = "auto"        # every async test runs under asyncio without decorators
+asyncio_mode = "auto"
 
 [tool.mypy]
 python_version = "3.12"
-strict = true                # full strictness from day one - cheaper than retrofitting
+strict = true
 packages = ["jarvis"]
 mypy_path = "src"
