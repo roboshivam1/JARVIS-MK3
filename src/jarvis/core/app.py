@@ -40,6 +40,8 @@ from jarvis.core.db.repos.sessions import SessionsRepo
 from jarvis.core.gateway.http import GatewayDeps, build_status_snapshot, create_app
 from jarvis.core.db.repos.artifacts import ArtifactsRepo
 from jarvis.core.db.repos.jobs import JobsRepo
+from jarvis.core.db.repos.notifications import NotificationsRepo
+from jarvis.core.initiative.notifier import Notifier
 from jarvis.core.observability.traces import TracesRepo, make_db_trace_sink
 from jarvis.core.queue.coreworker import CoreWorker
 from jarvis.core.queue.dispatcher import ReclaimLoop
@@ -62,6 +64,8 @@ class CoreApp:
         self.traces: TracesRepo | None = None
         self.jobs: JobsRepo | None = None
         self.artifacts: ArtifactsRepo | None = None
+        self.notifications: NotificationsRepo | None = None
+        self.notifier: Notifier | None = None
         self.registry: JobTypeRegistry = JobTypeRegistry()
         self._reclaim: ReclaimLoop | None = None
         self._core_worker: CoreWorker | None = None
@@ -100,6 +104,11 @@ class CoreApp:
         self._core_worker = CoreWorker(
             self.jobs, self.events, self.registry, self.artifacts
         )
+        self.notifications = NotificationsRepo(self.db)
+        self.notifier = Notifier(
+            self.jobs, self.sessions, self.notifications,
+            self.artifacts, self.events,
+        )
 
         await self._recover()
 
@@ -135,6 +144,9 @@ class CoreApp:
                 sessions_repo=self.sessions,
                 status_provider=lambda: build_status_snapshot(self.gateway_deps),  # type: ignore[arg-type]
             )
+        # The bridge is now also a delivery surface for unprompted
+            # messages, not just a request/response client.
+            self.notifier.register_deliverer("telegram", self.telegram)
         else:
             log.info("no telegram token - bridge disabled")
 
@@ -205,6 +217,10 @@ class CoreApp:
         )
         residents["reclaim"] = asyncio.create_task(
             self._reclaim.run(), name="reclaim"
+        )
+        assert self.notifier is not None
+        residents["notifier"] = asyncio.create_task(
+            self.notifier.run(), name="notifier"
         )
 
         log.info("core running", extra={"residents": list(residents)})

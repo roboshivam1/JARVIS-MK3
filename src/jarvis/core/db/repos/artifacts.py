@@ -82,7 +82,7 @@ class ArtifactsRepo:
             ),
         )
         log.info("artifact stored", extra={
-            "artifact_id": artifact.id, "name": name,
+            "artifact_id": artifact.id, "artifact_name": name,
             "size": artifact.size, "created_by": created_by,
         })
         return artifact

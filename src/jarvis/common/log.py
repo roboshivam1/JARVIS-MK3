@@ -31,7 +31,7 @@ import logging
 import sys
 import traceback
 from datetime import datetime, timezone
-from typing import Any
+from typing import Any, MutableMapping
 
 # Attribute names present on a blank LogRecord: stdlib plumbing, not user
 # data. Computed once by making a throwaway record and reading its dict.
@@ -111,7 +111,32 @@ def setup_logging(level: str = "INFO") -> None:
     sys.excepthook = _log_uncaught
 
 
-def get_logger(name: str) -> logging.Logger:
+class _SafeLogger(logging.LoggerAdapter[logging.Logger]):
+    """A logger that cannot be killed by its own field names.
+
+    stdlib logging reserves attribute names on every record (name, msg,
+    module, created, process, ...) and RAISES if an `extra` dict tries to
+    use one. That turns a harmless logging mistake into a crash in
+    whatever real work was being done at the time - which is exactly
+    backwards: logging exists to observe work, never to endanger it.
+
+    Colliding keys are renamed to field_<key> rather than dropped, so no
+    information is lost and the collision is visible in the output.
+    """
+
+    def process(
+        self, msg: str, kwargs: MutableMapping[str, Any]
+    ) -> tuple[str, MutableMapping[str, Any]]:
+        extra = kwargs.get("extra")
+        if extra:
+            kwargs["extra"] = {
+                (f"field_{k}" if k in _STDLIB_ATTRS else k): v
+                for k, v in extra.items()
+            }
+        return msg, kwargs
+
+
+def get_logger(name: str) -> _SafeLogger:
     """Get a named logger. Names are dotted component paths by convention:
     core.app, core.db, core.gateway, worker.runner."""
-    return logging.getLogger(name)
+    return _SafeLogger(logging.getLogger(name), {})

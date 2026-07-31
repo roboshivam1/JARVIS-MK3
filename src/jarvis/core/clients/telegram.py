@@ -30,12 +30,12 @@
 from __future__ import annotations
 
 import asyncio
+from pathlib import Path
 from typing import Any, Awaitable, Callable
 
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
-from aiogram.types import Message
-
+from aiogram.types import FSInputFile, Message
 from jarvis.common.log import get_logger
 from jarvis.core.db.repos.sessions import SessionsRepo
 from jarvis.core.sessionmgr import SessionManager
@@ -139,6 +139,26 @@ class TelegramBridge:
         self._bot = Bot(token, default=DefaultBotProperties(parse_mode=None))
         self._dp = Dispatcher()
         self._dp.message.register(self._on_message)
+
+    async def deliver(
+        self,
+        text: str,
+        file_path: Path | None = None,
+        file_name: str | None = None,
+    ) -> None:
+        """Deliverer implementation: push an unprompted message (and
+        optionally a file) to the owner. Called only by the notifier -
+        nothing else may message the owner unprompted.
+
+        Files stream from disk via FSInputFile rather than loading into
+        memory, so a large artifact costs the same as a small one.
+        """
+        await self._bot.send_message(self._owner_id, text[:_TG_LIMIT])
+        if file_path is not None and file_path.exists():
+            await self._bot.send_document(
+                self._owner_id,
+                FSInputFile(file_path, filename=file_name or file_path.name),
+            )
 
     async def run(self) -> None:
         """Long-poll until cancelled. Runs as one supervised Core task."""
