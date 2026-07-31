@@ -30,18 +30,13 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class CommonSettings(BaseSettings):
-    """Configuration shared by every process role (Core, worker, tools).
-
-    Role-specific settings classes inherit from this; each process
-    instantiates exactly one settings object at startup and passes it down
-    explicitly (no global singleton - explicit wiring keeps tests honest).
-    """
+    """Configuration shared by every process role (Core, worker, tools)."""
 
     model_config = SettingsConfigDict(
-        env_prefix="JARVIS_",     # JARVIS_DATA_DIR -> data_dir, etc.
+        env_prefix="JARVIS_",
         env_file=".env",
         env_file_encoding="utf-8",
-        extra="ignore",           # unrelated env vars in .env are not errors
+        extra="ignore",
     )
 
     # Root of ALL persistent state for this deployment.
@@ -50,15 +45,12 @@ class CommonSettings(BaseSettings):
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR"] = "INFO"
 
     # Owner's IANA timezone. Storage is UTC everywhere; this is for
-    # owner-facing rendering and scheduling ("nightly" means nightly in
-    # Jaipur, not nightly in UTC).
+    # owner-facing rendering and scheduling.
     owner_timezone: str = "Asia/Kolkata"
 
     @field_validator("owner_timezone")
     @classmethod
     def _timezone_must_exist(cls, v: str) -> str:
-        # Fail at boot with a clear message, not at 2 a.m. when the first
-        # scheduled job tries to resolve an invalid zone name.
         try:
             ZoneInfo(v)
         except Exception:
@@ -77,18 +69,35 @@ class CommonSettings(BaseSettings):
 class CoreSettings(CommonSettings):
     """Settings for the Core daemon (`python -m jarvis.core`)."""
 
-    # -- LLM provider (phase 1) ----------------------------------------------
+    # -- LLM provider --------------------------------------------------------
 
     # Optional AT BOOT on purpose: a missing key must stop model calls with
-    # a clear error, never stop the daemon itself. The Core has duties
-    # (schedules, storage, status) that owe nothing to any API.
+    # a clear error, never stop the daemon itself.
     anthropic_api_key: SecretStr | None = None
 
-    # Tier -> model mapping. Code asks for a tier by name; these decide
-    # what each tier currently means. Changing models is a config edit
-    # plus restart, never a code change.
+    # Tier -> model mapping; changing models is a config edit + restart.
     model_reasoner: str = "claude-sonnet-4-6"
     model_utility: str = "claude-haiku-4-5"
+
+    # -- Gateway -------------------------------------------------------------
+
+    gateway_host: str = "127.0.0.1"
+    gateway_port: int = 8321
+
+    # Shared bearer secret for all authed gateway routes. Empty means
+    # "refuse all authed requests" - a forgotten token fails CLOSED, never
+    # open.
+    gateway_token: SecretStr = SecretStr("")
+
+    # -- Telegram ------------------------------------------------------------
+
+    # Empty token = bridge does not start; Core runs without it.
+    telegram_bot_token: SecretStr = SecretStr("")
+
+    # The ONLY Telegram user the bot answers. 0 = unset; the bridge
+    # refuses to start with a token but no owner (an open bot is worse
+    # than no bot).
+    telegram_owner_id: int = 0
 
     # -- Derived layout - properties, deliberately not fields ----------------
 

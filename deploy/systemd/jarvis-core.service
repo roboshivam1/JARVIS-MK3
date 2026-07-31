@@ -1,0 +1,52 @@
+# =============================================================================
+# deploy/systemd/jarvis-core.service - the Core as a supervised system service
+#
+# Install: copy to /etc/systemd/system/, then
+#   sudo systemctl daemon-reload && sudo systemctl enable --now jarvis-core
+#
+# The contract with our code:
+#   - stdout/stderr (our JSON log lines) flow into the journal; read with
+#     `journalctl -u jarvis-core`
+#   - `systemctl stop` sends SIGTERM, which our signal handler turns into
+#     a clean shutdown
+#   - any exit (crash, resident death, kill -9) triggers a restart after a
+#     short pause; boot-time recovery makes that safe by design
+# =============================================================================
+
+[Unit]
+Description=JARVIS MK3 Core daemon
+# Only start once the network is actually usable (Telegram polling needs it).
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=jarvis
+Group=jarvis
+
+# Working directory matters: settings read .env from here.
+WorkingDirectory=/opt/jarvis/app
+ExecStart=/opt/jarvis/app/.venv/bin/python -m jarvis.core
+
+# Always come back. The pause prevents a hot crash-loop from hammering
+# the machine; StartLimit gives up after 5 failures in 10 min so a truly
+# broken deploy becomes visible instead of thrashing forever.
+Restart=always
+RestartSec=3
+StartLimitIntervalSec=600
+StartLimitBurst=5
+
+# Clean stop: SIGTERM, then 20 s of grace before SIGKILL.
+KillSignal=SIGTERM
+TimeoutStopSec=20
+
+# -- Confinement: even a compromised JARVIS can only touch its own data --
+# The filesystem is read-only to the service except the paths listed.
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/opt/jarvis/data
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

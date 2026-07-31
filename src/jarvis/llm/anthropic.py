@@ -93,6 +93,7 @@ class AnthropicAdapter:
         system: str,
         messages: list[dict[str, Any]],
         tools: list[dict[str, Any]] | None = None,
+        provider_tools: list[dict[str, Any]] | None = None,
         max_tokens: int = 2048,
         on_text: TextCallback | None = None,
         cache_system: bool = True,
@@ -116,9 +117,16 @@ class AnthropicAdapter:
             "messages": messages,
             "max_tokens": max_tokens,
         }
-        if tools:
-            kwargs["tools"] = tools
-
+        # Client-side tools (we execute) and provider-side tools (the
+        # provider executes internally, e.g. web search) travel in the
+        # same list on the wire. Server tool activity shows up in the
+        # final content as server_tool_use blocks, which our tool_use
+        # extraction naturally ignores - correct, since there is nothing
+        # for us to run.
+        all_tools = list(tools or []) + list(provider_tools or [])
+        if all_tools:
+            kwargs["tools"] = all_tools
+            
         last_error: Exception | None = None
         for attempt in range(1, _MAX_ATTEMPTS + 1):
             try:

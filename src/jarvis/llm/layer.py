@@ -89,6 +89,7 @@ class LLMResponse(BaseModel):
     tokens_in: int
     tokens_out: int
     cached_tokens: int
+    call_id: str
     cost_usd: float
     cost_inr: float
     latency_ms: int
@@ -174,6 +175,7 @@ class LLMLayer:
         actor: str,
         trace_id: str,
         tools: list[ToolSpec] | None = None,
+        provider_tools: list[dict[str, Any]] | None = None,
         max_tokens: int = 2048,
         on_text: TextCallback | None = None,
     ) -> LLMResponse:
@@ -187,6 +189,7 @@ class LLMLayer:
             )
 
         model = resolve_model(tier, self._settings)
+        call_id = new_ulid() 
         started = time.monotonic()
 
         try:
@@ -195,13 +198,14 @@ class LLMLayer:
                 system=system,
                 messages=messages,
                 tools=[t.to_provider() for t in tools] if tools else None,
+                provider_tools=provider_tools,
                 max_tokens=max_tokens,
                 on_text=on_text,
             )
         except ProviderError as exc:
             latency_ms = int((time.monotonic() - started) * 1000)
             await self._trace(LLMCallRecord(
-                id=new_ulid(),
+                id=call_id,
                 ts=utc_now().isoformat(),
                 trace_id=trace_id,
                 actor=actor,
@@ -226,7 +230,7 @@ class LLMLayer:
             cached_tokens=result.cached_tokens,
         )
         await self._trace(LLMCallRecord(
-            id=new_ulid(),
+            id=call_id,
             ts=utc_now().isoformat(),
             trace_id=trace_id,
             actor=actor,
@@ -253,6 +257,7 @@ class LLMLayer:
             tokens_in=result.tokens_in,
             tokens_out=result.tokens_out,
             cached_tokens=result.cached_tokens,
+            call_id=call_id,
             cost_usd=cost.rounded_usd,
             cost_inr=cost.rounded_inr,
             latency_ms=latency_ms,

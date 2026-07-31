@@ -20,7 +20,10 @@ dependencies = [
     "pydantic>=2.7",           # every model, envelope, and schema
     "pydantic-settings>=2.2",  # typed config from env/.env
     "aiosqlite>=0.20",         # async SQLite access for the Core
-    "anthropic>=0.40",         # phase 1: the LLM provider SDK
+    "anthropic>=0.40",         # the LLM provider SDK
+    "fastapi>=0.111",          # the gateway web framework
+    "uvicorn>=0.30",           # the ASGI server that runs the gateway
+    "aiogram>=3.7",            # Telegram bridge (async-native)
 ]
 
 [project.optional-dependencies]
@@ -32,6 +35,7 @@ dev = [
     "pytest>=8.0",
     "pytest-asyncio>=0.23",
     "mypy>=1.10",
+    "httpx>=0.27",             # test client for the gateway
 ]
 
 # -- Build system -------------------------------------------------------------

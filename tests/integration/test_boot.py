@@ -18,6 +18,8 @@ from pathlib import Path
 
 import pytest
 
+from jarvis.core.db import database as db_module
+
 from jarvis.common.events import EventKind
 from jarvis.common.settings import CoreSettings
 from jarvis.core.app import CoreApp
@@ -27,8 +29,10 @@ from jarvis.core.db.repos.events import EventsRepo
 
 def _settings(tmp_path: Path) -> CoreSettings:
     # Point the Core at a throwaway data dir; nothing touches ./data.
-    return CoreSettings(data_dir=tmp_path / "data")
-
+    # _env_file=None: tests build their entire world explicitly and must
+    # never read the developer's real .env - a test that sees your real
+    # bot token is a test that fails differently on every machine.
+    return CoreSettings(_env_file=None, data_dir=tmp_path / "data")
 
 async def test_boot_writes_core_started(tmp_path: Path) -> None:
     app = CoreApp(_settings(tmp_path))
@@ -38,8 +42,14 @@ async def test_boot_writes_core_started(tmp_path: Path) -> None:
         started = await app.events.recent(kind=EventKind.CORE_STARTED)
         assert len(started) == 1
         assert started[0].source == "core.app"
-        # First boot applies migration 0001.
-        assert started[0].payload["migrations_applied"] == 1
+        # A fresh database applies EVERY migration that exists - counted
+        # from the migrations folder itself, so this test does not go
+        # stale each time a phase adds a schema change. (The other half
+        # of the invariant - a rebooted db applies zero - is pinned by
+        # test_restart_survival.)
+        known_migrations = len(list(db_module._MIGRATIONS_DIR.glob("*.sql")))
+        assert known_migrations >= 1
+        assert started[0].payload["migrations_applied"] == known_migrations
     finally:
         await app.shutdown()
 
