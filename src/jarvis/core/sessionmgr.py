@@ -36,6 +36,8 @@ from jarvis.common.log import get_logger
 from jarvis.common.sessions import Session, Turn, TurnRole
 from jarvis.core.db.repos.events import EventsRepo
 from jarvis.core.db.repos.sessions import SessionsRepo
+from jarvis.core.memory.profile import ProfileStore
+from jarvis.core.memory.service import MemoryService
 from jarvis.core.orchestrator.agent import Orchestrator
 from jarvis.llm.layer import TextCallback
 
@@ -68,10 +70,16 @@ class SessionManager:
         sessions: SessionsRepo,
         events: EventsRepo,
         orchestrator: Orchestrator,
+        memory: MemoryService | None = None,
+        profile: ProfileStore | None = None,
     ) -> None:
         self._sessions = sessions
         self._events = events
         self._orchestrator = orchestrator
+        # Optional so tests can exercise conversation flow without a
+        # memory system; absent simply means no memory in context.
+        self._memory = memory
+        self._profile = profile
         # session id -> the task currently generating its reply
         self._inflight: dict[str, asyncio.Task[LoopResult]] = {}
 
@@ -110,9 +118,20 @@ class SessionManager:
             payload={"turn_id": user_turn.id},
         ))
 
-        # 3. Assemble context from stored history (includes the new turn).
+        # 3. Assemble context: stored history, the standing profile, and
+        #    facts retrieved with THIS message as the query.
         turns = await self._sessions.recent_turns(session.id, limit=CONTEXT_TURNS)
         messages = _turns_to_messages(turns)
+
+        profile_doc = await self._profile.current() if self._profile else ""
+        retrieved_memory = ""
+        if self._memory is not None:
+            hits = await self._memory.search(text, k=6)
+            retrieved_memory = "\n".join(f"- {h.fact.text}" for h in hits)
+            if hits:
+                log.debug("memory retrieved for turn", extra={
+                    "session_id": session.id, "hits": len(hits),
+                })
 
         # 4. Think, inside a tracked and cancellable task.
         gen_task = asyncio.create_task(
@@ -120,6 +139,8 @@ class SessionManager:
                 messages,
                 session_id=session.id,
                 rolling_summary=session.rolling_summary,
+                profile_doc=profile_doc,
+                retrieved_memory=retrieved_memory,
                 trace_id=trace_id,
                 on_text=on_text,
             ),

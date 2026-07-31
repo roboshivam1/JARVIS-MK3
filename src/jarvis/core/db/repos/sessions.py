@@ -112,6 +112,32 @@ class SessionsRepo:
                 (turn.ts.isoformat(), turn.session_id),
             )
 
+    async def turns_since(
+        self, after_turn_id: str | None, limit: int = 120
+    ) -> list[Turn]:
+        """Turns across ALL sessions after a given turn id, oldest first.
+
+        ULIDs sort by time, so "after this id" is exactly "since this
+        moment" - the high-water mark the sleep cycle carries between
+        runs. A None marker (first ever cycle) reads the most recent
+        `limit` turns instead of the oldest, so a fresh cycle on an old
+        database starts from recent history rather than crawling forward
+        from the beginning.
+        """
+        if after_turn_id is not None:
+            rows = await self._db.query(
+                "SELECT * FROM turns WHERE id > ? ORDER BY id ASC LIMIT ?",
+                (after_turn_id, limit),
+            )
+            return [self._to_turn(r) for r in rows]
+
+        rows = await self._db.query(
+            "SELECT * FROM turns ORDER BY id DESC LIMIT ?", (limit,)
+        )
+        turns = [self._to_turn(r) for r in rows]
+        turns.reverse()
+        return turns
+
     async def recent_turns(self, session_id: str, limit: int = 20) -> list[Turn]:
         """The last N turns of a session, oldest first (ready to feed the
         model as conversation history)."""

@@ -79,6 +79,28 @@ class CoreSettings(CommonSettings):
     model_reasoner: str = "claude-sonnet-4-6"
     model_utility: str = "claude-haiku-4-5"
 
+    # -- Embeddings ----------------------------------------------------------
+
+    # Which provider computes embeddings. "none" (or a misconfigured
+    # provider) means memory falls back to keyword-only rather than
+    # failing - degraded memory beats no daemon.
+    embedder_provider: Literal["ollama", "voyage", "none"] = "ollama"
+
+    # Interpreted by the selected provider: an Ollama model name, or a
+    # Voyage model name.
+    model_embedder: str = "nomic-embed-text"
+
+    # Local provider: where the Ollama server listens.
+    ollama_base_url: str = "http://localhost:11434"
+
+    # When nightly memory maintenance runs, as a cron expression in the
+    # owner's timezone. Default 03:30 - late enough to catch the whole
+    # day, early enough to be done before morning.
+    sleep_cycle_cron: str = "30 3 * * *"
+
+    # Hosted provider: only needed when embedder_provider is "voyage".
+    voyage_api_key: SecretStr | None = None
+
     # -- Gateway -------------------------------------------------------------
 
     gateway_host: str = "127.0.0.1"

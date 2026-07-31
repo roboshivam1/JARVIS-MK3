@@ -56,6 +56,8 @@ class FakeOrchestrator:
         session_id: str,
         rolling_summary: str,
         trace_id: str,
+        profile_doc: str = "",
+        retrieved_memory: str = "",
         on_text: TextCallback | None = None,
     ) -> LoopResult:
         self.calls.append(messages)

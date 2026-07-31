@@ -43,8 +43,10 @@ def resolve_model(tier: Tier, settings: CoreSettings) -> str:
             return settings.model_reasoner
         case Tier.UTILITY:
             return settings.model_utility
-        case Tier.LOCAL | Tier.EMBEDDER:
+        case Tier.EMBEDDER:
+            return settings.model_embedder
+        case Tier.LOCAL:
             raise TierNotAvailable(
-                f"tier {tier} is not available yet - it arrives with "
-                f"workers (local) and the memory phase (embedder)"
+                "tier local is not available yet - it arrives with the "
+                "first worker running a local model"
             )

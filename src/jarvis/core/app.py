@@ -41,7 +41,14 @@ from jarvis.core.gateway.http import GatewayDeps, build_status_snapshot, create_
 from jarvis.core.db.repos.artifacts import ArtifactsRepo
 from jarvis.core.db.repos.jobs import JobsRepo
 from jarvis.core.db.repos.notifications import NotificationsRepo
+from jarvis.core.db.repos.facts import FactsRepo
+from jarvis.core.db.repos.schedules import SchedulesRepo
+from jarvis.common.schedules import Schedule, ScheduleKind
+from jarvis.core.initiative.engine import InitiativeEngine, next_cron_time
 from jarvis.core.initiative.notifier import Notifier
+from jarvis.core.memory.profile import ProfileStore
+from jarvis.core.memory.service import MemoryService
+from jarvis.llm.embeddings import create_embedder
 from jarvis.core.observability.traces import TracesRepo, make_db_trace_sink
 from jarvis.core.queue.coreworker import CoreWorker
 from jarvis.core.queue.dispatcher import ReclaimLoop
@@ -66,6 +73,10 @@ class CoreApp:
         self.artifacts: ArtifactsRepo | None = None
         self.notifications: NotificationsRepo | None = None
         self.notifier: Notifier | None = None
+        self.memory: MemoryService | None = None
+        self.profile: ProfileStore | None = None
+        self.schedules: SchedulesRepo | None = None
+        self.initiative: InitiativeEngine | None = None
         self.registry: JobTypeRegistry = JobTypeRegistry()
         self._reclaim: ReclaimLoop | None = None
         self._core_worker: CoreWorker | None = None
@@ -104,6 +115,10 @@ class CoreApp:
         self._core_worker = CoreWorker(
             self.jobs, self.events, self.registry, self.artifacts
         )
+        self.schedules = SchedulesRepo(self.db)
+        self.initiative = InitiativeEngine(
+            self.schedules, self.jobs, self.events, self.settings.tz
+        )
         self.notifications = NotificationsRepo(self.db)
         self.notifier = Notifier(
             self.jobs, self.sessions, self.notifications,
@@ -118,13 +133,44 @@ class CoreApp:
             log.warning("no API key - daemon runs, conversation will not")
 
         # Job types register at boot, after their dependencies exist.
+        from jarvis.jobs.maintenance import register_maintenance_jobs
         from jarvis.jobs.research import register_research_jobs
         register_research_jobs(self.registry, self.llm)
+        register_maintenance_jobs(
+            self.registry, self.llm, self.memory, FactsRepo(self.db),
+            self.sessions, self.profile, self.events,
+        )
+
+        # Seed the nightly sleep cycle. ensure() leaves an existing
+        # schedule untouched, so the owner's edits (a moved hour, a
+        # disabled row) survive every restart.
+        await self.schedules.ensure(Schedule(
+            name="nightly memory sleep cycle",
+            kind=ScheduleKind.CRON,
+            cron_expr=self.settings.sleep_cycle_cron,
+            job_type="memory.sleep_cycle",
+            job_payload={"reason": "scheduled"},
+            priority=8,
+            next_fire_ts=next_cron_time(
+                self.settings.sleep_cycle_cron, self.settings.tz
+            ),
+        ))
+
+        # Memory: an embedder (local or hosted, per config), the fact
+        # vault, and the standing profile document.
+        self.memory = MemoryService(
+            FactsRepo(self.db), create_embedder(self.settings)
+        )
+        self.profile = ProfileStore(self.db)
 
         orchestrator = Orchestrator(
-            self.llm, self.settings, self.jobs, self.events, self.registry
+            self.llm, self.settings, self.jobs, self.events,
+            self.registry, self.memory,
         )
-        self.session_mgr = SessionManager(self.sessions, self.events, orchestrator)
+        self.session_mgr = SessionManager(
+            self.sessions, self.events, orchestrator,
+            memory=self.memory, profile=self.profile,
+        )
 
         # Gateway app (server starts in run()).
         self.gateway_deps = GatewayDeps(
@@ -221,6 +267,10 @@ class CoreApp:
         assert self.notifier is not None
         residents["notifier"] = asyncio.create_task(
             self.notifier.run(), name="notifier"
+        )
+        assert self.initiative is not None
+        residents["initiative"] = asyncio.create_task(
+            self.initiative.run(), name="initiative"
         )
 
         log.info("core running", extra={"residents": list(residents)})

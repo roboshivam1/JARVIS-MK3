@@ -40,7 +40,9 @@ from jarvis.common.ids import is_ulid
 from jarvis.common.jobs import Job, JobStatus
 from jarvis.common.settings import CoreSettings
 from jarvis.core.db.repos.events import EventsRepo
+from jarvis.common.facts import FactCategory
 from jarvis.core.db.repos.jobs import JobsRepo
+from jarvis.core.memory.service import MemoryService
 from jarvis.core.orchestrator.prompts import assemble_system_prompt
 from jarvis.core.queue.dispatcher import cancel_job as queue_cancel_job
 from jarvis.core.queue.registry import JobTypeRegistry
@@ -88,6 +90,33 @@ class _JobIdArgs(BaseModel):
     job_id: str
 
 
+class _MemoryStoreArgs(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    fact: str = Field(
+        min_length=3,
+        description=(
+            "One self-contained sentence that will make sense read alone "
+            "in six months. Name the owner rather than writing 'he'."
+        ),
+    )
+    category: Literal[
+        "preference", "person", "project", "routine",
+        "credential-ref", "world", "other",
+    ] = "other"
+    importance: float = Field(
+        default=0.5, ge=0.0, le=1.0,
+        description="0 trivial, 0.5 ordinary, 0.9 defining.",
+    )
+
+
+class _MemorySearchArgs(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    query: str = Field(min_length=2)
+    k: int = Field(default=6, ge=1, le=15)
+
+
 class Orchestrator:
     """JARVIS's front mind: persona + tools + tier, applied per turn."""
 
@@ -98,12 +127,14 @@ class Orchestrator:
         jobs: JobsRepo,
         events: EventsRepo,
         registry: JobTypeRegistry,
+        memory: MemoryService,
     ) -> None:
         self._llm = llm
         self._settings = settings
         self._jobs = jobs
         self._events = events
         self._registry = registry
+        self._memory = memory
 
     # -- per-turn toolset -----------------------------------------------------
 
@@ -231,6 +262,43 @@ class Orchestrator:
             handler=cancel_job,
         ))
 
+        async def memory_store(args: _MemoryStoreArgs) -> str:
+            fact = await self._memory.store(
+                text=args.fact,
+                category=FactCategory(args.category),
+                importance=args.importance,
+            )
+            return f"Stored as fact {fact.id}."
+
+        tools.register(InlineTool(
+            name="memory_store",
+            description=(
+                "Remember one durable fact about the owner's world. Use "
+                "when he shares something worth keeping, or asks you to "
+                "remember. Not for passing chatter or one-off logistics."
+            ),
+            args_model=_MemoryStoreArgs,
+            handler=memory_store,
+        ))
+
+        async def memory_search(args: _MemorySearchArgs) -> str:
+            hits = await self._memory.search(args.query, k=args.k)
+            if not hits:
+                return "Nothing in memory matches that."
+            return "\n".join(f"- {h.fact.text}" for h in hits)
+
+        tools.register(InlineTool(
+            name="memory_search",
+            description=(
+                "Search everything known about the owner. Relevant facts "
+                "are already provided each turn, so use this only when "
+                "something older or more specific is needed than what is "
+                "in front of you."
+            ),
+            args_model=_MemorySearchArgs,
+            handler=memory_search,
+        ))
+
         return tools
 
     # -- one reply ------------------------------------------------------------
@@ -242,11 +310,19 @@ class Orchestrator:
         session_id: str,
         rolling_summary: str,
         trace_id: str,
+        profile_doc: str = "",
+        retrieved_memory: str = "",
         on_text: TextCallback | None = None,
     ) -> LoopResult:
         """Produce one reply to an assembled conversation. The session
-        manager owns storage and context; this owns only thinking."""
-        system = assemble_system_prompt(rolling_summary=rolling_summary)
+        manager owns storage, retrieval, and context; this owns only
+        thinking."""
+        system = assemble_system_prompt(
+            profile_doc=profile_doc,
+            rolling_summary=rolling_summary,
+            retrieved_memory=retrieved_memory,
+        )
+        
         return await run_agent_loop(
             self._llm,
             Tier.REASONER,

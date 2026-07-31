@@ -24,6 +24,9 @@ dependencies = [
     "fastapi>=0.111",          # the gateway web framework
     "uvicorn>=0.30",           # the ASGI server that runs the gateway
     "aiogram>=3.7",            # Telegram bridge (async-native)
+    "voyageai>=0.3",           # embeddings for semantic memory
+    "httpx>=0.27",             # embeddings: local Ollama provider, HTTP calls
+    "croniter>=2.0",           # cron expression parsing for schedules
 ]
 
 [project.optional-dependencies]
