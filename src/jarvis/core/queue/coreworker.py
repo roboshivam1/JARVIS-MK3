@@ -31,6 +31,7 @@ from jarvis.common.ids import utc_now
 from jarvis.common.jobs import Job, JobStatus, Lease
 from jarvis.common.log import get_logger
 from jarvis.core.db.repos.events import EventsRepo
+from jarvis.core.db.repos.artifacts import ArtifactsRepo
 from jarvis.core.db.repos.jobs import JobsRepo
 from jarvis.core.queue.dispatcher import requeue_or_fail
 from jarvis.core.queue.registry import JobContext, JobTypeRegistry
@@ -51,11 +52,13 @@ class CoreWorker:
         jobs: JobsRepo,
         events: EventsRepo,
         registry: JobTypeRegistry,
+        artifacts: ArtifactsRepo,
         max_concurrency: int = 2,
     ) -> None:
         self._jobs = jobs
         self._events = events
         self._registry = registry
+        self._artifacts = artifacts
         self._max = max_concurrency
         self._running: set[asyncio.Task[None]] = set()
 
@@ -140,10 +143,18 @@ class CoreWorker:
                 trace_id=job.trace_id, payload={"note": note},
             ))
 
+        async def write_artifact(name: str, mime: str, content: bytes) -> str:
+            artifact = await self._artifacts.write(
+                name=name, mime=mime, content=content, created_by=job.id
+            )
+            await self._jobs.add_artifact(job.id, artifact.id)
+            return artifact.id
+
         ctx = JobContext(
             job_id=job.id, trace_id=job.trace_id,
             checkpoint=job.checkpoint,
             save_checkpoint=save_checkpoint, progress=progress,
+            write_artifact=write_artifact,
         )
 
         try:

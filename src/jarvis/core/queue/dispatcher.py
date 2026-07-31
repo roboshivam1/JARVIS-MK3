@@ -28,7 +28,7 @@ import asyncio
 
 from jarvis.common.events import Event, EventKind
 from jarvis.common.ids import utc_now
-from jarvis.common.jobs import Job, JobStatus
+from jarvis.common.jobs import TERMINAL_STATUSES, Job, JobStatus
 from jarvis.common.log import get_logger
 from jarvis.core.db.repos.events import EventsRepo
 from jarvis.core.db.repos.jobs import JobsRepo
@@ -92,6 +92,34 @@ async def requeue_or_fail(
         log.info("job requeued with backoff", extra={
             "job_id": job.id, "attempt": job.attempts, "retry_in_s": backoff_s,
         })
+
+
+async def cancel_job(jobs: JobsRepo, events: EventsRepo, job_id: str) -> bool:
+    """Owner cancellation: mark a non-terminal job cancelled. Returns
+    False if it was already finished or does not exist.
+
+    Known limit: a job already RUNNING on the core-worker keeps executing
+    until its handler returns - the status is cancelled immediately, and
+    the handler's terminal transition then loses its optimistic check and
+    discards the result. True mid-flight interruption needs a cancel
+    signal the handler observes (core-local) and the core.job_cancel
+    message (remote workers). Both land with the worker protocol.
+    """
+    job = await jobs.get(job_id)
+    if job is None or job.status in TERMINAL_STATUSES:
+        return False
+    moved = await jobs.transition(
+        job.id, job.status, JobStatus.CANCELLED,
+        set_fields={"lease": None, "error": "cancelled by owner"},
+    )
+    if moved:
+        await events.append(Event(
+            kind=EventKind.JOB_CANCELLED,
+            source=SOURCE, job_id=job.id, session_id=job.session_id,
+            trace_id=job.trace_id, payload={},
+        ))
+        log.info("job cancelled by owner", extra={"job_id": job.id})
+    return moved
 
 
 class ReclaimLoop:

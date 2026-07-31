@@ -139,6 +139,24 @@ class JobsRepo:
             })
         return moved
 
+    async def add_artifact(self, job_id: str, artifact_id: str) -> None:
+        """Append an artifact id to a job's list. Read-modify-write on a
+        JSON column: safe here because one handler writes its artifacts
+        sequentially, and nothing else touches this job's list."""
+        job = await self.get(job_id)
+        if job is None:
+            return
+        if artifact_id in job.artifacts:
+            return
+        await self._db.execute(
+            "UPDATE jobs SET artifacts = ?, updated_ts = ? WHERE id = ?",
+            (
+                json.dumps([*job.artifacts, artifact_id]),
+                utc_now().isoformat(),
+                job_id,
+            ),
+        )
+
     async def set_checkpoint(self, job_id: str, checkpoint: dict[str, Any]) -> None:
         """Persist resume state for a running job. Not a status change, so
         no optimistic check - last checkpoint wins, which is correct: a

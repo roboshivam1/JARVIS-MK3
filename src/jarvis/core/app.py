@@ -38,6 +38,7 @@ from jarvis.core.db.database import Database
 from jarvis.core.db.repos.events import EventsRepo
 from jarvis.core.db.repos.sessions import SessionsRepo
 from jarvis.core.gateway.http import GatewayDeps, build_status_snapshot, create_app
+from jarvis.core.db.repos.artifacts import ArtifactsRepo
 from jarvis.core.db.repos.jobs import JobsRepo
 from jarvis.core.observability.traces import TracesRepo, make_db_trace_sink
 from jarvis.core.queue.coreworker import CoreWorker
@@ -60,6 +61,7 @@ class CoreApp:
         self.sessions: SessionsRepo | None = None
         self.traces: TracesRepo | None = None
         self.jobs: JobsRepo | None = None
+        self.artifacts: ArtifactsRepo | None = None
         self.registry: JobTypeRegistry = JobTypeRegistry()
         self._reclaim: ReclaimLoop | None = None
         self._core_worker: CoreWorker | None = None
@@ -69,12 +71,19 @@ class CoreApp:
         self.gateway_deps: GatewayDeps | None = None
         self._uvicorn: uvicorn.Server | None = None
         self._stop = asyncio.Event()
+        self._booted = False
 
     # -- stage 1: boot --------------------------------------------------------
 
     async def boot(self) -> None:
         """Storage up, schema current, component graph constructed.
         Fast, non-interactive, and server-free (servers start in run())."""
+        if self._booted:
+            # Booting twice would re-register job types, re-open the
+            # database, and duplicate residents. Always a wiring mistake.
+            raise RuntimeError("CoreApp.boot() called twice on one instance")
+        self._booted = True
+
         started = time.monotonic()
         self._boot_trace = new_ulid()
 
@@ -86,8 +95,11 @@ class CoreApp:
         self.sessions = SessionsRepo(self.db)
         self.traces = TracesRepo(self.db)
         self.jobs = JobsRepo(self.db, self.events)
+        self.artifacts = ArtifactsRepo(self.db, self.settings.artifacts_dir)
         self._reclaim = ReclaimLoop(self.jobs, self.events)
-        self._core_worker = CoreWorker(self.jobs, self.events, self.registry)
+        self._core_worker = CoreWorker(
+            self.jobs, self.events, self.registry, self.artifacts
+        )
 
         await self._recover()
 
@@ -96,7 +108,13 @@ class CoreApp:
         if not self.llm.available:
             log.warning("no API key - daemon runs, conversation will not")
 
-        orchestrator = Orchestrator(self.llm, self.settings)
+        # Job types register at boot, after their dependencies exist.
+        from jarvis.jobs.research import register_research_jobs
+        register_research_jobs(self.registry, self.llm)
+
+        orchestrator = Orchestrator(
+            self.llm, self.settings, self.jobs, self.events, self.registry
+        )
         self.session_mgr = SessionManager(self.sessions, self.events, orchestrator)
 
         # Gateway app (server starts in run()).
@@ -157,8 +175,10 @@ class CoreApp:
     async def run(self) -> None:
         """boot, start residents, watch until stop or a resident dies."""
         self._install_signal_handlers()
-        await self.boot()
-
+        # Callers may boot first (to enqueue work before residents start);
+        # run() boots only if that has not happened yet.
+        if not self._booted:
+            await self.boot()
         residents: dict[str, asyncio.Task[None]] = {}
 
         assert self.gateway_deps is not None

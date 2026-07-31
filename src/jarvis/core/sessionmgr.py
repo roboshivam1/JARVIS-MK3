@@ -118,6 +118,7 @@ class SessionManager:
         gen_task = asyncio.create_task(
             self._orchestrator.respond(
                 messages,
+                session_id=session.id,
                 rolling_summary=session.rolling_summary,
                 trace_id=trace_id,
                 on_text=on_text,

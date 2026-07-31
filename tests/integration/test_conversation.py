@@ -53,6 +53,7 @@ class FakeOrchestrator:
         self,
         messages: list[dict[str, Any]],
         *,
+        session_id: str,
         rolling_summary: str,
         trace_id: str,
         on_text: TextCallback | None = None,

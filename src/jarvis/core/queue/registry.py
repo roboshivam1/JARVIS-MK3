@@ -37,6 +37,9 @@ class JobContext:
     checkpoint: dict[str, Any] | None                      # resume state, if any
     save_checkpoint: Callable[[dict[str, Any]], Awaitable[None]]
     progress: Callable[[str], Awaitable[None]]             # human-readable note
+    # (name, mime, content) -> artifact id. Files a handler produces go
+    # through here: stored, catalogued, and attached to this job.
+    write_artifact: Callable[[str, str, bytes], Awaitable[str]]
 
 
 # A core-executable handler: validated payload in, output model back.
