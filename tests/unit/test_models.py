@@ -157,6 +157,11 @@ class TestJobStateMachine:
             JobStatus.QUEUED: {JobStatus.LEASED, JobStatus.CANCELLED},
             JobStatus.LEASED: {
                 JobStatus.RUNNING, JobStatus.QUEUED, JobStatus.CANCELLED,
+                # A worker can vanish on the final attempt, and a leased
+                # job whose type has no handler is doomed on arrival -
+                # both must be able to die without passing through
+                # running. (Doc-02 amendment.)
+                JobStatus.FAILED,
             },
             JobStatus.RUNNING: {
                 JobStatus.SUCCEEDED, JobStatus.FAILED, JobStatus.QUEUED,

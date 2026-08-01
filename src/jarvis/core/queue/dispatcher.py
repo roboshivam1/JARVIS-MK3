@@ -122,6 +122,33 @@ async def cancel_job(jobs: JobsRepo, events: EventsRepo, job_id: str) -> bool:
     return moved
 
 
+async def fail_permanently(
+    jobs: JobsRepo,
+    events: EventsRepo,
+    job: Job,
+    error: str,
+    *,
+    expected: JobStatus,
+) -> None:
+    """Terminal failure with no retry, for errors that repetition cannot
+    fix: a handler bug, an invalid payload, an unrunnable job type."""
+    moved = await jobs.transition(
+        job.id, expected, JobStatus.FAILED,
+        set_fields={"error": error, "lease": None},
+    )
+    if moved:
+        await events.append(Event(
+            kind=EventKind.JOB_FAILED,
+            source=SOURCE, job_id=job.id, session_id=job.session_id,
+            trace_id=job.trace_id,
+            payload={"error": error, "terminal": True, "permanent": True,
+                     "attempts": job.attempts},
+        ))
+        log.warning("job failed permanently - not retried", extra={
+            "job_id": job.id, "type": job.type, "error": error,
+        })
+
+
 class ReclaimLoop:
     """Rescues work from dead executors, forever."""
 

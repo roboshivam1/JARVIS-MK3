@@ -33,8 +33,8 @@ from jarvis.common.log import get_logger
 from jarvis.core.db.repos.events import EventsRepo
 from jarvis.core.db.repos.artifacts import ArtifactsRepo
 from jarvis.core.db.repos.jobs import JobsRepo
-from jarvis.core.queue.dispatcher import requeue_or_fail
-from jarvis.core.queue.registry import JobContext, JobTypeRegistry
+from jarvis.core.queue.dispatcher import fail_permanently, requeue_or_fail
+from jarvis.core.queue.registry import JobContext, JobTypeRegistry, PermanentJobError
 
 log = get_logger("core.queue.coreworker")
 
@@ -68,9 +68,9 @@ class CoreWorker:
             try:
                 if len(self._running) < self._max:
                     job = await self._jobs.next_queued(capabilities=set())
-                    if job is not None and await self._lease(job):
+                    if job is not None and await self.lease(job):
                         task = asyncio.create_task(
-                            self._execute(job), name=f"corejob-{job.id[-6:]}"
+                            self.execute(job), name=f"corejob-{job.id[-6:]}"
                         )
                         self._running.add(task)
                         task.add_done_callback(self._running.discard)
@@ -79,7 +79,7 @@ class CoreWorker:
                 log.error("core worker loop error", exc_info=True)
             await asyncio.sleep(_POLL_INTERVAL_S)
 
-    async def _lease(self, job: Job) -> bool:
+    async def lease(self, job: Job) -> bool:
         """Claim the job. False = someone else got it first (fine)."""
         spec = self._registry.get(job.type)
         ttl = (spec.timeout_s if spec else 300) + _LEASE_MARGIN_S
@@ -103,7 +103,7 @@ class CoreWorker:
             ))
         return won
 
-    async def _execute(self, leased: Job) -> None:
+    async def execute(self, leased: Job) -> None:
         """Run one job to a terminal (or requeued) state. Never raises."""
         job = await self._jobs.get(leased.id)
         if job is None:
@@ -111,8 +111,9 @@ class CoreWorker:
 
         spec = self._registry.get(job.type)
         if spec is None or spec.handler is None:
-            # Queue drift: a job whose type this build cannot run.
-            await requeue_or_fail(
+            # Queue drift: a job whose type this build cannot run. Waiting
+            # will not conjure a handler, so this is permanent.
+            await fail_permanently(
                 self._jobs, self._events, job,
                 error=f"no runnable handler for job type {job.type!r}",
                 expected=JobStatus.LEASED,
@@ -173,15 +174,27 @@ class CoreWorker:
                     expected=JobStatus.RUNNING,
                 )
             return
-        except ValidationError as exc:
+        except PermanentJobError as exc:
+            # The handler knows retrying is pointless.
             fresh = await self._jobs.get(job.id)
             if fresh:
-                await requeue_or_fail(
+                await fail_permanently(
+                    self._jobs, self._events, fresh,
+                    error=str(exc), expected=JobStatus.RUNNING,
+                )
+            return
+        except ValidationError as exc:
+            # A payload that does not match its schema will not match it
+            # on the next attempt either.
+            fresh = await self._jobs.get(job.id)
+            if fresh:
+                await fail_permanently(
                     self._jobs, self._events, fresh,
                     error=f"payload/result validation failed: {exc}",
                     expected=JobStatus.RUNNING,
                 )
             return
+        
         except Exception as exc:
             log.error("job handler crashed", exc_info=True,
                       extra={"job_id": job.id, "type": job.type})

@@ -28,6 +28,17 @@ from jarvis.common.log import get_logger
 log = get_logger("core.queue.registry")
 
 
+class PermanentJobError(Exception):
+    """This job will never succeed - do not retry it.
+
+    Retry exists for TRANSIENT failure: a network blip, a busy provider,
+    a worker that vanished. A bug in the handler or a malformed payload
+    fails identically every time, so retrying it just spends the same
+    money twice more before giving up. Handlers raise this when they can
+    tell the difference; the queue fails such jobs immediately.
+    """
+
+
 @dataclass
 class JobContext:
     """What a running handler may know and do about its own job."""

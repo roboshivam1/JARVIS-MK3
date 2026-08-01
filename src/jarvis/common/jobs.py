@@ -59,8 +59,10 @@ ALLOWED_TRANSITIONS: dict[JobStatus, frozenset[JobStatus]] = {
     }),
     JobStatus.LEASED: frozenset({
         JobStatus.RUNNING,            # worker confirms start
-        JobStatus.QUEUED,             # lease/heartbeat expiry → reclaim
+        JobStatus.QUEUED,             # lease/heartbeat expiry -> reclaim
         JobStatus.CANCELLED,          # owner cancels
+        JobStatus.FAILED,             # attempts exhausted while leased, or
+                                      # the job type has no runnable handler
     }),
     JobStatus.RUNNING: frozenset({
         JobStatus.SUCCEEDED,

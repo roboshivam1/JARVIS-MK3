@@ -137,25 +137,50 @@ class FactsRepo:
     async def search_keyword(self, query: str, limit: int = 20) -> list[tuple[Fact, float]]:
         """Keyword candidates with a 0-1 relevance score.
 
-        FTS5's bm25() returns a rank where MORE NEGATIVE is better, which
-        is awkward to fuse with similarity scores. It is mapped into 0-1
-        (higher better) so both search paths speak the same language.
+        Scoring is TERM COVERAGE - what fraction of the query's words the
+        fact contains - not bm25.
+
+        bm25 scores partly on how RARE a term is across the corpus, which
+        makes it meaningless on a small one: with a handful of facts it
+        returns values at or near zero for perfect matches, and a
+        perfect match scoring zero is worse than useless. A personal
+        memory vault is small for months and never becomes large by
+        search-engine standards, so the corpus statistic never starts
+        working. Coverage behaves identically at two facts and at twenty
+        thousand, and it is explainable when you are debugging why a
+        memory surfaced.
+
+        FTS5 still does the matching - it owns the stemming and the index.
+        We only decline to use its ranking.
         """
         match = _fts_query(query)
         if not match:
             return []
         rows = await self._db.query(
-            "SELECT f.*, bm25(facts_fts) AS rank FROM facts_fts "
+            "SELECT f.* FROM facts_fts "
             "JOIN facts f ON f.id = facts_fts.fact_id "
-            "WHERE facts_fts MATCH ? AND f.status = 'active' "
-            "ORDER BY rank LIMIT ?",
+            "WHERE facts_fts MATCH ? AND f.status = 'active' LIMIT ?",
             (match, limit),
         )
+
+        query_tokens = {t for t in _TOKEN_RE.findall(query.lower()) if len(t) > 1}
+        if not query_tokens:
+            return []
+
         results: list[tuple[Fact, float]] = []
         for row in rows:
-            rank = float(row["rank"])          # negative; nearer zero is worse
-            score = min(1.0, -rank / 10.0) if rank < 0 else 0.0
-            results.append((self._to_fact(row), score))
+            fact = self._to_fact(row)
+            fact_tokens = set(_TOKEN_RE.findall(fact.text.lower()))
+            # Prefix comparison approximates the stemming FTS already did
+            # ("studying" vs "studies" share "stud"), without reaching for
+            # a stemmer of our own.
+            matched = sum(
+                1 for q in query_tokens
+                if any(f.startswith(q[:4]) or q.startswith(f[:4]) for f in fact_tokens)
+            )
+            results.append((fact, matched / len(query_tokens)))
+
+        results.sort(key=lambda pair: pair[1], reverse=True)
         return results
 
     async def active_with_vectors(self) -> list[tuple[Fact, list[float]]]:

@@ -127,12 +127,7 @@ class JobsRepo:
             f"WHERE id = ? AND status = ?"    # <- the optimistic check
         )
 
-        cursor = await self._db.query(
-            "SELECT changes() AS n", ()
-        )  # placeholder; real change count read below
-        await self._db.execute(sql, params)
-        row = await self._db.query_one("SELECT changes() AS n")
-        moved = bool(row and int(row["n"]) == 1)
+        moved = await self._db.execute_returning_changes(sql, params) == 1
         if not moved:
             log.debug("transition lost race or job absent", extra={
                 "job_id": job_id, "expected": expected.value, "new": new.value,

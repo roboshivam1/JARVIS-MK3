@@ -106,6 +106,26 @@ class Database:
         finally:
             await cursor.close()
 
+    async def execute_returning_changes(
+        self, sql: str, params: Iterable[Any] = ()
+    ) -> int:
+        """Run a write and report how many rows it touched, atomically.
+
+        SQLite's changes() reports the LAST statement's row count on this
+        connection - and every component shares one connection. Asking in
+        a separate call leaves a gap in which another coroutine's write
+        can land, so the answer would sometimes describe someone else's
+        UPDATE. Reading cursor.rowcount from the same cursor closes the
+        gap: no other statement can intervene.
+        """
+        cursor = await self._conn.execute(sql, tuple(params))
+        try:
+            changed = cursor.rowcount
+        finally:
+            await cursor.close()
+        await self._conn.commit()
+        return int(changed)
+
     async def query_one(self, sql: str, params: Iterable[Any] = ()) -> aiosqlite.Row | None:
         """Read at most one row, None if no match."""
         cursor = await self._conn.execute(sql, tuple(params))
