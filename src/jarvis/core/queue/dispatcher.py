@@ -191,6 +191,9 @@ class ReclaimLoop:
         rule softens for remote workers when they exist."""
         reclaimed = 0
         for job in await self._jobs.live_jobs():
+            # awaiting_approval jobs are NOT orphans: they are waiting on
+            # a person, hold no lease, and must survive restarts intact.
+            # Reclaiming them would discard the owner's pending question.
             if job.status in (JobStatus.LEASED, JobStatus.RUNNING):
                 await requeue_or_fail(
                     self._jobs, self._events, job,

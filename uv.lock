@@ -640,6 +640,9 @@ dev = [
     { name = "pytest" },
     { name = "pytest-asyncio" },
 ]
+worker = [
+    { name = "websockets" },
+]
 
 [package.metadata]
 requires-dist = [
@@ -657,6 +660,7 @@ requires-dist = [
     { name = "pytest-asyncio", marker = "extra == 'dev'", specifier = ">=0.23" },
     { name = "uvicorn", specifier = ">=0.30" },
     { name = "voyageai", specifier = ">=0.3" },
+    { name = "websockets", marker = "extra == 'worker'", specifier = ">=13.0" },
 ]
 provides-extras = ["worker", "voice", "dev"]
 

@@ -35,6 +35,8 @@ from typing import Any, Literal
 from pydantic import BaseModel, ConfigDict, Field
 
 from jarvis.agentloop.loop import LoopResult, run_agent_loop
+from jarvis.agentloop.guard import Guard
+from jarvis.agentloop.policies import create_guard
 from jarvis.agentloop.toolset import InlineTool, Toolset
 from jarvis.common.ids import is_ulid
 from jarvis.common.jobs import Job, JobStatus
@@ -128,6 +130,7 @@ class Orchestrator:
         events: EventsRepo,
         registry: JobTypeRegistry,
         memory: MemoryService,
+        guard: Guard | None = None,
     ) -> None:
         self._llm = llm
         self._settings = settings
@@ -135,11 +138,12 @@ class Orchestrator:
         self._events = events
         self._registry = registry
         self._memory = memory
+        self._guard = guard or create_guard()
 
     # -- per-turn toolset -----------------------------------------------------
 
     def _build_toolset(self, session_id: str, trace_id: str) -> Toolset:
-        tools = Toolset()
+        tools = Toolset(guard=self._guard, actor=ACTOR)
 
         async def get_time(_: _NoArgs) -> str:
             return datetime.now(self._settings.tz).strftime("%A %d %B %Y, %H:%M %Z")

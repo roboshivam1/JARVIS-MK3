@@ -31,7 +31,9 @@ dependencies = [
 
 [project.optional-dependencies]
 # Worker-only deps arrive in phase 2 (websockets client, MCP host, etc.)
-worker = []
+worker = [
+    "websockets>=13.0",        # the worker's outbound link to the Core
+]
 # Voice deps arrive in phase 6 (wake word, VAD, TTS)
 voice = []
 dev = [

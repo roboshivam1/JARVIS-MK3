@@ -42,6 +42,9 @@ class Notification(BaseModel):
     session_id: str | None = None       # conversation it belongs to
     job_id: str | None = None           # work it reports on
     artifact_id: str | None = None      # file to deliver alongside
+    approval_id: str | None = None      # when set, this message asks a
+                                        # question and renders with
+                                        # approve/reject buttons
     delivered_ts: datetime | None = None
     suppress_reason: str | None = None
     trace_id: str

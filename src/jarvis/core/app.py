@@ -42,7 +42,9 @@ from jarvis.core.db.repos.artifacts import ArtifactsRepo
 from jarvis.core.db.repos.jobs import JobsRepo
 from jarvis.core.db.repos.notifications import NotificationsRepo
 from jarvis.core.db.repos.facts import FactsRepo
+from jarvis.core.db.repos.approvals import ApprovalsRepo
 from jarvis.core.db.repos.schedules import SchedulesRepo
+from jarvis.core.approvals.service import ApprovalService
 from jarvis.common.schedules import Schedule, ScheduleKind
 from jarvis.core.initiative.engine import InitiativeEngine, next_cron_time
 from jarvis.core.initiative.notifier import Notifier
@@ -53,6 +55,9 @@ from jarvis.core.observability.traces import TracesRepo, make_db_trace_sink
 from jarvis.core.queue.coreworker import CoreWorker
 from jarvis.core.queue.dispatcher import ReclaimLoop
 from jarvis.core.queue.registry import JobTypeRegistry
+from jarvis.core.queue.registry_workers import WorkerRegistry
+# Importing the protocol registers its envelope kinds.
+import jarvis.common.worker_protocol  # noqa: F401
 from jarvis.core.orchestrator.agent import Orchestrator
 from jarvis.core.sessionmgr import SessionManager
 from jarvis.llm.layer import LLMLayer
@@ -77,7 +82,10 @@ class CoreApp:
         self.profile: ProfileStore | None = None
         self.schedules: SchedulesRepo | None = None
         self.initiative: InitiativeEngine | None = None
+        self.approvals: ApprovalsRepo | None = None
+        self.approval_service: ApprovalService | None = None
         self.registry: JobTypeRegistry = JobTypeRegistry()
+        self.workers: WorkerRegistry = WorkerRegistry()
         self._reclaim: ReclaimLoop | None = None
         self._core_worker: CoreWorker | None = None
         self.llm: LLMLayer | None = None
@@ -115,6 +123,10 @@ class CoreApp:
         self._core_worker = CoreWorker(
             self.jobs, self.events, self.registry, self.artifacts
         )
+        self.approvals = ApprovalsRepo(self.db)
+        self.approval_service = ApprovalService(
+            self.approvals, self.jobs, self.events
+        )
         self.schedules = SchedulesRepo(self.db)
         self.initiative = InitiativeEngine(
             self.schedules, self.jobs, self.events, self.settings.tz
@@ -122,7 +134,7 @@ class CoreApp:
         self.notifications = NotificationsRepo(self.db)
         self.notifier = Notifier(
             self.jobs, self.sessions, self.notifications,
-            self.artifacts, self.events,
+            self.artifacts, self.events, self.approvals,
         )
 
         await self._recover()
@@ -136,6 +148,13 @@ class CoreApp:
         from jarvis.jobs.maintenance import register_maintenance_jobs
         from jarvis.jobs.research import register_research_jobs
         register_research_jobs(self.registry, self.llm)
+        # Worker-executed job types are registered on the Core too, for
+        # their metadata (timeout, models) - the Core never runs them,
+        # since they declare capabilities it does not have. This is what
+        # lets the orchestrator offer work it cannot itself perform.
+        from jarvis.jobs.worker_types import register_worker_job_types
+        register_worker_job_types(self.registry)
+
         register_maintenance_jobs(
             self.registry, self.llm, self.memory, FactsRepo(self.db),
             self.sessions, self.profile, self.events,
@@ -178,6 +197,11 @@ class CoreApp:
             db=self.db,
             traces=self.traces,
             started_monotonic=started,
+            workers=self.workers,
+            jobs=self.jobs,
+            events=self.events,
+            artifacts=self.artifacts,
+            job_types=self.registry,
         )
 
         # Telegram bridge, only if configured.
@@ -189,6 +213,8 @@ class CoreApp:
                 session_mgr=self.session_mgr,
                 sessions_repo=self.sessions,
                 status_provider=lambda: build_status_snapshot(self.gateway_deps),  # type: ignore[arg-type]
+                approval_service=self.approval_service,
+                approvals_repo=self.approvals,
             )
         # The bridge is now also a delivery surface for unprompted
             # messages, not just a request/response client.
@@ -271,6 +297,10 @@ class CoreApp:
         assert self.initiative is not None
         residents["initiative"] = asyncio.create_task(
             self.initiative.run(), name="initiative"
+        )
+        assert self.approval_service is not None
+        residents["approvals"] = asyncio.create_task(
+            self.approval_service.run(), name="approvals"
         )
 
         log.info("core running", extra={"residents": list(residents)})

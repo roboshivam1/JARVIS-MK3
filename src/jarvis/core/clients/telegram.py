@@ -2,29 +2,26 @@
 # src/jarvis/core/clients/telegram.py - the Telegram bridge
 # =============================================================================
 #
-# A thin adapter between Telegram and the session manager. It renders and
-# relays; it never thinks. All intelligence stays in the Core.
+# A thin adapter between Telegram and the Core. It renders and relays; it
+# never thinks. All intelligence stays in the Core.
 #
 # Mechanics:
-#   - Long-polling: the bridge asks Telegram for updates in a loop, so no
-#     public address or webhook is needed. Works the same on a laptop and
-#     a VPS.
-#   - Streamed replies: Telegram cannot append to a message, so we send a
-#     placeholder and EDIT it as text arrives. Edits are throttled to one
-#     every ~1.2 s per reply (Telegram pushes back around 1/s), driven by
-#     a small flusher task; a final edit delivers the complete text.
+#   - Long-polling: no public address or webhook needed, so the bridge
+#     works identically on a laptop and a VPS.
+#   - Streamed replies: Telegram cannot append to a message, so a
+#     placeholder is sent and EDITED as text arrives, throttled to one
+#     edit per ~1.2 s (Telegram pushes back near 1/s).
 #   - Owner lock: the FIRST check on every update is the sender's numeric
-#     id. Strangers get silence and a log line. A configured bot token
-#     without an owner id refuses to start at all.
+#     id. Strangers get silence and a log line.
 #
-# Commands:
-#   /start  - greeting and a liveness hint
-#   /new    - archive the current thread; next message opens a fresh one
-#   /status - the same snapshot the HTTP /status route serves
+# APPROVALS: gated actions arrive as messages with inline buttons. A tap
+# sends a small hidden payload (approve:<ulid> / reject:<ulid>) rather
+# than a visible message - typing a job id on a phone is how mistakes
+# happen. Once answered, the message is edited to show the decision and
+# the keyboard is REMOVED: a live approve button on a settled question
+# invites a second tap that silently does nothing.
 #
-# Telegram caps messages at 4096 chars. The stream buffer edits the first
-# chunk; if a finished reply is longer, the remainder is sent as follow-up
-# messages at the end.
+# Commands: /start, /new, /status, /approvals
 # =============================================================================
 
 from __future__ import annotations
@@ -33,10 +30,19 @@ import asyncio
 from pathlib import Path
 from typing import Any, Awaitable, Callable
 
-from aiogram import Bot, Dispatcher
+from aiogram import Bot, Dispatcher, F
 from aiogram.client.default import DefaultBotProperties
-from aiogram.types import FSInputFile, Message
+from aiogram.types import (
+    CallbackQuery,
+    FSInputFile,
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
+    Message,
+)
+
 from jarvis.common.log import get_logger
+from jarvis.core.approvals.service import ApprovalService
+from jarvis.core.db.repos.approvals import ApprovalsRepo
 from jarvis.core.db.repos.sessions import SessionsRepo
 from jarvis.core.sessionmgr import SessionManager
 
@@ -45,10 +51,22 @@ log = get_logger("core.telegram")
 CLIENT_KIND = "telegram"
 _EDIT_INTERVAL_S = 1.2
 _TG_LIMIT = 4096
-_STREAM_CAP = 4000          # headroom under the hard limit while streaming
+_STREAM_CAP = 4000
 
-# Provided by the gateway module: computes the shared status snapshot.
 StatusProvider = Callable[[], Awaitable[dict[str, Any]]]
+
+
+def _approval_keyboard(approval_id: str) -> InlineKeyboardMarkup:
+    """Approve / reject buttons for one request.
+
+    callback_data is capped at 64 bytes by Telegram; an action word plus
+    a 26-character ULID fits with room to spare - one more dividend from
+    short sortable ids.
+    """
+    return InlineKeyboardMarkup(inline_keyboard=[[
+        InlineKeyboardButton(text="Approve", callback_data=f"approve:{approval_id}"),
+        InlineKeyboardButton(text="Reject", callback_data=f"reject:{approval_id}"),
+    ]])
 
 
 class _StreamingReply:
@@ -66,7 +84,6 @@ class _StreamingReply:
         self._done = asyncio.Event()
 
     async def on_text(self, chunk: str) -> None:
-        """The callback handed to the session manager; called per chunk."""
         async with self._lock:
             self._buffer += chunk
         if self._flusher is None:
@@ -78,7 +95,7 @@ class _StreamingReply:
             try:
                 await asyncio.wait_for(self._done.wait(), timeout=_EDIT_INTERVAL_S)
             except asyncio.TimeoutError:
-                pass   # interval elapsed - loop and flush again
+                pass
 
     async def _flush(self, partial: bool) -> None:
         async with self._lock:
@@ -95,12 +112,9 @@ class _StreamingReply:
                 )
             self._sent_text = text
         except Exception:
-            # Rendering must never kill the turn; worst case the final
-            # flush delivers everything in one go.
             log.warning("stream flush failed", exc_info=True)
 
     async def finalize(self, full_text: str) -> None:
-        """Stop the metronome and deliver the complete reply."""
         self._done.set()
         if self._flusher is not None:
             await self._flusher
@@ -110,7 +124,6 @@ class _StreamingReply:
             self._buffer = head
         await self._flush(partial=False)
 
-        # Anything beyond the first message's cap goes out as follow-ups.
         while rest:
             piece, rest = rest[:_TG_LIMIT], rest[_TG_LIMIT:]
             await self._bot.send_message(self._chat_id, piece)
@@ -126,6 +139,8 @@ class TelegramBridge:
         session_mgr: SessionManager,
         sessions_repo: SessionsRepo,
         status_provider: StatusProvider,
+        approval_service: ApprovalService | None = None,
+        approvals_repo: ApprovalsRepo | None = None,
     ) -> None:
         if owner_id <= 0:
             raise ValueError(
@@ -136,42 +151,86 @@ class TelegramBridge:
         self._mgr = session_mgr
         self._sessions = sessions_repo
         self._status = status_provider
+        self._approval_service = approval_service
+        self._approvals = approvals_repo
         self._bot = Bot(token, default=DefaultBotProperties(parse_mode=None))
         self._dp = Dispatcher()
         self._dp.message.register(self._on_message)
+        self._dp.callback_query.register(
+            self._on_callback, F.data.startswith(("approve:", "reject:"))
+        )
+
+    async def run(self) -> None:
+        """Long-poll until cancelled. Runs as one supervised Core task."""
+        log.info("telegram bridge polling", extra={"owner_id": self._owner_id})
+        try:
+            await self._dp.start_polling(self._bot, handle_signals=False)
+        finally:
+            await self._bot.session.close()
+
+    # -- outbound (the notifier's delivery surface) ---------------------------
 
     async def deliver(
         self,
         text: str,
         file_path: Path | None = None,
         file_name: str | None = None,
+        approval_id: str | None = None,
     ) -> None:
-        """Deliverer implementation: push an unprompted message (and
-        optionally a file) to the owner. Called only by the notifier -
-        nothing else may message the owner unprompted.
-
-        Files stream from disk via FSInputFile rather than loading into
-        memory, so a large artifact costs the same as a small one.
-        """
-        await self._bot.send_message(self._owner_id, text[:_TG_LIMIT])
+        """Push an unprompted message to the owner, with buttons when it
+        is a question. Called only by the notifier."""
+        keyboard = _approval_keyboard(approval_id) if approval_id else None
+        await self._bot.send_message(
+            self._owner_id, text[:_TG_LIMIT], reply_markup=keyboard
+        )
         if file_path is not None and file_path.exists():
             await self._bot.send_document(
                 self._owner_id,
                 FSInputFile(file_path, filename=file_name or file_path.name),
             )
 
-    async def run(self) -> None:
-        """Long-poll until cancelled. Runs as one supervised Core task."""
-        log.info("telegram bridge polling", extra={"owner_id": self._owner_id})
-        try:
-            await self._dp.start_polling(
-                self._bot,
-                handle_signals=False,   # the Core owns signal handling
-            )
-        finally:
-            await self._bot.session.close()
+    # -- inbound: taps --------------------------------------------------------
 
-    # -- update handling ------------------------------------------------------
+    async def _on_callback(self, callback: CallbackQuery) -> None:
+        """A button was tapped."""
+        if callback.from_user.id != self._owner_id:
+            await callback.answer("Not for you.", show_alert=True)
+            log.warning("ignored non-owner callback", extra={
+                "from_id": callback.from_user.id,
+            })
+            return
+
+        if self._approval_service is None or not callback.data:
+            await callback.answer("Approvals are not available.", show_alert=True)
+            return
+
+        action, _, approval_id = callback.data.partition(":")
+        approve = action == "approve"
+        decided = await self._approval_service.decide(approval_id, approve=approve)
+
+        if not decided:
+            # Already answered, or expired while the owner was deciding.
+            await callback.answer("Already settled, sir.", show_alert=True)
+        else:
+            await callback.answer("Approved." if approve else "Rejected.")
+
+        # Remove the buttons and record the outcome in the message
+        # itself: a live button on a settled question invites a tap that
+        # does nothing, and confusion is expensive in a safety interface.
+        if callback.message is not None:
+            verdict = "APPROVED" if approve else "REJECTED"
+            suffix = f"\n\n--- {verdict} ---" if decided else "\n\n--- already settled ---"
+            try:
+                await self._bot.edit_message_text(
+                    (callback.message.text or "")[:_TG_LIMIT - 40] + suffix,
+                    chat_id=callback.message.chat.id,
+                    message_id=callback.message.message_id,
+                    reply_markup=None,
+                )
+            except Exception:
+                log.warning("could not update approval message", exc_info=True)
+
+    # -- inbound: messages ----------------------------------------------------
 
     async def _on_message(self, message: Message) -> None:
         # Owner lock FIRST. Everyone else does not exist.
@@ -190,7 +249,6 @@ class TelegramBridge:
             await self._handle_command(message, text)
             return
 
-        # A normal conversational turn, streamed back via edits.
         reply = _StreamingReply(self._bot, message.chat.id)
         try:
             result = await self._mgr.handle_user_message(
@@ -205,7 +263,6 @@ class TelegramBridge:
             return
 
         if result.interrupted:
-            # A newer message took over; that turn will speak for itself.
             return
         assert result.reply is not None
         await reply.finalize(result.reply.content)
@@ -216,6 +273,7 @@ class TelegramBridge:
         if command == "/start":
             await message.answer(
                 "Online, sir. Speak freely - or /status for vitals, "
+                "/approvals for anything awaiting your say-so, "
                 "/new for a fresh thread."
             )
 
@@ -234,5 +292,28 @@ class TelegramBridge:
                 f"{s['sessions']} sessions, {s['turns']} turns on record."
             )
 
+        elif command == "/approvals":
+            await self._list_approvals(message)
+
         else:
             await message.answer(f"No such command, sir: {command}")
+
+    async def _list_approvals(self, message: Message) -> None:
+        """Re-present anything still waiting - useful when a request was
+        scrolled past, or its message was tapped and lost."""
+        if self._approvals is None:
+            await message.answer("Approvals are not available in this build.")
+            return
+
+        pending = await self._approvals.all_pending()
+        if not pending:
+            await message.answer("Nothing awaiting your say-so, sir.")
+            return
+
+        for request in pending:
+            body = f"{request.summary}\n\n{request.detail}"
+            if request.risk_note:
+                body += f"\n\nRisk: {request.risk_note}"
+            await message.answer(
+                body[:_TG_LIMIT], reply_markup=_approval_keyboard(request.id)
+            )

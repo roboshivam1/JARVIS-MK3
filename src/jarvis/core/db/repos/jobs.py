@@ -152,6 +152,19 @@ class JobsRepo:
             ),
         )
 
+    async def set_lease_heartbeat(self, job_id: str, moment: datetime) -> None:
+        """Push a lease forward. Called on every worker heartbeat: the
+        lease TTL counts from this timestamp, so a job stays claimed
+        exactly as long as its worker keeps saying so."""
+        job = await self.get(job_id)
+        if job is None or job.lease is None:
+            return
+        refreshed = job.lease.model_copy(update={"heartbeat_ts": moment})
+        await self._db.execute(
+            "UPDATE jobs SET lease = ?, updated_ts = ? WHERE id = ?",
+            (refreshed.model_dump_json(), utc_now().isoformat(), job_id),
+        )
+
     async def set_checkpoint(self, job_id: str, checkpoint: dict[str, Any]) -> None:
         """Persist resume state for a running job. Not a status change, so
         no optimistic check - last checkpoint wins, which is correct: a

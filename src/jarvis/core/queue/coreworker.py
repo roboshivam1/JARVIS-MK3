@@ -34,7 +34,12 @@ from jarvis.core.db.repos.events import EventsRepo
 from jarvis.core.db.repos.artifacts import ArtifactsRepo
 from jarvis.core.db.repos.jobs import JobsRepo
 from jarvis.core.queue.dispatcher import fail_permanently, requeue_or_fail
-from jarvis.core.queue.registry import JobContext, JobTypeRegistry, PermanentJobError
+from jarvis.core.queue.registry import (
+    JobContext,
+    JobTypeRegistry,
+    PausedForApproval,
+    PermanentJobError,
+)
 
 log = get_logger("core.queue.coreworker")
 
@@ -151,11 +156,14 @@ class CoreWorker:
             await self._jobs.add_artifact(job.id, artifact.id)
             return artifact.id
 
+        # A job carrying a checkpoint AND a cleared approval field is one
+        # resuming after the owner said yes.
         ctx = JobContext(
             job_id=job.id, trace_id=job.trace_id,
             checkpoint=job.checkpoint,
             save_checkpoint=save_checkpoint, progress=progress,
             write_artifact=write_artifact,
+            approval_granted=job.checkpoint is not None and job.approval is None,
         )
 
         try:
@@ -173,6 +181,13 @@ class CoreWorker:
                     error=f"timed out after {spec.timeout_s}s",
                     expected=JobStatus.RUNNING,
                 )
+            return
+        
+        except PausedForApproval:
+            # Not a failure. The approvals service has already moved the
+            # job to awaiting_approval and released the lease; there is
+            # nothing for the executor to do but step aside.
+            log.info("job paused for approval", extra={"job_id": job.id})
             return
         except PermanentJobError as exc:
             # The handler knows retrying is pointless.

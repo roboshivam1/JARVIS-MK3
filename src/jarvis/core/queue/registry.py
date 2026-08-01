@@ -38,6 +38,14 @@ class PermanentJobError(Exception):
     tell the difference; the queue fails such jobs immediately.
     """
 
+class PausedForApproval(Exception):
+    """This job stopped to ask the owner's permission.
+
+    Not a failure: the handler saved a checkpoint, the approvals service
+    paused the job, and a later attempt resumes from where this one
+    stopped. Raising this is how a handler says "I need consent before
+    the next step" without blocking a worker slot while the owner sleeps.
+    """
 
 @dataclass
 class JobContext:
@@ -51,6 +59,10 @@ class JobContext:
     # (name, mime, content) -> artifact id. Files a handler produces go
     # through here: stored, catalogued, and attached to this job.
     write_artifact: Callable[[str, str, bytes], Awaitable[str]]
+    # True when this attempt follows an APPROVED gate. Handlers that
+    # paused for permission check this on resume to know they may now
+    # proceed with the action that was blocked.
+    approval_granted: bool = False
 
 
 # A core-executable handler: validated payload in, output model back.

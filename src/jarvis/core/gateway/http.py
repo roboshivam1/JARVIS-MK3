@@ -26,13 +26,19 @@ import time
 from dataclasses import dataclass
 from typing import Any
 
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, WebSocket
 
 from jarvis.common.log import get_logger
 from jarvis.common.settings import CoreSettings
 from jarvis.core.db.database import Database
 from jarvis.core.gateway.auth import BearerAuth
+from jarvis.core.db.repos.artifacts import ArtifactsRepo
+from jarvis.core.db.repos.events import EventsRepo
+from jarvis.core.db.repos.jobs import JobsRepo
+from jarvis.core.gateway.workers import WorkerConnection
 from jarvis.core.observability.traces import TracesRepo
+from jarvis.core.queue.registry import JobTypeRegistry
+from jarvis.core.queue.registry_workers import WorkerRegistry
 
 log = get_logger("core.gateway")
 
@@ -45,12 +51,28 @@ class GatewayDeps:
     db: Database
     traces: TracesRepo
     started_monotonic: float   # time.monotonic() at boot, for uptime
+    # Worker plumbing. Optional so tests can build a gateway without the
+    # queue; the endpoint simply refuses connections when absent.
+    workers: "WorkerRegistry | None" = None
+    jobs: "JobsRepo | None" = None
+    events: "EventsRepo | None" = None
+    artifacts: "ArtifactsRepo | None" = None
+    job_types: "JobTypeRegistry | None" = None
 
 
 async def build_status_snapshot(deps: GatewayDeps) -> dict[str, Any]:
     """The status answer, as data. Shared by this HTTP route and by the
     Telegram /status command - one computation, many doors."""
     uptime_s = int(time.monotonic() - deps.started_monotonic)
+
+    workers = (
+        [
+            {"id": w.worker_id, "capabilities": sorted(w.capabilities),
+             "running": len(w.running_job_ids)}
+            for w in deps.workers.connected()
+        ]
+        if deps.workers else []
+    )
 
     sessions_row = await deps.db.query_one(
         "SELECT COUNT(*) AS n FROM sessions"
@@ -65,7 +87,7 @@ async def build_status_snapshot(deps: GatewayDeps) -> dict[str, Any]:
         "sessions": int(sessions_row["n"]) if sessions_row else 0,
         "turns": int(turns_row["n"]) if turns_row else 0,
         "llm_calls": int(calls_row["n"]) if calls_row else 0,
-        # workers/queue join this dict in the worker phase
+        "workers": workers,
     }
 
 
@@ -83,5 +105,29 @@ def create_app(deps: GatewayDeps) -> FastAPI:
     @app.get("/status", dependencies=[Depends(auth)])
     async def status() -> dict[str, Any]:
         return await build_status_snapshot(deps)
+
+    @app.websocket("/ws/worker")
+    async def worker_socket(websocket: WebSocket) -> None:
+        # Auth happens INSIDE the connection, in the hello frame, rather
+        # than as an HTTP dependency: WebSocket clients cannot set
+        # headers reliably across every runtime, and the handshake needs
+        # to carry capabilities anyway.
+        if (
+            deps.workers is None or deps.jobs is None
+            or deps.events is None or deps.artifacts is None
+            or deps.job_types is None
+        ):
+            await websocket.close(code=1011)
+            return
+        connection = WorkerConnection(
+            websocket=websocket,
+            expected_token=deps.settings.gateway_token.get_secret_value(),
+            registry=deps.workers,
+            jobs=deps.jobs,
+            events=deps.events,
+            artifacts=deps.artifacts,
+            job_types=deps.job_types,
+        )
+        await connection.run()
 
     return app

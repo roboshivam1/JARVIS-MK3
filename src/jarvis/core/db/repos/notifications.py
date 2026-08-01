@@ -35,14 +35,15 @@ class NotificationsRepo:
             await self._db.execute(
                 "INSERT INTO notifications "
                 "(id, ts, priority, status, client_kind, text, session_id, "
-                " job_id, artifact_id, delivered_ts, suppress_reason, trace_id) "
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                " job_id, artifact_id, approval_id, delivered_ts, "
+                " suppress_reason, trace_id) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 (
                     notification.id, notification.ts.isoformat(),
                     notification.priority, notification.status.value,
                     notification.client_kind, notification.text,
                     notification.session_id, notification.job_id,
-                    notification.artifact_id,
+                    notification.artifact_id, notification.approval_id,
                     notification.delivered_ts.isoformat()
                         if notification.delivered_ts else None,
                     notification.suppress_reason, notification.trace_id,
@@ -91,6 +92,20 @@ class NotificationsRepo:
         )
         return [str(r["job_id"]) for r in rows]
 
+    async def approval_ids_awaiting_notification(self, limit: int = 20) -> list[str]:
+        """Pending approval requests the owner has not been asked about
+        yet. Same shape as the job scan: the database's unique index makes
+        the query the whole bookkeeping."""
+        rows = await self._db.query(
+            "SELECT a.id AS approval_id FROM approvals a "
+            "WHERE a.status = 'pending' "
+            "AND NOT EXISTS ("
+            "  SELECT 1 FROM notifications n WHERE n.approval_id = a.id"
+            ") ORDER BY a.id ASC LIMIT ?",
+            (limit,),
+        )
+        return [str(r["approval_id"]) for r in rows]
+
     @staticmethod
     def _to_notification(row: aiosqlite.Row) -> Notification:
         return Notification.model_validate({
@@ -103,6 +118,7 @@ class NotificationsRepo:
             "session_id": row["session_id"],
             "job_id": row["job_id"],
             "artifact_id": row["artifact_id"],
+            "approval_id": row["approval_id"],
             "delivered_ts": row["delivered_ts"],
             "suppress_reason": row["suppress_reason"],
             "trace_id": row["trace_id"],
