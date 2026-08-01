@@ -56,6 +56,7 @@ ACTOR = "core.orchestrator"
 # Subagent name -> the job type that runs it. Grows one line per subagent.
 _SUBAGENT_JOBS: dict[str, str] = {
     "researcher": "research.brief",
+    "operator": "browser.task",
 }
 
 
@@ -66,7 +67,7 @@ class _NoArgs(BaseModel):
 class _RunSubagentArgs(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    agent: Literal["researcher"]
+    agent: Literal["researcher", "operator"]
     brief: str = Field(
         min_length=10,
         description=(
@@ -160,6 +161,8 @@ class Orchestrator:
 
         async def run_subagent(args: _RunSubagentArgs) -> str:
             job_type = _SUBAGENT_JOBS[args.agent]
+            # The operator's payload field is "task", not "brief".
+            payload_key = "task" if args.agent == "operator" else "brief"
             spec = self._registry.get(job_type)
             if spec is None:
                 return (
@@ -168,7 +171,7 @@ class Orchestrator:
                 )
             job = Job(
                 type=job_type,
-                payload={"brief": args.brief},
+                payload={payload_key: args.brief},
                 priority=args.priority,
                 requires=spec.requires,
                 session_id=session_id,   # so the result finds its way back
@@ -187,7 +190,11 @@ class Orchestrator:
                 "Hand a task to a specialist as a background job. Returns "
                 "immediately with a job id; the work continues without you. "
                 "Use for anything taking more than a few seconds. "
-                "'researcher' (ATHENA) handles web research and written briefs."
+                "'researcher' (ATHENA) handles web research and written "
+                "briefs from search results. 'operator' (PROTEUS) drives a "
+                "real browser on the owner's machine - use for pages that "
+                "need JavaScript, a login, or interaction, and say plainly "
+                "that it needs a worker online."
             ),
             args_model=_RunSubagentArgs,
             handler=run_subagent,

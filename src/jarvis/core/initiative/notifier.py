@@ -145,7 +145,15 @@ class Notifier:
 
         result = job.result or {}
         summary = result.get("summary")
+
+        # A result may name its artifact explicitly (Core-run jobs mint
+        # the id themselves). Worker-run jobs cannot: the Core mints ids
+        # on upload, so the handler never learns them. Fall back to the
+        # job's own artifact list, which the upload path populates.
         artifact_id = result.get("artifact_id")
+        if artifact_id is None and job.artifacts:
+            artifact_id = job.artifacts[-1]
+
         if summary:
             return f"Finished, sir. {summary}", artifact_id
         return f"Job {job.id} finished ({job.type}).", artifact_id

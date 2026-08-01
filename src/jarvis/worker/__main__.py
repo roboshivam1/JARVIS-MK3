@@ -19,7 +19,9 @@ import sys
 from pydantic import BaseModel, ConfigDict
 
 from jarvis.common.log import get_logger, setup_logging
+from jarvis.common.settings import CoreSettings
 from jarvis.core.queue.registry import JobContext, JobTypeRegistry, JobTypeSpec
+from jarvis.llm.layer import LLMLayer
 from jarvis.worker.app import WorkerApp
 from jarvis.worker.settings import WorkerSettings
 
@@ -80,12 +82,21 @@ def main() -> None:
 
     try:
         settings = WorkerSettings()
+        # Subagents on this worker think, so they need model access. The
+        # API key comes from the same .env; traces log locally rather
+        # than reaching across to the Core's database, which a worker
+        # deliberately cannot touch.
+        llm = LLMLayer(CoreSettings())
     except Exception:
         log.critical("configuration invalid - refusing to start", exc_info=True)
         sys.exit(1)
 
+    if not llm.available:
+        log.warning("no API key on this worker - subagent jobs will fail")
+
     logging.getLogger().setLevel(settings.log_level)
-    asyncio.run(WorkerApp(settings, build_registry(settings)).run())
+    app = WorkerApp(settings, build_registry(settings), llm=llm)
+    asyncio.run(app.run())
 
 
 if __name__ == "__main__":

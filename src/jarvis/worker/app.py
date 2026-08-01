@@ -47,6 +47,7 @@ from jarvis.common.worker_protocol import (
 )
 from jarvis.agentloop.mcp_client import McpHost
 from jarvis.core.queue.registry import JobTypeRegistry
+from jarvis.llm.layer import LLMLayer
 from jarvis.worker.mcp_host import load_mcp_configs
 from jarvis.worker.runner import JobRunner
 from jarvis.worker.settings import WorkerSettings
@@ -60,9 +61,15 @@ _BACKOFF_MAX_S = 60.0
 class WorkerApp:
     """One worker process: connect, work, reconnect, forever."""
 
-    def __init__(self, settings: WorkerSettings, registry: JobTypeRegistry) -> None:
+    def __init__(
+        self,
+        settings: WorkerSettings,
+        registry: JobTypeRegistry,
+        llm: "LLMLayer | None" = None,
+    ) -> None:
         self._settings = settings
         self._registry = registry
+        self._llm = llm
         self._stop = asyncio.Event()
         self._heartbeat_interval_s = 15
         self.mcp = McpHost()
@@ -88,6 +95,13 @@ class WorkerApp:
             log.info("mcp servers running", extra={
                 "servers": self.mcp.server_names(),
             })
+
+        # Subagent job types register AFTER MCP, because their handlers
+        # close over the running host. A worker with no model access
+        # skips them rather than accepting work it cannot do.
+        if self._llm is not None:
+            from jarvis.worker.subagent_jobs import register_subagent_jobs
+            register_subagent_jobs(self._registry, self._llm, self.mcp)
 
         while not self._stop.is_set():
             try:

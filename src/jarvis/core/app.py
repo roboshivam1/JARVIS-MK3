@@ -129,7 +129,8 @@ class CoreApp:
         )
         self.schedules = SchedulesRepo(self.db)
         self.initiative = InitiativeEngine(
-            self.schedules, self.jobs, self.events, self.settings.tz
+            self.schedules, self.jobs, self.events,
+            self.settings.tz, self.registry,
         )
         self.notifications = NotificationsRepo(self.db)
         self.notifier = Notifier(
@@ -152,8 +153,10 @@ class CoreApp:
         # their metadata (timeout, models) - the Core never runs them,
         # since they declare capabilities it does not have. This is what
         # lets the orchestrator offer work it cannot itself perform.
+        from jarvis.jobs.browser import register_browser_job_metadata
         from jarvis.jobs.worker_types import register_worker_job_types
         register_worker_job_types(self.registry)
+        register_browser_job_metadata(self.registry)
 
         register_maintenance_jobs(
             self.registry, self.llm, self.memory, FactsRepo(self.db),

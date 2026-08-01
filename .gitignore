@@ -7,3 +7,4 @@ __pycache__/
 
 secret.txt
 data/
+.playwright-mpc/

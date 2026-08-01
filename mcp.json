@@ -3,6 +3,13 @@
     "filesystem": {
       "command": "npx",
       "args": ["-y", "@modelcontextprotocol/server-filesystem", "/tmp/jarvis-sandbox"]
+    },
+    "playwright": {
+      "command": "npx",
+      "args": [
+        "-y", "@playwright/mcp@latest",
+        "--user-data-dir", "/tmp/jarvis-browser-profile"
+      ]
     }
   }
 }

@@ -38,6 +38,7 @@ from jarvis.common.schedules import Schedule, ScheduleKind
 from jarvis.core.db.repos.events import EventsRepo
 from jarvis.core.db.repos.jobs import JobsRepo
 from jarvis.core.db.repos.schedules import SchedulesRepo
+from jarvis.core.queue.registry import JobTypeRegistry
 
 log = get_logger("core.initiative.engine")
 
@@ -87,11 +88,13 @@ class InitiativeEngine:
         jobs: JobsRepo,
         events: EventsRepo,
         tz: ZoneInfo,
+        registry: "JobTypeRegistry | None" = None,
     ) -> None:
         self._schedules = schedules
         self._jobs = jobs
         self._events = events
         self._tz = tz
+        self._registry = registry
 
     async def run(self) -> None:
         """The resident loop: tick, sleep, repeat."""
@@ -120,6 +123,16 @@ class InitiativeEngine:
 
     async def _fire(self, schedule: Schedule) -> None:
         trace_id = new_ulid()   # this firing is its own root cause
+
+        # A schedule pointing at a job type nothing can run would
+        # otherwise fire forever, failing every time - which is exactly
+        # what a leftover test schedule did. Disable it instead.
+        if self._registry is not None and self._registry.get(schedule.job_type) is None:
+            log.warning("schedule references an unknown job type - disabling", extra={
+                "schedule": schedule.name, "job_type": schedule.job_type,
+            })
+            await self._schedules.disable(schedule.id)
+            return
 
         job = Job(
             type=schedule.job_type,
