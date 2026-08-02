@@ -1,47 +1,29 @@
 import asyncio
+import subprocess
+import sys
+import tempfile
+from pathlib import Path
 
-from pydantic import BaseModel
+from jarvis.worker.sandbox.policy import build_policy, interpreter_read_paths
 
-from jarvis.common.log import setup_logging
-from jarvis.common.schedules import Schedule, ScheduleKind
-from jarvis.common.settings import CoreSettings
-from jarvis.common.ids import utc_now
-from jarvis.core.app import CoreApp
-from jarvis.core.queue.registry import JobContext, JobTypeSpec
+workdir = Path(tempfile.mkdtemp(prefix="probe-"))
+policy = build_policy(workdir)
+policy_path = workdir.parent / "probe.sb"
+policy_path.write_text(policy)
 
+script = workdir / "t.py"
+script.write_text('print("HELLO")')
 
-class TickIn(BaseModel):
-    label: str
-
-class TickOut(BaseModel):
-    label: str
-
-
-async def tick_handler(payload: TickIn, ctx: JobContext) -> TickOut:
-    print(f"    >>> scheduled job ran: {payload.label}")
-    return TickOut(label=payload.label)
-
-
-async def main() -> None:
-    setup_logging("INFO")
-    app = CoreApp(CoreSettings())
-    app.registry.register(JobTypeSpec(
-        type="test.tick", input_model=TickIn, output_model=TickOut,
-        execution="idempotent", timeout_s=30, handler=tick_handler,
-    ))
-    await app.boot()
-    assert app.schedules is not None
-
-    await app.schedules.ensure(Schedule(
-        name="demo every 30s",
-        kind=ScheduleKind.INTERVAL,
-        interval_s=30,
-        job_type="test.tick",
-        job_payload={"label": "heartbeat"},
-        next_fire_ts=utc_now(),      # due immediately
-    ))
-    print(">>> schedule created - watch it fire, then kill and restart me")
-    await app.run()
-
-
-asyncio.run(main())
+print("=== sys.executable ===")
+print(sys.executable)
+print("\n=== interpreter_read_paths() ===")
+for p in interpreter_read_paths():
+    print(" ", p)
+print("\n=== policy ===")
+print(policy)
+print("=== running (no capture, so errors show) ===")
+r = subprocess.run(
+    ["sandbox-exec", "-f", str(policy_path), sys.executable, str(script)],
+    cwd=workdir,
+)
+print("exit code:", r.returncode)

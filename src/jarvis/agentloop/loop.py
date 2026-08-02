@@ -37,6 +37,66 @@ from jarvis.agentloop.toolset import Toolset
 
 log = get_logger("agentloop.loop")
 
+# Tool results longer than this are candidates for pruning once they age
+# out of the window. Short results (a number, a confirmation) cost
+# nothing to keep and are often the thing the model needs to remember.
+_PRUNE_THRESHOLD_CHARS = 800
+
+
+# Tool-result blocks whose content we have already replaced. Tracked
+# HERE rather than stamped onto the block, because message dicts go
+# verbatim to the provider and it rejects fields it does not recognise.
+_PRUNED_MARKER = "[earlier tool output,"
+
+
+def _prune_stale_tool_results(
+    messages: list[dict[str, Any]],
+    keep_recent: int,
+) -> int:
+    """Replace old bulky tool results with a placeholder. Returns how
+    many were pruned.
+
+    WHY: every step resends the whole conversation, so a browser
+    snapshot taken at step 2 is paid for again at steps 3, 4, 5 and so
+    on. Cost grows with the SQUARE of the step count, which is why a
+    twenty-step browse costs far more than five times a four-step one.
+
+    A stale snapshot is also not worth keeping on its own merits: the
+    accessibility tree of a page the agent left three steps ago is
+    stale, and having it in context invites confusion about which page
+    is actually in front of it. The agent needs the CURRENT page plus a
+    memory of what it did, not a transcript of every DOM it has seen.
+
+    Short results are left alone - they are cheap, and a one-line
+    confirmation is often exactly what the model needs to recall.
+    """
+    # Find bulky tool results, oldest first.
+    candidates: list[tuple[int, int, int]] = []   # (msg index, block index, size)
+    for m_index, message in enumerate(messages):
+        content = message.get("content")
+        if not isinstance(content, list):
+            continue
+        for b_index, block in enumerate(content):
+            if not isinstance(block, dict) or block.get("type") != "tool_result":
+                continue
+            text = block.get("content")
+            if not isinstance(text, str):
+                continue
+            if text.startswith(_PRUNED_MARKER):
+                continue          # already pruned on an earlier pass
+            if len(text) > _PRUNE_THRESHOLD_CHARS:
+                candidates.append((m_index, b_index, len(text)))
+
+    prunable = candidates[:-keep_recent] if keep_recent else candidates
+    for m_index, b_index, size in prunable:
+        block = messages[m_index]["content"][b_index]
+        block["content"] = (
+            f"{_PRUNED_MARKER} {size} characters, pruned to save "
+            f"context - re-run the tool if this is needed again]"
+        )
+
+    return len(prunable)
+
 
 @dataclass
 class LoopResult:
@@ -47,6 +107,7 @@ class LoopResult:
     iterations: int = 0
     tool_calls_made: int = 0
     hit_iteration_budget: bool = False
+    results_pruned: int = 0                    # bulky tool outputs trimmed
 
 
 async def run_agent_loop(
@@ -62,6 +123,7 @@ async def run_agent_loop(
     provider_tools: list[dict[str, Any]] | None = None,
     max_iterations: int = 8,
     max_tokens: int = 2048,
+    keep_recent_results: int | None = None,
 ) -> LoopResult:
     """Run the think-act-observe cycle to completion.
 
@@ -105,6 +167,17 @@ async def run_agent_loop(
                 "tool": call.name, "is_error": is_error, "trace_id": trace_id,
             })
             convo.append(tool_result_message(call.id, output, is_error=is_error))
+
+        # Trim what the next call has to pay for. Loops with bulky tool
+        # output (browser snapshots above all) opt in by setting
+        # keep_recent_results; loops with small results leave it off.
+        if keep_recent_results is not None:
+            pruned = _prune_stale_tool_results(convo, keep_recent_results)
+            if pruned:
+                result.results_pruned += pruned
+                log.debug("pruned stale tool results", extra={
+                    "count": pruned, "trace_id": trace_id,
+                })
 
     # Budget exhausted with the model still asking for tools.
     result.hit_iteration_budget = True

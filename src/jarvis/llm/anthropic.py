@@ -48,9 +48,14 @@ class ProviderError(RuntimeError):
     """A model call failed for good. `retried` tells whether backoff was
     already attempted before giving up."""
 
-    def __init__(self, message: str, retried: bool) -> None:
+    def __init__(
+        self, message: str, retried: bool, permanent: bool = False
+    ) -> None:
         super().__init__(message)
         self.retried = retried
+        # True when repeating the call cannot possibly help: a malformed
+        # request, a rejected key, an unknown model.
+        self.permanent = permanent
 
 
 @dataclass(frozen=True)
@@ -111,10 +116,23 @@ class AnthropicAdapter:
         else:
             system_param = system
 
+        # Cache the conversation PREFIX as well as the system prompt.
+        # In a tool loop the conversation only ever grows, so everything
+        # before the newest exchange is identical to last call and bills
+        # at roughly a tenth when cached.
+        #
+        # Honest caveat: this and context pruning work against each
+        # other. Caching rewards an unchanging prefix; pruning rewrites
+        # older messages as the window slides, breaking the cache from
+        # that point on. What still caches is everything before the
+        # pruning boundary - the bulk of a long conversation, and
+        # already shrunk. Both help; they do not compose perfectly.
+        cached_messages = _with_prefix_cache(messages) if cache_system else messages
+
         kwargs: dict[str, Any] = {
             "model": model,
             "system": system_param,
-            "messages": messages,
+            "messages": cached_messages,
             "max_tokens": max_tokens,
         }
         # Client-side tools (we execute) and provider-side tools (the
@@ -147,9 +165,13 @@ class AnthropicAdapter:
                 await asyncio.sleep(delay)
             except anthropic.APIStatusError as exc:
                 # Non-retryable API rejection (bad key, bad request, ...).
+                # A 400 means the request itself is malformed, which no
+                # amount of retrying repairs - it is a bug in our code,
+                # and retrying it just spends the same money again.
                 raise ProviderError(
                     f"provider rejected the call: {exc.__class__.__name__}: {exc}",
                     retried=False,
+                    permanent=exc.status_code < 500,
                 ) from exc
 
         raise ProviderError(
@@ -197,3 +219,32 @@ class AnthropicAdapter:
             cached_tokens=cache_read,
             model=kwargs["model"],
         )
+
+def _with_prefix_cache(messages: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Mark a cache breakpoint just behind the newest exchange.
+
+    The provider caches everything up to and including the marked block.
+    Placing it one message back means the stable prefix caches while the
+    newest turn (which differs every call) sits outside it.
+
+    Short conversations are left alone: caching has a minimum size and a
+    write cost, so marking a two-message exchange loses money.
+    """
+    if len(messages) < 3:
+        return messages
+
+    marked = [dict(m) for m in messages]
+    target = marked[-2]
+    content = target.get("content")
+
+    if isinstance(content, str):
+        target["content"] = [{
+            "type": "text", "text": content,
+            "cache_control": {"type": "ephemeral"},
+        }]
+    elif isinstance(content, list) and content:
+        blocks = [dict(b) for b in content]
+        blocks[-1] = {**blocks[-1], "cache_control": {"type": "ephemeral"}}
+        target["content"] = blocks
+
+    return marked

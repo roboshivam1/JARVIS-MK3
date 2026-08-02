@@ -33,6 +33,13 @@ dependencies = [
 # Worker-only deps arrive in phase 2 (websockets client, MCP host, etc.)
 worker = [
     "websockets>=13.0",        # the worker's outbound link to the Core
+    # Available to sandboxed code. Pre-installed rather than pip-installed
+    # on demand: installing at run time would need network access, which
+    # is the one thing the sandbox most usefully denies.
+    "pandas>=2.2",
+    "numpy>=1.26",
+    "matplotlib>=3.8",
+    "scipy>=1.12",
 ]
 # Voice deps arrive in phase 6 (wake word, VAD, TTS)
 voice = []

@@ -145,23 +145,6 @@ class CoreApp:
         if not self.llm.available:
             log.warning("no API key - daemon runs, conversation will not")
 
-        # Job types register at boot, after their dependencies exist.
-        from jarvis.jobs.maintenance import register_maintenance_jobs
-        from jarvis.jobs.research import register_research_jobs
-        register_research_jobs(self.registry, self.llm)
-        # Worker-executed job types are registered on the Core too, for
-        # their metadata (timeout, models) - the Core never runs them,
-        # since they declare capabilities it does not have. This is what
-        # lets the orchestrator offer work it cannot itself perform.
-        from jarvis.jobs.browser import register_browser_job_metadata
-        from jarvis.jobs.worker_types import register_worker_job_types
-        register_worker_job_types(self.registry)
-        register_browser_job_metadata(self.registry)
-
-        register_maintenance_jobs(
-            self.registry, self.llm, self.memory, FactsRepo(self.db),
-            self.sessions, self.profile, self.events,
-        )
 
         # Seed the nightly sleep cycle. ensure() leaves an existing
         # schedule untouched, so the owner's edits (a moved hour, a
@@ -184,6 +167,26 @@ class CoreApp:
             FactsRepo(self.db), create_embedder(self.settings)
         )
         self.profile = ProfileStore(self.db)
+
+        # Job types register at boot, after their dependencies exist.
+        from jarvis.jobs.maintenance import register_maintenance_jobs
+        from jarvis.jobs.research import register_research_jobs
+        register_research_jobs(self.registry, self.llm)
+        # Worker-executed job types are registered on the Core too, for
+        # their metadata (timeout, models) - the Core never runs them,
+        # since they declare capabilities it does not have. This is what
+        # lets the orchestrator offer work it cannot itself perform.
+        from jarvis.jobs.browser import register_browser_job_metadata
+        from jarvis.jobs.code import register_code_job_metadata
+        from jarvis.jobs.worker_types import register_worker_job_types
+        register_worker_job_types(self.registry)
+        register_browser_job_metadata(self.registry)
+        register_code_job_metadata(self.registry)
+        
+        register_maintenance_jobs(
+            self.registry, self.llm, self.memory, FactsRepo(self.db),
+            self.sessions, self.profile, self.events,
+        )
 
         orchestrator = Orchestrator(
             self.llm, self.settings, self.jobs, self.events,

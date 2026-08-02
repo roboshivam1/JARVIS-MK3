@@ -114,7 +114,17 @@ class Notifier:
         """Queue notifications for newly finished conversational jobs."""
         queued = 0
         for job_id in await self._notifications.job_ids_awaiting_notification():
-            job = await self._jobs.get(job_id)
+            try:
+                job = await self._jobs.get(job_id)
+            except Exception:
+                # A row that fails model validation - a corrupted state
+                # left by two writers racing, say - must not wedge the
+                # scan. Without this, one bad row loops this subsystem
+                # forever at the poll interval and nothing else in the
+                # outbox is ever delivered.
+                log.error("skipping unreadable job row", exc_info=True,
+                          extra={"job_id": job_id})
+                continue
             if job is None or job.session_id is None:
                 continue
             session = await self._sessions.get(job.session_id)

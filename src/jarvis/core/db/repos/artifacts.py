@@ -25,6 +25,7 @@ import aiosqlite
 from jarvis.common.artifacts import Artifact
 from jarvis.common.ids import new_ulid
 from jarvis.common.log import get_logger
+from jarvis.core.db.artifact_links import link_artifact
 from jarvis.core.db.database import Database
 
 log = get_logger("core.db.artifacts")
@@ -81,6 +82,10 @@ class ArtifactsRepo:
                 artifact.ts.isoformat(),
             ),
         )
+        # Add it to the browsable tree. Best effort: a failed symlink is
+        # a missing convenience, never a failed artifact.
+        link_artifact(self._root, artifact)
+
         log.info("artifact stored", extra={
             "artifact_id": artifact.id, "artifact_name": name,
             "size": artifact.size, "created_by": created_by,

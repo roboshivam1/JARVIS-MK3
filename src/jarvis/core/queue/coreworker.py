@@ -224,7 +224,7 @@ class CoreWorker:
 
         moved = await self._jobs.transition(
             job.id, JobStatus.RUNNING, JobStatus.SUCCEEDED,
-            set_fields={"result": result, "lease": None},
+            set_fields={"result": result, "lease": None, "error": None},
         )
         if moved:
             await self._events.append(Event(

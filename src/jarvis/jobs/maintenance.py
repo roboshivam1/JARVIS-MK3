@@ -102,6 +102,14 @@ def register_maintenance_jobs(
     events: EventsRepo,
 ) -> None:
     """Register maintenance job types. Called once at boot."""
+    # Fail at BOOT if a dependency has not been constructed yet, rather
+    # than at 3:30 a.m. when the handler dereferences None and burns
+    # three retries discovering it.
+    if memory is None or profile is None or sessions is None:
+        raise RuntimeError(
+            "register_maintenance_jobs called before its dependencies "
+            "exist - check construction order in CoreApp.boot()"
+        )
 
     async def handle(payload: BaseModel, ctx: JobContext) -> BaseModel:
         assert isinstance(payload, SleepCycleIn)

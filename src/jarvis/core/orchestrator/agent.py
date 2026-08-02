@@ -57,6 +57,7 @@ ACTOR = "core.orchestrator"
 _SUBAGENT_JOBS: dict[str, str] = {
     "researcher": "research.brief",
     "operator": "browser.task",
+    "engineer": "code.task",
 }
 
 
@@ -67,7 +68,7 @@ class _NoArgs(BaseModel):
 class _RunSubagentArgs(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    agent: Literal["researcher", "operator"]
+    agent: Literal["researcher", "operator", "engineer"]
     brief: str = Field(
         min_length=10,
         description=(
@@ -162,7 +163,7 @@ class Orchestrator:
         async def run_subagent(args: _RunSubagentArgs) -> str:
             job_type = _SUBAGENT_JOBS[args.agent]
             # The operator's payload field is "task", not "brief".
-            payload_key = "task" if args.agent == "operator" else "brief"
+            payload_key = "brief" if args.agent == "researcher" else "task"
             spec = self._registry.get(job_type)
             if spec is None:
                 return (
@@ -194,7 +195,10 @@ class Orchestrator:
                 "briefs from search results. 'operator' (PROTEUS) drives a "
                 "real browser on the owner's machine - use for pages that "
                 "need JavaScript, a login, or interaction, and say plainly "
-                "that it needs a worker online."
+                "that it needs a worker online. 'engineer' (DAEDALUS) "
+                "writes and runs Python in a sandbox - use for "
+                "calculations, data analysis, charts, and anything where "
+                "the answer should be computed rather than recalled."
             ),
             args_model=_RunSubagentArgs,
             handler=run_subagent,

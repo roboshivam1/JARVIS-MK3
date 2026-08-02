@@ -372,7 +372,16 @@ class WorkerConnection:
         if result.status == "succeeded":
             moved = await self._jobs.transition(
                 job.id, JobStatus.RUNNING, JobStatus.SUCCEEDED,
-                set_fields={"result": result.result or {}, "lease": None},
+                set_fields={
+                    "result": result.result or {},
+                    "lease": None,
+                    # Clear any error left by a previous attempt. A job
+                    # requeued after a lease expiry carries the reason
+                    # in `error`; succeeding later must wipe it, or the
+                    # row violates the model's own invariant and becomes
+                    # unreadable.
+                    "error": None,
+                },
             )
             if moved:
                 await self._events.append(Event(

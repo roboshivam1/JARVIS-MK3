@@ -28,6 +28,7 @@ from typing import Any, Awaitable, Callable
 from pydantic import BaseModel, ValidationError
 
 from jarvis.common.log import get_logger
+from jarvis.llm.anthropic import ProviderError
 from jarvis.common.worker_protocol import (
     WORKER_ARTIFACT_BEGIN,
     WORKER_ARTIFACT_CHUNK,
@@ -156,6 +157,12 @@ class JobRunner:
         except PermanentJobError as exc:
             await self._report(offer.job_id, "failed",
                                error=str(exc), permanent=True)
+            return
+        except ProviderError as exc:
+            # A malformed request or rejected key fails identically every
+            # time; only transient provider trouble deserves a retry.
+            await self._report(offer.job_id, "failed",
+                               error=str(exc), permanent=exc.permanent)
             return
         except ValidationError as exc:
             # A payload that fails its schema will fail it again.
