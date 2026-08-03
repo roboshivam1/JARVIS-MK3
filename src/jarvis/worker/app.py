@@ -100,8 +100,26 @@ class WorkerApp:
         # close over the running host. A worker with no model access
         # skips them rather than accepting work it cannot do.
         if self._llm is not None:
+            from pathlib import Path
+
+            from jarvis.worker.git.config import load_git_config
+            from jarvis.worker.git.operations import GitOperations
             from jarvis.worker.subagent_jobs import register_subagent_jobs
-            register_subagent_jobs(self._registry, self._llm, self.mcp)
+
+            git_ops = None
+            token = self._settings.github_token.get_secret_value().strip()
+            git_config = load_git_config()
+            if token and git_config.repos:
+                git_ops = GitOperations(
+                    git_config, token, Path("data/git-workspace")
+                )
+                log.info("git capability enabled", extra={
+                    "repos": sorted(git_config.repos),
+                })
+
+            register_subagent_jobs(
+                self._registry, self._llm, self.mcp, git_ops
+            )
 
         while not self._stop.is_set():
             try:

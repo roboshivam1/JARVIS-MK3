@@ -38,6 +38,8 @@ from jarvis.common.events import Event, EventKind
 from jarvis.common.ids import utc_now
 from jarvis.common.jobs import JobStatus, Lease
 from jarvis.common.log import get_logger
+from jarvis.common.capabilities import Gate
+from jarvis.core.approvals.service import ApprovalService
 from jarvis.common.worker_protocol import (
     CORE_JOB_CANCEL,
     CORE_JOB_OFFER,
@@ -54,6 +56,7 @@ from jarvis.common.worker_protocol import (
     WORKER_JOB_PROGRESS,
     WORKER_JOB_RESULT,
     WORKER_JOB_STARTED,
+    WORKER_NEEDS_APPROVAL,
     CoreJobCancel,
     CoreJobOffer,
     CoreWelcome,
@@ -69,6 +72,7 @@ from jarvis.common.worker_protocol import (
     WorkerJobProgress,
     WorkerJobResult,
     WorkerJobStarted,
+    WorkerNeedsApproval,
 )
 from jarvis.core.db.repos.artifacts import ArtifactsRepo
 from jarvis.core.db.repos.events import EventsRepo
@@ -112,6 +116,7 @@ class WorkerConnection:
         events: EventsRepo,
         artifacts: ArtifactsRepo,
         job_types: JobTypeRegistry,
+        approvals: "ApprovalService | None" = None,
     ) -> None:
         self._ws = websocket
         self._expected_token = expected_token
@@ -120,6 +125,7 @@ class WorkerConnection:
         self._events = events
         self._artifacts = artifacts
         self._job_types = job_types
+        self._approvals = approvals
         self._worker: ConnectedWorker | None = None
         self._offered: set[str] = set()      # awaiting accept or decline
         self._uploads: dict[str, _ArtifactBuffer] = {}
@@ -323,6 +329,11 @@ class WorkerConnection:
             worker.running_job_ids.discard(payload.job_id)
             await self._settle(payload)
 
+        elif kind == WORKER_NEEDS_APPROVAL:
+            assert isinstance(payload, WorkerNeedsApproval)
+            worker.running_job_ids.discard(payload.job_id)
+            await self._raise_gate(payload)
+
         elif kind == WORKER_ARTIFACT_BEGIN:
             assert isinstance(payload, WorkerArtifactBegin)
             self._uploads[payload.job_id] = _ArtifactBuffer(payload)
@@ -362,6 +373,38 @@ class WorkerConnection:
             set_fields={"lease": None, "attempts": max(0, job.attempts - 1)},
         )
         log.info("worker declined job", extra={"job_id": job_id, "reason": reason})
+
+    async def _raise_gate(self, request: WorkerNeedsApproval) -> None:
+        """A worker asked permission. Pause the job and ask the owner.
+
+        This is the bridge the approval system was missing: gates fire
+        on workers, approvals live here, and workers have no database.
+        The service, the outbox, and the Telegram buttons all work
+        exactly as built - they only needed a way for a distant process
+        to reach them.
+        """
+        if self._approvals is None:
+            log.error("worker raised a gate but approvals are unavailable",
+                      extra={"job_id": request.job_id})
+            return
+
+        try:
+            gate = Gate(request.gate)
+        except ValueError:
+            log.error("worker raised an unknown gate", extra={
+                "job_id": request.job_id, "gate": request.gate,
+            })
+            return
+
+        await self._approvals.request(
+            job_id=request.job_id,
+            gate=gate,
+            actor=request.actor,
+            tool=request.tool,
+            summary=request.summary,
+            detail=request.detail,
+            risk_note=request.risk_note,
+        )
 
     async def _settle(self, result: WorkerJobResult) -> None:
         """Record a terminal report from the worker."""

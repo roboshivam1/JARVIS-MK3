@@ -1,0 +1,158 @@
+- generic [ref=f1e2]:
+  - banner [ref=f1e3]:
+    - generic [ref=f1e4]:
+      - generic [ref=f1e5]: Vol. I · No. 3
+      - generic [ref=f1e6]: Jaipur · Sunday, 2 August 2026
+      - button "Night edition" [ref=f1e7] [cursor=pointer]
+      - generic [ref=f1e8]: Est. 2026
+    - separator [ref=f1e9]
+    - generic [ref=f1e10]:
+      - generic [ref=f1e11]:
+        - generic [ref=f1e12]: Weather
+        - text: Hazy, hot 39° / 28°
+      - generic [ref=f1e13]:
+        - heading [level=1] [ref=f1e14]:
+          - link "The Basement Gazette" [ref=f1e15] [cursor=pointer]:
+            - /url: /
+        - separator [ref=f1e16]
+        - paragraph [ref=f1e17]: software · hardware · things half-built
+      - generic [ref=f1e18]:
+        - generic [ref=f1e19]: Free
+        - text: ★★★ Late Edition Circulation 11
+    - navigation "Sections" [ref=f1e20]:
+      - link "Front page" [ref=f1e21] [cursor=pointer]:
+        - /url: /
+      - link "Workshop" [ref=f1e22] [cursor=pointer]:
+        - /url: /workshop/
+      - link "Motoring" [ref=f1e23] [cursor=pointer]:
+        - /url: /motoring/
+      - link "Pictures" [ref=f1e24] [cursor=pointer]:
+        - /url: /photography/
+      - link "Lab notes" [ref=f1e25] [cursor=pointer]:
+        - /url: /lab-notes/
+      - link "Op-ed" [ref=f1e26] [cursor=pointer]:
+        - /url: /op-ed/
+      - link "Obituaries" [ref=f1e27] [cursor=pointer]:
+        - /url: /obituaries/
+      - link "Archive" [ref=f1e28] [cursor=pointer]:
+        - /url: /archive/
+      - link "About" [ref=f1e29] [cursor=pointer]:
+        - /url: /about/
+  - main [ref=f1e30]:
+    - generic [ref=f1e31]:
+      - paragraph [ref=f1e32]: The staff box
+      - heading "Shivam Kapoor — editor, reporter, typesetter, and entire circulation department" [level=2] [ref=f1e33]
+      - paragraph [ref=f1e34]: A life in parts, mostly unfinished, occasionally working.
+      - generic [ref=f1e35]:
+        - paragraph [ref=f1e36]:
+          - text: I'm Shivam Kapoor. I live in Jaipur, I study computer science engineering at LNMIIT, and I build things.
+          - generic [ref=f1e37]:
+            - img "Shivam Kapoor" [ref=f1e39]
+            - generic [ref=f1e40]: The editor.
+        - paragraph [ref=f1e41]:
+          - text: "That's the short version, and it's accurate, but it's also the kind of sentence that could belong to about four thousand people. So here's the long version — the one with the lime green website and the robot that cleaned air and the YouTube channel nobody watched. Fair warning: I've been at this a while, and I intend to mention almost all of it."
+          - generic [ref=f1e42]:
+            - generic [ref=f1e43]: Write to the editor
+            - generic [ref=f1e44]:
+              - text: "Email:"
+              - link "roboshivam25@gmail.com" [ref=f1e45] [cursor=pointer]:
+                - /url: mailto:roboshivam25@gmail.com
+            - generic [ref=f1e46]:
+              - text: "Elsewhere:"
+              - link "GitHub," [ref=f1e47] [cursor=pointer]:
+                - /url: https://github.com/roboshivam1
+              - link "Instagram," [ref=f1e48] [cursor=pointer]:
+                - /url: https://www.instagram.com/shivamkapoorthisside
+              - link "LinkedIn" [ref=f1e49] [cursor=pointer]:
+                - /url: https://www.linkedin.com/in/shivam-kapoor-abc
+            - generic [ref=f1e50]: Available for AI systems that have to survive contact with real users, internal tools, hardware-adjacent software, and second opinions on architecture before you commit to it.
+        - heading "Before the electricity" [level=3] [ref=f1e51]
+        - paragraph [ref=f1e52]: I don't remember deciding to become someone who makes things. As far as I can tell, I arrived that way.
+        - paragraph [ref=f1e53]: "Toddler-me did art, crafts, models — anything that let me turn a pile of stuff into a slightly different pile of stuff with a name. Evenings were Lego with the neighbourhood crew. Weekends were board games, until board games stopped being enough and I started making my own versions of them: rewritten rules, hand-drawn boards, houses that were definitely not up to code. At some point I informed my family that I would be founding a board game company when I grew up."
+        - paragraph [ref=f1e54]: I did not found a board game company. But I want it on record that the ambition was there early, and that I still think about it more than is reasonable.
+        - heading "The robot kit" [level=3] [ref=f1e55]
+        - paragraph [ref=f1e56]: Fifth grade. The fault line.
+        - paragraph [ref=f1e57]:
+          - text: My parents bought me a robot-building kit, and everything after this paragraph is downstream of it.
+          - generic [ref=f1e58]: One of my first bots. This one played soccer.
+        - paragraph [ref=f1e60]: The first robots were remote-controlled — I'd build them, drive them around, and then, because a working robot was apparently not enough, I'd sit down and draw new ones. Pages of robot designs, by hand, some of them genuinely impeccable. Nobody had told me CAD existed. I was doing mechanical design with a pencil and total confidence.
+        - paragraph [ref=f1e61]:
+          - text: The problem showed up fast. Everything I built had to be
+          - emphasis [ref=f1e62]: driven
+          - text: . I wanted them to think. And you can't solder your way to autonomy.
+        - heading "HTML betrayed me" [level=3] [ref=f1e63]
+        - paragraph [ref=f1e64]: Age ten.
+        - paragraph [ref=f1e65]:
+          - text: So I went looking for programming, and the first thing I found was HTML.
+          - generic [ref=f1e66]: Version one of this paper. The art direction has changed.
+        - paragraph [ref=f1e69]: I built a one-page website about myself — my hobbies, my interests, a giant cartoon robot, set against a solid lime green background that I maintain was a bold choice. It was, in every way that counts, the first version of the page you are currently reading. Twelve years of iteration and I'm still writing an about page with a robot on it.
+        - paragraph [ref=f1e70]: Then I learned you cannot program a robot in HTML. I took this badly.
+        - paragraph [ref=f1e71]: Python came next. I got myself into an introductory Python summer camp meant for 11th graders — a month of it, and I was by a distance the youngest person in the room. I left with the title of "most inquisitive student," which is the politest possible way to describe a ten-year-old who would not stop asking questions.
+        - paragraph [ref=f1e72]:
+          - text: That's where it started. Calculators. Number games. And then I found
+          - code [ref=f1e73]: import
+          - text: .
+        - paragraph [ref=f1e74]:
+          - text: I want to be dramatic about this, because it
+          - emphasis [ref=f1e75]: was
+          - text: dramatic. One keyword and the language stopped being a box and became a door. Suddenly there were libraries. There were other people's tools, free, right there. I built WhatsApp message spammers and tested them on my friends, who were thrilled. I lived inside YouTube tutorials. I may or may not have skipped a few online classes to work on those projects(in my defense... they were educational) — and somewhere in that stretch, I built the first version of JARVIS.
+        - paragraph [ref=f1e76]: He's still around. We'll get to him.
+        - heading "The gamedev detour" [level=3] [ref=f1e77]
+        - paragraph [ref=f1e78]: Age eleven.
+        - paragraph [ref=f1e79]: I was already deep into online games, so of course I wanted to make them.
+        - paragraph [ref=f1e80]: Roblox took me in. I learned Lua, got my first exposure to 3D modelling, and — maybe more importantly — found out what it feels like to be part of an online developer community, where nobody knows or cares how old you are as long as the thing works. I made games. My friends played them. I earned a genuinely respectable amount of Robux and spent every last one of it on clothes and accessories, which I regret not at all.
+        - paragraph [ref=f1e81]: There was a Unity phase. A brief Android app development phase. Both taught me something and neither stuck. Python remained the great love. Robotics kept running in the background, the way it always has.
+        - heading "The channel" [level=3] [ref=f1e82]
+        - paragraph [ref=f1e83]: "Age twelve. Circulation: negligible."
+        - paragraph [ref=f1e84]:
+          - text: I started a YouTube channel to show off the robots I was building.
+          - generic [ref=f1e85]: Selected without mercy from the archive.
+        - paragraph [ref=f1e87]: The scripts were unhinged. Insanely fun to write, frequently cringe, never once normal — I have always been this specific kind of storyteller and I have made my peace with it. Between robot builds I posted piano covers of the most absurd songs I liked, occasional Hot Wheels reviews, and poetry I'd written myself, because the writing thing was always there too.
+        - paragraph [ref=f1e88]: The channel failed. Completely. I had the time of my life.
+        - heading "ACE" [level=3] [ref=f1e89]
+        - paragraph [ref=f1e90]: Age fourteen. IIT Madras. Runners-up.
+        - paragraph [ref=f1e91]:
+          - text: Four of us went to IIT Madras for a team competition, and we spent about a month building ACE — an air purifier rover.
+          - generic [ref=f1e92]: ACE
+        - paragraph [ref=f1e94]:
+          - text: This was the first time a project made me
+          - emphasis [ref=f1e95]: study
+          - text: . Air pollution, air purification, the actual chemistry and airflow of the thing, and then the usual robotics, code, tinkering and research to make it move and work at the same time. Every bad assumption we had got found out by a physical object refusing to cooperate.
+        - paragraph [ref=f1e96]: We came away runners-up. I came away with the understanding that a good project is mostly research wearing a robot costume.
+        - heading "The school years" [level=3] [ref=f1e97]
+        - paragraph [ref=f1e98]: Eleventh grade. Things got serious without my noticing.
+        - paragraph [ref=f1e99]:
+          - text: I got into AI systems programming with Python, and — for the first time — learned Python properly, academically, in a classroom, after six years of learning it in the wild. Turns out I'd been right about most of it and spectacularly wrong about a few things.
+          - generic [ref=f1e100]: First printer, first benchy
+        - paragraph [ref=f1e102]: "I became robotics club lead and tech advisor at my school, which meant I stopped just building for myself. I built for the school: a teacher assessment platform, a library management system, a virtual assistant for the STEM lab. I mentored juniors through their robotics projects, exhibitions and competitions — and watching someone else's thing finally work is a very different pleasure from watching your own thing finally work. Both are good. That one's quieter."
+        - paragraph [ref=f1e103]:
+          - text: I also got my hands on a 3D printer for the first time. I was fascinated. I am
+          - emphasis [ref=f1e104]: still
+          - text: fascinated. I don't expect that to wear off — a machine that turns a file into an object is the closest thing to real magic I've been allowed to own.
+        - paragraph [ref=f1e105]: "And I founded the Student Gymkhana: a student-led body for the school's activities, clubs and events. Which, if you think about it, is just the board game thing again. Write the rules, draw the board, hand it to people, watch it run."
+        - heading "Now" [level=3] [ref=f1e106]
+        - paragraph [ref=f1e107]:
+          - text: I'm at LNMIIT Jaipur, studying CS engineering.
+          - generic [ref=f1e108]:
+            - img "the bench" [ref=f1e110]
+            - generic [ref=f1e111]: There's always another thing on the bench.
+        - paragraph [ref=f1e112]: I build AI systems and agentic pipelines that help actual people, not benchmarks. JARVIS MK2 is running — the sixth or seventh descendant of that program a ten-year-old wrote while skipping class, and by far the best-behaved of the lineage. I've built autonomous content creation pipelines. I modernise old tech, because throwing things away is boring. And there's an ebike taking shape, currently on its framework, which is my standing excuse to be covered in grease.
+        - paragraph [ref=f1e113]: "Still programming. Still 3D printing. Still soldering. Most importantly: still learning — twelve years in, and the best part of this is still the moment something I don't understand becomes something I do."
+        - paragraph [ref=f1e114]: The pencil-drawn robots didn't work. Neither did the channel. The board game company never happened. That's fine — the point was never the shipping. The point is that there's always another thing on the bench.
+        - heading "What the editor likes" [level=3] [ref=f1e115]
+        - paragraph [ref=f1e116]:
+          - text: Films, books, and records this paper will not stop going on about are collected on the
+          - link "arts & leisure page" [ref=f1e117] [cursor=pointer]:
+            - /url: /culture/
+          - text: . The critic is the editor, which explains the reviews.
+        - heading "Corrections policy" [level=3] [ref=f1e118]
+        - paragraph [ref=f1e119]:
+          - text: "This paper is wrong regularly. When it is, the piece gets a correction note at the top rather than a quiet edit. See also:"
+          - link "Obituaries" [ref=f1e120] [cursor=pointer]:
+            - /url: /obituaries/
+          - text: .
+  - contentinfo [ref=f1e121]:
+    - generic [ref=f1e122]: Set in Bodoni & Source Serif
+    - generic [ref=f1e123]: Printed in Jaipur
+    - link "RSS" [ref=f1e125] [cursor=pointer]:
+      - /url: /rss.xml

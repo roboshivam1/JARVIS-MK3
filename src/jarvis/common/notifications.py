@@ -47,6 +47,11 @@ class Notification(BaseModel):
                                         # approve/reject buttons
     delivered_ts: datetime | None = None
     suppress_reason: str | None = None
+    # Held until this moment by policy - quiet hours, or a snooze. The
+    # row stays pending throughout: deferred is not dropped.
+    not_before: datetime | None = None
+    # For a digest: the notifications it replaced.
+    digest_of: list[str] = Field(default_factory=list)
     trace_id: str
 
     @field_validator("id", "trace_id")
@@ -56,7 +61,7 @@ class Notification(BaseModel):
             raise ValueError(f"not a ULID: {v!r}")
         return v
 
-    @field_validator("ts", "delivered_ts")
+    @field_validator("ts", "delivered_ts", "not_before")
     @classmethod
     def _utc(cls, v: datetime | None) -> datetime | None:
         if v is None:

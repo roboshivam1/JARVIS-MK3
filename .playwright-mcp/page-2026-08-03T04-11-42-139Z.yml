@@ -1,0 +1,286 @@
+- generic [ref=f5e2]:
+  - banner [ref=f5e3]:
+    - generic [ref=f5e4]:
+      - generic [ref=f5e5]: Vol. I · No. 3
+      - generic [ref=f5e6]: Jaipur · Sunday, 2 August 2026
+      - button "Night edition" [ref=f5e7] [cursor=pointer]
+      - generic [ref=f5e8]: Est. 2026
+    - separator [ref=f5e9]
+    - generic [ref=f5e10]:
+      - generic [ref=f5e11]:
+        - generic [ref=f5e12]: Weather
+        - text: Hazy, hot 39° / 28°
+      - generic [ref=f5e13]:
+        - heading [level=1] [ref=f5e14]:
+          - link "The Basement Gazette" [ref=f5e15] [cursor=pointer]:
+            - /url: /
+        - separator [ref=f5e16]
+        - paragraph [ref=f5e17]: software · hardware · things half-built
+      - generic [ref=f5e18]:
+        - generic [ref=f5e19]: Free
+        - text: ★★★ Late Edition Circulation 11
+    - navigation "Sections" [ref=f5e20]:
+      - link "Front page" [ref=f5e21] [cursor=pointer]:
+        - /url: /
+      - link "Workshop" [ref=f5e22] [cursor=pointer]:
+        - /url: /workshop/
+      - link "Motoring" [ref=f5e23] [cursor=pointer]:
+        - /url: /motoring/
+      - link "Pictures" [ref=f5e24] [cursor=pointer]:
+        - /url: /photography/
+      - link "Lab notes" [ref=f5e25] [cursor=pointer]:
+        - /url: /lab-notes/
+      - link "Op-ed" [ref=f5e26] [cursor=pointer]:
+        - /url: /op-ed/
+      - link "Obituaries" [ref=f5e27] [cursor=pointer]:
+        - /url: /obituaries/
+      - link "Archive" [ref=f5e28] [cursor=pointer]:
+        - /url: /archive/
+      - link "About" [ref=f5e29] [cursor=pointer]:
+        - /url: /about/
+  - main [ref=f5e30]:
+    - generic [ref=f5e31]:
+      - paragraph [ref=f5e32]: Motoring
+      - heading "Every car this paper owns" [level=2] [ref=f5e33]
+      - paragraph [ref=f5e34]: At 1:64 scale, reviewed by a correspondent with no licence and no test track.
+      - generic [ref=f5e35]:
+        - generic [ref=f5e36]:
+          - button "'87 Audi quattro 2024" [ref=f5e37] [cursor=pointer]:
+            - generic [ref=f5e39]: "'87 Audi quattro"
+            - generic [ref=f5e40]: "2024"
+          - button "Mattel Dream Mobile 2025" [ref=f5e41] [cursor=pointer]:
+            - generic [ref=f5e43]: Mattel Dream Mobile
+            - generic [ref=f5e44]: "2025"
+          - button "Ford Escort RS1600 2023" [ref=f5e45] [cursor=pointer]:
+            - generic [ref=f5e47]: Ford Escort RS1600
+            - generic [ref=f5e48]: "2023"
+          - button "Shelby Cobra Daytona Coupe 2007" [ref=f5e49] [cursor=pointer]:
+            - generic [ref=f5e51]: Shelby Cobra Daytona Coupe
+            - generic [ref=f5e52]: "2007"
+          - button "Nerve Hammer 2023" [ref=f5e53] [cursor=pointer]:
+            - generic [ref=f5e55]: Nerve Hammer
+            - generic [ref=f5e56]: "2023"
+          - button "BWT Alpine Formula One Team 2025" [ref=f5e57] [cursor=pointer]:
+            - generic [ref=f5e59]: BWT Alpine Formula One Team
+            - generic [ref=f5e60]: "2025"
+          - button "'95 Mazda MX-5 Miata 2024" [ref=f5e61] [cursor=pointer]:
+            - generic [ref=f5e63]: "'95 Mazda MX-5 Miata"
+            - generic [ref=f5e64]: "2024"
+          - button "MoneyGram Haas F1 Team 2025" [ref=f5e65] [cursor=pointer]:
+            - generic [ref=f5e67]: MoneyGram Haas F1 Team
+            - generic [ref=f5e68]: "2025"
+          - button "Custom '66 Toronado 2026" [ref=f5e69] [cursor=pointer]:
+            - generic [ref=f5e71]: Custom '66 Toronado
+            - generic [ref=f5e72]: "2026"
+          - button "Tesla Cybertruck 2024" [ref=f5e73] [cursor=pointer]:
+            - generic [ref=f5e75]: Tesla Cybertruck
+            - generic [ref=f5e76]: "2024"
+          - button "Solar Reflex 2025" [ref=f5e77] [cursor=pointer]:
+            - generic [ref=f5e79]: Solar Reflex
+            - generic [ref=f5e80]: "2025"
+          - button "1994 Honda Del Sol 2024" [ref=f5e81] [cursor=pointer]:
+            - generic [ref=f5e83]: 1994 Honda Del Sol
+            - generic [ref=f5e84]: "2024"
+          - button "Supercharged 2025" [ref=f5e85] [cursor=pointer]:
+            - generic [ref=f5e87]: Supercharged
+            - generic [ref=f5e88]: "2025"
+          - button "Hi-Roller II 2016" [ref=f5e89] [cursor=pointer]:
+            - generic [ref=f5e91]: Hi-Roller II
+            - generic [ref=f5e92]: "2016"
+          - button "'71 Lamborghini Miura P400 SV 2024" [ref=f5e93] [cursor=pointer]:
+            - generic [ref=f5e95]: "'71 Lamborghini Miura P400 SV"
+            - generic [ref=f5e96]: "2024"
+          - button "Honda Civic Custom 2025" [ref=f5e97] [cursor=pointer]:
+            - generic [ref=f5e99]: Honda Civic Custom
+            - generic [ref=f5e100]: "2025"
+          - button "Super Twin Mill 2024" [ref=f5e101] [cursor=pointer]:
+            - generic [ref=f5e103]: Super Twin Mill
+            - generic [ref=f5e104]: "2024"
+          - button "Custom Cadillac Fleetwood 2013" [ref=f5e105] [cursor=pointer]:
+            - generic [ref=f5e107]: Custom Cadillac Fleetwood
+            - generic [ref=f5e108]: "2013"
+          - button "Nissan Skyline 2000 GT-R 2009" [ref=f5e109] [cursor=pointer]:
+            - generic [ref=f5e111]: Nissan Skyline 2000 GT-R
+            - generic [ref=f5e112]: "2009"
+          - button "McLaren Formula 1 Team 2025" [ref=f5e113] [cursor=pointer]:
+            - generic [ref=f5e115]: McLaren Formula 1 Team
+            - generic [ref=f5e116]: "2025"
+          - button "'69 Ford Torino Talladega 2025" [ref=f5e117] [cursor=pointer]:
+            - generic [ref=f5e119]: "'69 Ford Torino Talladega"
+            - generic [ref=f5e120]: "2025"
+          - button "'64 Impala 2003" [ref=f5e121] [cursor=pointer]:
+            - generic [ref=f5e123]: "'64 Impala"
+            - generic [ref=f5e124]: "2003"
+          - button "Hot Wheengs 2022" [ref=f5e125] [cursor=pointer]:
+            - generic [ref=f5e127]: Hot Wheengs
+            - generic [ref=f5e128]: "2022"
+          - button "Cool-One (Spider-Man Edition – Venom) 1982" [ref=f5e129] [cursor=pointer]:
+            - generic [ref=f5e131]: Cool-One (Spider-Man Edition – Venom)
+            - generic [ref=f5e132]: "1982"
+          - button "Atlassian Williams Racing 2025" [ref=f5e133] [cursor=pointer]:
+            - generic [ref=f5e135]: Atlassian Williams Racing
+            - generic [ref=f5e136]: "2025"
+          - button "'90 Acura NSX 2022" [ref=f5e137] [cursor=pointer]:
+            - generic [ref=f5e139]: "'90 Acura NSX"
+            - generic [ref=f5e140]: "2022"
+          - button "Layin' Lowrider 2022" [ref=f5e141] [cursor=pointer]:
+            - generic [ref=f5e143]: Layin' Lowrider
+            - generic [ref=f5e144]: "2022"
+          - button "MoneyGram Haas F1 Team 2025" [ref=f5e145] [cursor=pointer]:
+            - generic [ref=f5e147]: MoneyGram Haas F1 Team
+            - generic [ref=f5e148]: "2025"
+          - button "'96 Porsche Carrera 2020" [ref=f5e149] [cursor=pointer]:
+            - generic [ref=f5e151]: "'96 Porsche Carrera"
+            - generic [ref=f5e152]: "2020"
+          - button "Batmobile Arkham Knight 2015" [ref=f5e153] [cursor=pointer]:
+            - generic [ref=f5e155]: Batmobile Arkham Knight
+            - generic [ref=f5e156]: "2015"
+          - button "Arkham Asylum Batmobile 2024" [ref=f5e157] [cursor=pointer]:
+            - generic [ref=f5e159]: Arkham Asylum Batmobile
+            - generic [ref=f5e160]: "2024"
+          - button "Rogue Hog (Spider-Man Edition) 2023" [ref=f5e161] [cursor=pointer]:
+            - generic [ref=f5e163]: Rogue Hog (Spider-Man Edition)
+            - generic [ref=f5e164]: "2023"
+          - button "Oracle Red Bull Racing 2025" [ref=f5e165] [cursor=pointer]:
+            - generic [ref=f5e167]: Oracle Red Bull Racing
+            - generic [ref=f5e168]: "2025"
+          - button "Coupe Clip 2022" [ref=f5e169] [cursor=pointer]:
+            - generic [ref=f5e171]: Coupe Clip
+            - generic [ref=f5e172]: "2022"
+          - button "Alfa Romeo GTV6 3.0 2023" [ref=f5e173] [cursor=pointer]:
+            - generic [ref=f5e175]: Alfa Romeo GTV6 3.0
+            - generic [ref=f5e176]: "2023"
+          - button "Maserati Shamal 2025" [ref=f5e177] [cursor=pointer]:
+            - generic [ref=f5e179]: Maserati Shamal
+            - generic [ref=f5e180]: "2025"
+          - button "Morgan Super 3 2025" [ref=f5e181] [cursor=pointer]:
+            - generic [ref=f5e183]: Morgan Super 3
+            - generic [ref=f5e184]: "2025"
+          - button "'67 Lotus Type 49 2024" [ref=f5e185] [cursor=pointer]:
+            - generic [ref=f5e187]: "'67 Lotus Type 49"
+            - generic [ref=f5e188]: "2024"
+          - button "Hako Type D 2025" [ref=f5e189] [cursor=pointer]:
+            - generic [ref=f5e191]: Hako Type D
+            - generic [ref=f5e192]: "2025"
+          - button "'92 Honda Civic EG 2025" [ref=f5e193] [cursor=pointer]:
+            - generic [ref=f5e195]: "'92 Honda Civic EG"
+            - generic [ref=f5e196]: "2025"
+          - button "Bugatti Bolide 2024" [ref=f5e197] [cursor=pointer]:
+            - generic [ref=f5e199]: Bugatti Bolide
+            - generic [ref=f5e200]: "2024"
+          - button "Mercedes-AMG PETRONAS Formula One Team 2025" [ref=f5e201] [cursor=pointer]:
+            - generic [ref=f5e203]: Mercedes-AMG PETRONAS Formula One Team
+            - generic [ref=f5e204]: "2025"
+          - button "Electrack 2018" [ref=f5e205] [cursor=pointer]:
+            - generic [ref=f5e207]: Electrack
+            - generic [ref=f5e208]: "2018"
+          - button "Tesla Cyberquad 2021" [ref=f5e209] [cursor=pointer]:
+            - generic [ref=f5e211]: Tesla Cyberquad
+            - generic [ref=f5e212]: "2021"
+          - button "Cobra H.I.S.S. (G.I. Joe) 2025" [ref=f5e213] [cursor=pointer]:
+            - generic [ref=f5e215]: Cobra H.I.S.S. (G.I. Joe)
+            - generic [ref=f5e216]: "2025"
+          - button "Max Steel 2022" [ref=f5e217] [cursor=pointer]:
+            - generic [ref=f5e219]: Max Steel
+            - generic [ref=f5e220]: "2022"
+          - button "2019 Audi R8 Spyder 2021" [ref=f5e221] [cursor=pointer]:
+            - generic [ref=f5e223]: 2019 Audi R8 Spyder
+            - generic [ref=f5e224]: "2021"
+          - button "Kool Kombi 2015" [ref=f5e225] [cursor=pointer]:
+            - generic [ref=f5e227]: Kool Kombi
+            - generic [ref=f5e228]: "2015"
+          - button "Cruise Bruiser 2016" [ref=f5e229] [cursor=pointer]:
+            - generic [ref=f5e231]: Cruise Bruiser
+            - generic [ref=f5e232]: "2016"
+          - button "Honda Motocompo 2024" [ref=f5e233] [cursor=pointer]:
+            - generic [ref=f5e235]: Honda Motocompo
+            - generic [ref=f5e236]: "2024"
+          - button "Fish'd & Chip'd (Scorpion Edition) 2006" [ref=f5e237] [cursor=pointer]:
+            - generic [ref=f5e239]: Fish'd & Chip'd (Scorpion Edition)
+            - generic [ref=f5e240]: "2006"
+          - button "Count Muscula (Batman & Robin Edition) 2014" [ref=f5e241] [cursor=pointer]:
+            - generic [ref=f5e243]: Count Muscula (Batman & Robin Edition)
+            - generic [ref=f5e244]: "2014"
+          - button "X-Raycers RD-06 2025" [ref=f5e245] [cursor=pointer]:
+            - generic [ref=f5e247]: X-Raycers RD-06
+            - generic [ref=f5e248]: "2025"
+          - button "'64 Impala 2003" [ref=f5e249] [cursor=pointer]:
+            - generic [ref=f5e251]: "'64 Impala"
+            - generic [ref=f5e252]: "2003"
+          - button "Ford F-150 Lightning SuperTruck 2025" [ref=f5e253] [cursor=pointer]:
+            - generic [ref=f5e255]: Ford F-150 Lightning SuperTruck
+            - generic [ref=f5e256]: "2025"
+          - button "Rally Speciale 2023" [ref=f5e257] [cursor=pointer]:
+            - generic [ref=f5e259]: Rally Speciale
+            - generic [ref=f5e260]: "2023"
+          - button "Toyota GR86 Cup 2024" [ref=f5e261] [cursor=pointer]:
+            - generic [ref=f5e263]: Toyota GR86 Cup
+            - generic [ref=f5e264]: "2024"
+          - button "Deora III 2019" [ref=f5e265] [cursor=pointer]:
+            - generic [ref=f5e267]: Deora III
+            - generic [ref=f5e268]: "2019"
+          - button "Mod Mill 2024" [ref=f5e269] [cursor=pointer]:
+            - generic [ref=f5e271]: Mod Mill
+            - generic [ref=f5e272]: "2024"
+          - button "Mod Mill 2024" [ref=f5e273] [cursor=pointer]:
+            - generic [ref=f5e275]: Mod Mill
+            - generic [ref=f5e276]: "2024"
+          - button "Gordon Murray Automotive T.33 2025" [ref=f5e277] [cursor=pointer]:
+            - generic [ref=f5e279]: Gordon Murray Automotive T.33
+            - generic [ref=f5e280]: "2025"
+          - button "Hoto Roto 2018" [ref=f5e281] [cursor=pointer]:
+            - generic [ref=f5e283]: Hoto Roto
+            - generic [ref=f5e284]: "2018"
+          - button "Cadillac ATS-V R 2017" [ref=f5e285] [cursor=pointer]:
+            - generic [ref=f5e287]: Cadillac ATS-V R
+            - generic [ref=f5e288]: "2017"
+          - button "La Fasta 2013" [ref=f5e289] [cursor=pointer]:
+            - generic [ref=f5e291]: La Fasta
+            - generic [ref=f5e292]: "2013"
+          - button "Team Hot Wheels Corkscrew Buggy 2013" [ref=f5e293] [cursor=pointer]:
+            - generic [ref=f5e295]: Team Hot Wheels Corkscrew Buggy
+            - generic [ref=f5e296]: "2013"
+          - button "Monster Dairy Delivery 2012" [ref=f5e297] [cursor=pointer]:
+            - generic [ref=f5e299]: Monster Dairy Delivery
+            - generic [ref=f5e300]: "2012"
+          - button "Dodge XP-07 2008" [ref=f5e301] [cursor=pointer]:
+            - generic [ref=f5e303]: Dodge XP-07
+            - generic [ref=f5e304]: "2008"
+          - button "Chill Mill 2015" [ref=f5e305] [cursor=pointer]:
+            - generic [ref=f5e307]: Chill Mill
+            - generic [ref=f5e308]: "2015"
+        - complementary [ref=f5e309]:
+          - generic [ref=f5e310]:
+            - generic [ref=f5e311]: "68"
+            - generic [ref=f5e312]: cars in the collection
+          - paragraph [ref=f5e313]: Arrivals
+          - table [ref=f5e314]:
+            - rowgroup [ref=f5e315]:
+              - row [ref=f5e316]:
+                - rowheader "2026" [ref=f5e317]
+                - cell "2" [ref=f5e318]
+              - row [ref=f5e320]:
+                - rowheader "2025" [ref=f5e321]
+                - cell "38" [ref=f5e322]
+              - row [ref=f5e324]:
+                - rowheader "2024" [ref=f5e325]
+                - cell "23" [ref=f5e326]
+              - row [ref=f5e328]:
+                - rowheader "2018" [ref=f5e329]
+                - cell "1" [ref=f5e330]
+              - row [ref=f5e332]:
+                - rowheader "2017" [ref=f5e333]
+                - cell "3" [ref=f5e334]
+              - row [ref=f5e336]:
+                - rowheader "2016" [ref=f5e337]
+                - cell "1" [ref=f5e338]
+          - generic [ref=f5e340]:
+            - paragraph [ref=f5e341]: For sale
+            - paragraph [ref=f5e342]:
+              - strong [ref=f5e343]: ABSOLUTELY NOTHING.
+              - text: Every Hot Wheels stays. Enquiries will be read, appreciated, and declined.
+  - contentinfo [ref=f5e344]:
+    - generic [ref=f5e345]: Set in Bodoni & Source Serif
+    - generic [ref=f5e346]: Printed in Jaipur
+    - link "RSS" [ref=f5e348] [cursor=pointer]:
+      - /url: /rss.xml

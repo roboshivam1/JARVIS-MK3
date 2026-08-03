@@ -46,9 +46,14 @@ from jarvis.common.worker_protocol import (
     WorkerJobResult,
     WorkerJobStarted,
 )
+from jarvis.common.worker_protocol import (
+    WORKER_NEEDS_APPROVAL,
+    WorkerNeedsApproval,
+)
 from jarvis.core.queue.registry import (
     JobContext,
     JobTypeRegistry,
+    PausedForApproval,
     PermanentJobError,
 )
 
@@ -145,6 +150,24 @@ class JobRunner:
             result = spec.output_model.model_validate(
                 output, from_attributes=True
             ).model_dump(mode="json")
+        except PausedForApproval:
+            # Not a failure. The handler wants permission; we relay the
+            # request and stop. The Core raises the gate, pauses the job,
+            # and re-offers it after the owner answers.
+            request = ctx.pending_approval or {}
+            await self._send(WORKER_NEEDS_APPROVAL, WorkerNeedsApproval(
+                job_id=offer.job_id,
+                gate=str(request.get("gate", "unknown")),
+                actor=str(request.get("actor", "subagent.engineer")),
+                tool=str(request.get("tool", "unknown")),
+                summary=str(request.get("summary", "An action needs approval")),
+                detail=str(request.get("detail", "")),
+                risk_note=str(request.get("risk_note", "")),
+            ))
+            log.info("job paused for approval", extra={
+                "job_id": offer.job_id, "tool": request.get("tool"),
+            })
+            return
         except asyncio.CancelledError:
             # The Core asked us to stop; it already knows why.
             await self._report(offer.job_id, "failed",

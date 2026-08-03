@@ -11,9 +11,8 @@
 #                    pending notification
 #   scan approvals - pending gates the owner has not been asked about get
 #                    a pending notification carrying the approval id
-#   deliver        - pending rows go out through the client that owns
-#                    their session. Approval-carrying rows render with
-#                    buttons; the rest render as plain messages.
+#   deliver        - pending rows are judged by POLICY, then sent,
+#                    deferred, or batched into a digest
 #
 # Duplicates are impossible by construction: unique indexes on job_id and
 # approval_id mean a crash mid-scan cannot produce two copies of the same
@@ -22,20 +21,23 @@
 # Delivered messages are recorded as assistant turns, so JARVIS knows
 # what he already told the owner and the owner can reply to it naturally.
 #
-# Phase-2 policy still applies: deliver everything, immediately. Quiet
-# hours, digests, and priority routing replace ONLY the policy decision
-# inside this file - approvals will be the exception that always wakes
-# the owner, which is exactly the sort of rule this choke point exists
-# to make expressible in one place.
+# DEFERRED IS NOT DROPPED. A notification held during quiet hours keeps
+# its pending status and simply is not due yet. Silence must mean
+# "nothing happened", never "something happened and I decided not to
+# say" - the owner cannot tell those apart, and the uncertainty poisons
+# everything else the system tells him.
 # =============================================================================
 
 from __future__ import annotations
 
 import asyncio
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Protocol
+from zoneinfo import ZoneInfo
 
 from jarvis.common.events import Event, EventKind
+from jarvis.common.ids import utc_now
 from jarvis.common.jobs import Job, JobStatus
 from jarvis.common.log import get_logger
 from jarvis.common.notifications import Notification
@@ -46,14 +48,20 @@ from jarvis.core.db.repos.events import EventsRepo
 from jarvis.core.db.repos.jobs import JobsRepo
 from jarvis.core.db.repos.notifications import NotificationsRepo
 from jarvis.core.db.repos.sessions import SessionsRepo
+from jarvis.core.initiative.policy import (
+    Decision,
+    NotificationPolicy,
+    compose_digest,
+)
 
 log = get_logger("core.initiative.notifier")
 
 SOURCE = "core.initiative"
 _POLL_INTERVAL_S = 3.0
 
-# Approvals are the one thing that should reach the owner ahead of
-# everything else: work is paused until he answers.
+# Approvals reach the owner ahead of everything else: work is PAUSED
+# until he answers, so waiting until morning costs more than the
+# interruption does.
 _APPROVAL_PRIORITY = 1
 
 
@@ -71,7 +79,7 @@ class Deliverer(Protocol):
 
 class Notifier:
     """Turns finished work and pending questions into messages that
-    actually reach the owner."""
+    actually reach the owner - at a time he will tolerate."""
 
     def __init__(
         self,
@@ -81,6 +89,8 @@ class Notifier:
         artifacts: ArtifactsRepo,
         events: EventsRepo,
         approvals: ApprovalsRepo | None = None,
+        policy: NotificationPolicy | None = None,
+        tz: ZoneInfo | None = None,
     ) -> None:
         self._jobs = jobs
         self._sessions = sessions
@@ -88,6 +98,11 @@ class Notifier:
         self._artifacts = artifacts
         self._events = events
         self._approvals = approvals
+        # The policy object is SHARED with the Telegram bridge, which
+        # mutates its snooze field via /quiet. Two copies would mean the
+        # snooze silently did nothing.
+        self._policy = policy or NotificationPolicy()
+        self._tz = tz or ZoneInfo("UTC")
         self._deliverers: dict[str, Deliverer] = {}
 
     def register_deliverer(self, client_kind: str, deliverer: Deliverer) -> None:
@@ -117,14 +132,14 @@ class Notifier:
             try:
                 job = await self._jobs.get(job_id)
             except Exception:
-                # A row that fails model validation - a corrupted state
+                # A row that fails model validation - corrupted state
                 # left by two writers racing, say - must not wedge the
                 # scan. Without this, one bad row loops this subsystem
-                # forever at the poll interval and nothing else in the
-                # outbox is ever delivered.
+                # forever and nothing else in the outbox is delivered.
                 log.error("skipping unreadable job row", exc_info=True,
                           extra={"job_id": job_id})
                 continue
+
             if job is None or job.session_id is None:
                 continue
             session = await self._sessions.get(job.session_id)
@@ -176,7 +191,8 @@ class Notifier:
             return 0
 
         queued = 0
-        for approval_id in await self._notifications.approval_ids_awaiting_notification():
+        pending = await self._notifications.approval_ids_awaiting_notification()
+        for approval_id in pending:
             request = await self._approvals.get(approval_id)
             if request is None or not request.is_open:
                 continue
@@ -217,55 +233,115 @@ class Notifier:
     # -- deliver --------------------------------------------------------------
 
     async def deliver_pending(self) -> int:
-        """Send queued notifications through their client surface."""
+        """Send queued notifications, subject to policy."""
         sent = 0
+        now = utc_now()
+        digestible: list[Notification] = []
+
         for note in await self._notifications.pending():
-            deliverer = self._deliverers.get(note.client_kind)
-            if deliverer is None:
-                # Nothing can ever deliver this: settle it rather than
-                # retrying forever.
-                await self._notifications.mark_suppressed(
-                    note.id, f"no client registered for {note.client_kind}"
-                )
+            decision = self._policy.decide(note, now, self._tz)
+
+            if decision is Decision.DEFER:
+                until = self._policy.next_waking_moment(now, self._tz)
+                await self._notifications.defer(note.id, until)
                 await self._events.append(Event(
                     kind=EventKind.INITIATIVE_NOTIFICATION_SUPPRESSED,
                     source=SOURCE, session_id=note.session_id,
                     job_id=note.job_id, trace_id=note.trace_id,
-                    payload={"reason": "no client",
-                             "client_kind": note.client_kind},
+                    payload={"reason": "quiet hours",
+                             "until": until.isoformat()},
                 ))
                 continue
 
-            file_path: Path | None = None
-            file_name: str | None = None
-            if note.artifact_id:
-                artifact = await self._artifacts.get(note.artifact_id)
-                if artifact is not None:
-                    file_path = self._artifacts.path_for(artifact)
-                    file_name = artifact.name
-
-            try:
-                await deliverer.deliver(
-                    note.text, file_path, file_name, note.approval_id
-                )
-            except Exception:
-                # Stays pending: the next cycle tries again. A transient
-                # network failure must not eat the message.
-                log.warning("delivery failed, will retry",
-                            exc_info=True, extra={"notification_id": note.id})
+            if decision is Decision.DIGEST:
+                digestible.append(note)
                 continue
 
+            if await self._send_one(note):
+                sent += 1
+
+        # Batched items go out together once enough accumulate, or once
+        # the oldest has waited long enough. One message about fourteen
+        # things gets read; fourteen buzzes get muted.
+        if digestible:
+            sent += await self._maybe_send_digest(digestible, now)
+
+        return sent
+
+    async def _maybe_send_digest(
+        self, notifications: list[Notification], now: datetime
+    ) -> int:
+        """Send a batch, if there is enough of one yet."""
+        oldest = min(n.ts for n in notifications)
+        window = timedelta(minutes=self._policy.digest_window_minutes)
+        if len(notifications) < 3 and now - oldest < window:
+            return 0        # not enough yet, and not old enough
+
+        deliverer = self._deliverers.get(notifications[0].client_kind)
+        if deliverer is None:
+            return 0
+
+        try:
+            await deliverer.deliver(compose_digest(notifications))
+        except Exception:
+            log.warning("digest delivery failed, will retry", exc_info=True)
+            return 0
+
+        for note in notifications:
             await self._notifications.mark_delivered(note.id)
+        log.info("digest delivered", extra={"count": len(notifications)})
+        return 1
+
+    async def _send_one(self, note: Notification) -> bool:
+        """Deliver one notification. Returns whether it went out.
+
+        Never raises: a failed send leaves the row pending so the next
+        cycle retries it, and a transient network failure must not eat
+        the message.
+        """
+        deliverer = self._deliverers.get(note.client_kind)
+        if deliverer is None:
+            # Nothing can ever deliver this: settle it rather than
+            # retrying forever.
+            await self._notifications.mark_suppressed(
+                note.id, f"no client registered for {note.client_kind}"
+            )
             await self._events.append(Event(
-                kind=EventKind.INITIATIVE_NOTIFICATION_SENT,
+                kind=EventKind.INITIATIVE_NOTIFICATION_SUPPRESSED,
                 source=SOURCE, session_id=note.session_id,
                 job_id=note.job_id, trace_id=note.trace_id,
-                payload={"client_kind": note.client_kind,
-                         "approval": note.approval_id is not None},
+                payload={"reason": "no client",
+                         "client_kind": note.client_kind},
             ))
-            await self._record_as_turn(note)
-            sent += 1
-        return sent
+            return False
+
+        file_path: Path | None = None
+        file_name: str | None = None
+        if note.artifact_id:
+            artifact = await self._artifacts.get(note.artifact_id)
+            if artifact is not None:
+                file_path = self._artifacts.path_for(artifact)
+                file_name = artifact.name
+
+        try:
+            await deliverer.deliver(
+                note.text, file_path, file_name, note.approval_id
+            )
+        except Exception:
+            log.warning("delivery failed, will retry",
+                        exc_info=True, extra={"notification_id": note.id})
+            return False
+
+        await self._notifications.mark_delivered(note.id)
+        await self._events.append(Event(
+            kind=EventKind.INITIATIVE_NOTIFICATION_SENT,
+            source=SOURCE, session_id=note.session_id,
+            job_id=note.job_id, trace_id=note.trace_id,
+            payload={"client_kind": note.client_kind,
+                     "approval": note.approval_id is not None},
+        ))
+        await self._record_as_turn(note)
+        return True
 
     async def _record_as_turn(self, note: Notification) -> None:
         """A delivered notification IS JARVIS speaking, so it belongs in

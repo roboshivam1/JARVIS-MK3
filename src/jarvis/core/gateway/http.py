@@ -35,6 +35,7 @@ from jarvis.core.gateway.auth import BearerAuth
 from jarvis.core.db.repos.artifacts import ArtifactsRepo
 from jarvis.core.db.repos.events import EventsRepo
 from jarvis.core.db.repos.jobs import JobsRepo
+from jarvis.core.approvals.service import ApprovalService
 from jarvis.core.gateway.workers import WorkerConnection
 from jarvis.core.observability.traces import TracesRepo
 from jarvis.core.queue.registry import JobTypeRegistry
@@ -58,6 +59,7 @@ class GatewayDeps:
     events: "EventsRepo | None" = None
     artifacts: "ArtifactsRepo | None" = None
     job_types: "JobTypeRegistry | None" = None
+    approvals: "ApprovalService | None" = None
 
 
 async def build_status_snapshot(deps: GatewayDeps) -> dict[str, Any]:
@@ -127,6 +129,7 @@ def create_app(deps: GatewayDeps) -> FastAPI:
             events=deps.events,
             artifacts=deps.artifacts,
             job_types=deps.job_types,
+            approvals=deps.approvals,
         )
         await connection.run()
 

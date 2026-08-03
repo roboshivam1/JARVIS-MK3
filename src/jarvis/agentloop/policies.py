@@ -80,7 +80,12 @@ DEFAULT_POLICIES: dict[str, ActorPolicy] = {
     WRITER: ActorPolicy(
         actor=WRITER,
         tools=("artifact_*", "render_*"),
-        description="CALLIOPE. Produces documents and rendered output.",
+        description=(
+            "CALLIOPE. Reads source material and produces documents. "
+            "Reads and writes artifacts only - no browser, no shell, no "
+            "network. The narrowest surface of any subagent, because "
+            "writing needs nothing else."
+        ),
     ),
     ARCHIVIST: ActorPolicy(
         actor=ARCHIVIST,
@@ -117,11 +122,17 @@ DEFAULT_GATE_RULES: tuple[GateRule, ...] = (
         reason="posting a message as the owner",
     ),
 
-    # Making something public.
+    # Making something public. Both of these leave the machine and
+    # cannot be taken back, which is exactly what a gate is for.
     GateRule(
         gate=Gate.PUBLISH,
         tool_pattern="git_push",
-        reason="pushing to a remote repository",
+        reason="pushing commits to GitHub",
+    ),
+    GateRule(
+        gate=Gate.PUBLISH,
+        tool_pattern="git_create_repo",
+        reason="creating a new repository on GitHub",
     ),
 
     # Using stored credentials or logging in anywhere.

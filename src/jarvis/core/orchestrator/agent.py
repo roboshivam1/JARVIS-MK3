@@ -42,7 +42,14 @@ from jarvis.common.ids import is_ulid
 from jarvis.common.jobs import Job, JobStatus
 from jarvis.common.settings import CoreSettings
 from jarvis.core.db.repos.events import EventsRepo
+from zoneinfo import ZoneInfo
+
 from jarvis.common.facts import FactCategory
+from jarvis.common.schedules import Schedule, ScheduleKind
+from jarvis.common.watchers import Watcher, WatcherKind
+from jarvis.core.db.repos.schedules import SchedulesRepo
+from jarvis.core.db.repos.watchers import WatchersRepo
+from jarvis.core.initiative.engine import next_cron_time
 from jarvis.core.db.repos.jobs import JobsRepo
 from jarvis.core.memory.service import MemoryService
 from jarvis.core.orchestrator.prompts import assemble_system_prompt
@@ -58,6 +65,7 @@ _SUBAGENT_JOBS: dict[str, str] = {
     "researcher": "research.brief",
     "operator": "browser.task",
     "engineer": "code.task",
+    "writer": "write.document",
 }
 
 
@@ -68,7 +76,7 @@ class _NoArgs(BaseModel):
 class _RunSubagentArgs(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    agent: Literal["researcher", "operator", "engineer"]
+    agent: Literal["researcher", "operator", "engineer", "writer"]
     brief: str = Field(
         min_length=10,
         description=(
@@ -121,6 +129,64 @@ class _MemorySearchArgs(BaseModel):
     k: int = Field(default=6, ge=1, le=15)
 
 
+class _CreateWatcherArgs(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    name: str = Field(
+        min_length=3, max_length=60,
+        description=(
+            "A short descriptive name the owner will recognise weeks "
+            "later, e.g. 'sqonion patent status'. Not 'watcher 1'."
+        ),
+    )
+    kind: Literal["web_page", "spend", "job_health", "idle"]
+    config: dict[str, Any] = Field(
+        description=(
+            "Depends on kind. web_page: {'url': '...'}. "
+            "spend: {'threshold_inr': 200}. "
+            "job_health: {'job_type': 'research.brief', "
+            "'consecutive_failures': 2}. "
+            "idle: {'event_kind': 'session.turn_user', 'max_idle_hours': 72}."
+        ),
+    )
+    priority: int = Field(
+        default=5, ge=0, le=9,
+        description=(
+            "0-2 reaches him at any hour - use only when work is blocked "
+            "or money is involved. 3-5 during waking hours. 6-9 batched "
+            "into a digest, which is right for most page-change watchers."
+        ),
+    )
+    note: str = Field(
+        default="",
+        description=(
+            "What the owner actually asked for, in his words. Sent with "
+            "every notification, so a hit six weeks later still makes "
+            "sense on its own."
+        ),
+    )
+
+
+class _WatcherNameArgs(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    name: str
+
+
+class _ScheduleArgs(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    name: str = Field(min_length=3, max_length=60)
+    cron: str = Field(
+        description=(
+            "Standard cron in the owner's timezone: '30 3 * * *' is "
+            "03:30 daily, '0 9 * * 1' is 09:00 every Monday."
+        ),
+    )
+    job_type: str
+    payload: dict[str, Any] = Field(default_factory=dict)
+
+
 class Orchestrator:
     """JARVIS's front mind: persona + tools + tier, applied per turn."""
 
@@ -133,6 +199,9 @@ class Orchestrator:
         registry: JobTypeRegistry,
         memory: MemoryService,
         guard: Guard | None = None,
+        watchers: "WatchersRepo | None" = None,
+        schedules: "SchedulesRepo | None" = None,
+        tz: "ZoneInfo | None" = None,
     ) -> None:
         self._llm = llm
         self._settings = settings
@@ -141,6 +210,9 @@ class Orchestrator:
         self._registry = registry
         self._memory = memory
         self._guard = guard or create_guard()
+        self._watchers = watchers
+        self._schedules = schedules
+        self._tz = tz or settings.tz
 
     # -- per-turn toolset -----------------------------------------------------
 
@@ -163,7 +235,9 @@ class Orchestrator:
         async def run_subagent(args: _RunSubagentArgs) -> str:
             job_type = _SUBAGENT_JOBS[args.agent]
             # The operator's payload field is "task", not "brief".
-            payload_key = "brief" if args.agent == "researcher" else "task"
+            payload_key = (
+                "brief" if args.agent in ("researcher", "writer") else "task"
+            )
             spec = self._registry.get(job_type)
             if spec is None:
                 return (
@@ -198,7 +272,10 @@ class Orchestrator:
                 "that it needs a worker online. 'engineer' (DAEDALUS) "
                 "writes and runs Python in a sandbox - use for "
                 "calculations, data analysis, charts, and anything where "
-                "the answer should be computed rather than recalled."
+                "the answer should be computed rather than recalled. "
+                "'writer' (CALLIOPE) produces documents - articles, "
+                "reports, long-form pieces. Use when the deliverable is "
+                "the writing itself rather than the research behind it."
             ),
             args_model=_RunSubagentArgs,
             handler=run_subagent,
@@ -313,6 +390,145 @@ class Orchestrator:
             args_model=_MemorySearchArgs,
             handler=memory_search,
         ))
+
+        # -- watchers ---------------------------------------------------------
+        #
+        # The first thing JARVIS creates that OUTLIVES the conversation.
+        # Everything else is a job: it runs, finishes, done. A watcher
+        # persists and acts on its own for months, which is why the tool
+        # asks for a real name and a note about what was wanted.
+        if self._watchers is not None:
+
+            async def create_watcher(args: _CreateWatcherArgs) -> str:
+                created = await self._watchers.create(Watcher(
+                    name=args.name,
+                    kind=WatcherKind(args.kind),
+                    config=args.config,
+                    priority=args.priority,
+                    note=args.note,
+                ))
+                if not created:
+                    return (
+                        f"A watcher named {args.name!r} already exists. "
+                        f"Pick another name, or remove that one first."
+                    )
+                return (
+                    f"Watching: {args.name}. Checked every fifteen minutes. "
+                    f"The first check records a baseline, so the owner will "
+                    f"hear about changes from the second check onward."
+                )
+
+            tools.register(InlineTool(
+                name="create_watcher",
+                description=(
+                    "Keep an eye on something and tell the owner when it "
+                    "changes. Checked every fifteen minutes, indefinitely. "
+                    "Use for standing requests - 'tell me if X changes' - "
+                    "not for one-off checks, which are jobs. Ask what he "
+                    "actually wants to know about if the request is vague: "
+                    "a badly aimed watcher fires uselessly forever."
+                ),
+                args_model=_CreateWatcherArgs,
+                handler=create_watcher,
+            ))
+
+            async def list_watchers(_: _NoArgs) -> str:
+                watchers = await self._watchers.all()
+                if not watchers:
+                    return "Nothing is being watched."
+                lines = []
+                for w in watchers:
+                    state = "on" if w.enabled else "paused"
+                    seen = (
+                        w.last_checked_ts.strftime("%d %b %H:%M")
+                        if w.last_checked_ts else "never"
+                    )
+                    lines.append(
+                        f"{w.name} | {w.kind.value} | {state} | "
+                        f"{w.hit_count} hits | last checked {seen}"
+                    )
+                return "\n".join(lines)
+
+            tools.register(InlineTool(
+                name="list_watchers",
+                description="Everything currently being watched.",
+                args_model=_NoArgs,
+                handler=list_watchers,
+            ))
+
+            async def remove_watcher(args: _WatcherNameArgs) -> str:
+                if await self._watchers.delete(args.name):
+                    return f"Stopped watching {args.name}."
+                return f"No watcher named {args.name!r}."
+
+            tools.register(InlineTool(
+                name="remove_watcher",
+                description="Stop watching something, permanently.",
+                args_model=_WatcherNameArgs,
+                handler=remove_watcher,
+            ))
+
+        # -- schedules --------------------------------------------------------
+        #
+        # Owed since the scheduler was built: the machinery existed but
+        # nothing could create a schedule except boot-time seeding.
+        if self._schedules is not None:
+
+            async def create_schedule(args: _ScheduleArgs) -> str:
+                spec = self._registry.get(args.job_type)
+                if spec is None:
+                    available = ", ".join(s.type for s in self._registry.catalogue())
+                    return (
+                        f"No job type {args.job_type!r}. Available: {available}"
+                    )
+                try:
+                    first = next_cron_time(args.cron, self._tz)
+                except Exception as exc:
+                    return f"That cron expression is not valid: {exc}"
+
+                created = await self._schedules.ensure(Schedule(
+                    name=args.name,
+                    kind=ScheduleKind.CRON,
+                    cron_expr=args.cron,
+                    job_type=args.job_type,
+                    job_payload=args.payload,
+                    next_fire_ts=first,
+                ))
+                if not created:
+                    return f"A schedule named {args.name!r} already exists."
+                return (
+                    f"Scheduled: {args.name}, first run "
+                    f"{first.astimezone(self._tz).strftime('%d %b at %H:%M')}."
+                )
+
+            tools.register(InlineTool(
+                name="create_schedule",
+                description=(
+                    "Run a job repeatedly on a cron schedule. For standing "
+                    "routines - a nightly report, a weekly check. Use a "
+                    "watcher instead when the point is noticing a change."
+                ),
+                args_model=_ScheduleArgs,
+                handler=create_schedule,
+            ))
+
+            async def list_schedules(_: _NoArgs) -> str:
+                schedules = await self._schedules.all()
+                if not schedules:
+                    return "Nothing is scheduled."
+                return "\n".join(
+                    f"{s.name} | {s.job_type} | "
+                    f"{'on' if s.enabled else 'off'} | "
+                    f"next {s.next_fire_ts.astimezone(self._tz).strftime('%d %b %H:%M')}"
+                    for s in schedules
+                )
+
+            tools.register(InlineTool(
+                name="list_schedules",
+                description="Everything on a recurring schedule.",
+                args_model=_NoArgs,
+                handler=list_schedules,
+            ))
 
         return tools
 

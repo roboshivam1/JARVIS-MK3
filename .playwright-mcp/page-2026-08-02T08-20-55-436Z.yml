@@ -1,0 +1,267 @@
+- generic [ref=f3e2]:
+  - banner [ref=f3e3]:
+    - generic [ref=f3e4]:
+      - generic [ref=f3e5]: Vol. I · No. 3
+      - generic [ref=f3e6]: Jaipur · Sunday, 2 August 2026
+      - button "Night edition" [ref=f3e7] [cursor=pointer]
+      - generic [ref=f3e8]: Est. 2026
+    - separator [ref=f3e9]
+    - generic [ref=f3e10]:
+      - generic [ref=f3e11]:
+        - generic [ref=f3e12]: Weather
+        - text: Hazy, hot 39° / 28°
+      - generic [ref=f3e13]:
+        - heading [level=1] [ref=f3e14]:
+          - link "The Basement Gazette" [ref=f3e15] [cursor=pointer]:
+            - /url: /
+        - separator [ref=f3e16]
+        - paragraph [ref=f3e17]: software · hardware · things half-built
+      - generic [ref=f3e18]:
+        - generic [ref=f3e19]: Free
+        - text: ★★★ Late Edition Circulation 11
+    - navigation "Sections" [ref=f3e20]:
+      - link "Front page" [ref=f3e21] [cursor=pointer]:
+        - /url: /
+      - link "Workshop" [ref=f3e22] [cursor=pointer]:
+        - /url: /workshop/
+      - link "Motoring" [ref=f3e23] [cursor=pointer]:
+        - /url: /motoring/
+      - link "Pictures" [ref=f3e24] [cursor=pointer]:
+        - /url: /photography/
+      - link "Lab notes" [ref=f3e25] [cursor=pointer]:
+        - /url: /lab-notes/
+      - link "Op-ed" [ref=f3e26] [cursor=pointer]:
+        - /url: /op-ed/
+      - link "Obituaries" [ref=f3e27] [cursor=pointer]:
+        - /url: /obituaries/
+      - link "Archive" [ref=f3e28] [cursor=pointer]:
+        - /url: /archive/
+      - link "About" [ref=f3e29] [cursor=pointer]:
+        - /url: /about/
+  - main [ref=f3e30]:
+    - table [ref=f3e31]:
+      - caption [ref=f3e32]: Markets · commits this session against the last
+      - rowgroup [ref=f3e33]:
+        - row [ref=f3e34]:
+          - cell "JRVS 11 ▲ 11" [ref=f3e35]
+          - cell "SITE 21 ▲ 11" [ref=f3e36]
+          - cell "SCHL 0 ▬ —" [ref=f3e37]
+          - cell "AIRG 0 ▬ —" [ref=f3e38]
+    - generic [ref=f3e39]:
+      - generic [ref=f3e40]:
+        - paragraph [ref=f3e41]: Lead story · software
+        - heading [level=2] [ref=f3e42]:
+          - link "THE ELECTRIC MOTORCYCLE THAT WON'T COMMIT" [ref=f3e43] [cursor=pointer]:
+            - /url: /software/motorcycle-wont-commit/
+        - paragraph [ref=f3e44]: A dead Pulsar, a scrap-market rescue, and a plan to give one bike a different face whenever the mood strikes
+        - paragraph [ref=f3e45]: By Shivam · 18 Jul 2026
+        - figure "The frame in question" [ref=f3e46]
+        - generic [ref=f3e49]:
+          - paragraph [ref=f3e50]: Jaipur — Most motorcycles are one thing forever. You buy a cruiser and it stays a cruiser until the day it dies in somebody’s backyard. I found this arrangement a little boring, so I went and bought a bike that was already dead and skipped to the interesting part.
+          - paragraph [ref=f3e51]:
+            - text: It’s a Pulsar NS200 frame, rescued from a scrap market on the far side of the city, stripped to its bones and cleaned up until it looked less like a corpse and more like a possibility. Which is the whole point — because I’m not trying to build
+            - emphasis [ref=f3e52]: a
+            - text: bike. I’m trying to build one bike that can be several.
+          - paragraph [ref=f3e53]:
+            - text: The idea is simple and slightly unreasonable. The frame stays. Everything you actually
+            - emphasis [ref=f3e54]: see
+            - text: — the panels, the tank cover, the cowl, the entire personality of the thing — bolts on and off. A scrambler this week. A café racer when I get tired of that. Maybe something low and sharp after. Same machine underneath, wearing whatever it feels like, the way the rest of us change a jacket.
+          - paragraph [ref=f3e55]: I’m printing those bodies myself, one prototype at a time, testing whether my ideas survive contact with an actual frame. (They usually don’t, on the first try. That’s what the prototypes are for.) The first face it’s going to wear is a scrambler — a little rugged, a little bad-mannered, exactly the mood I’m in.
+          - paragraph [ref=f3e56]: There’s a good deal of work left before any of it moves under its own power. But that’s a later problem. For now there’s a clean frame in a workshop that hasn’t decided what it wants to be yet — and honestly, neither have I. Which might be why we get along.
+          - paragraph [ref=f3e57]:
+            - emphasis [ref=f3e58]: More from the workshop as it happens.
+        - paragraph [ref=f3e59]:
+          - link "Continued inside →" [ref=f3e60] [cursor=pointer]:
+            - /url: /software/motorcycle-wont-commit/
+        - separator [ref=f3e61]
+        - generic [ref=f3e62]:
+          - generic [ref=f3e63]:
+            - paragraph [ref=f3e64]: Motoring · car of the issue
+            - generic [ref=f3e67]:
+              - heading "Team Hot Wheels Corkscrew Buggy" [level=3] [ref=f3e68]
+              - table [ref=f3e69]:
+                - rowgroup [ref=f3e70]:
+                  - row [ref=f3e71]:
+                    - rowheader "Issued" [ref=f3e72]
+                    - cell "2013" [ref=f3e73]
+                  - row [ref=f3e74]:
+                    - rowheader "Acquired" [ref=f3e75]
+                    - cell "December 2017" [ref=f3e76]
+                  - row [ref=f3e77]:
+                    - rowheader "Scale" [ref=f3e78]
+                    - cell "1:64" [ref=f3e79]
+                  - row [ref=f3e80]:
+                    - rowheader "Series" [ref=f3e81]
+                    - cell "HW Stunt- Road Rally" [ref=f3e82]
+              - paragraph [ref=f3e83]: Designed to perform a world-record corkscrew jump. Your bookshelf remains unconvinced, though the ambition is appreciated.
+              - paragraph [ref=f3e84]:
+                - link "View the complete collection →" [ref=f3e85] [cursor=pointer]:
+                  - /url: /motoring/
+          - generic [ref=f3e86]:
+            - paragraph [ref=f3e87]: op ed
+            - heading [level=3] [ref=f3e88]:
+              - link "Engineers Need Better Taste" [ref=f3e89] [cursor=pointer]:
+                - /url: /op-ed/engineers-need-taste/
+            - paragraph [ref=f3e90]: They need one fewer docmuentation
+            - paragraph [ref=f3e91]: 19 Jul 2026
+        - separator [ref=f3e92]
+        - generic [ref=f3e93]:
+          - generic [ref=f3e94]:
+            - paragraph [ref=f3e95]: op ed
+            - heading [level=3] [ref=f3e96]:
+              - link "The Strangest Kind of Property" [ref=f3e97] [cursor=pointer]:
+                - /url: /op-ed/strangest-property/
+            - paragraph [ref=f3e98]: What's the capital investment for that?
+            - paragraph [ref=f3e99]: 31 Jul 2026
+          - figure "Picked up from a scrap shop. whatever suited the eye." [ref=f3e100]:
+            - paragraph [ref=f3e101]: Pictures
+            - paragraph [ref=f3e104]:
+              - link "More frames →" [ref=f3e105] [cursor=pointer]:
+                - /url: /photography/
+        - separator [ref=f3e106]
+        - generic [ref=f3e108]:
+          - paragraph [ref=f3e109]: op ed
+          - heading [level=3] [ref=f3e110]:
+            - link "The Workshop Must Get Bigger" [ref=f3e111] [cursor=pointer]:
+              - /url: /op-ed/workshop-gets-bigger/
+          - paragraph [ref=f3e112]: Peace means having a bigger stick than the other guy. But what's bigger than the big stick?
+          - paragraph [ref=f3e113]: 25 Jul 2026
+      - complementary [ref=f3e114]:
+        - paragraph [ref=f3e115]: Column one
+        - heading [level=3] [ref=f3e116]:
+          - link "The last version?(apparently)" [ref=f3e117] [cursor=pointer]:
+            - /url: /lab-notes/mk3-is-starting/
+        - paragraph [ref=f3e118]: not adding -final to my directory names from now on.
+        - paragraph [ref=f3e119]: 29 Jul 2026
+        - generic [ref=f3e120]:
+          - paragraph [ref=f3e121]: Jaipur — Six month ago I named a folder JARVIS-MK2-final
+          - paragraph [ref=f3e122]: I genuinely believed it.
+          - paragraph [ref=f3e123]: I had planned to make the core assistant, add some features, keep adding a feature or two here and there. I thought I had known what JARVIS was supposed to be.
+          - paragraph [ref=f3e124]: Turns out I had only figured out what that version of me wanted it to be.
+          - paragraph [ref=f3e125]: Today I am sketching out JARVIS MK3, and it shares surprisingly little with MK2. Different architecture. Different philosophy. Different goals.
+          - paragraph [ref=f3e126]: Funny how projects evolve. You don’t just rewrite code—you rewrite assumptions.
+          - paragraph [ref=f3e127]: I’ve stopped trying to build the “final version.” That phrase ages horribly.
+          - paragraph [ref=f3e128]: I guess its just about reaching a point every now and then where I look at my old “Perfect version” and quietly smile before deleting half of the code.
+        - paragraph [ref=f3e129]:
+          - link "Continued inside →" [ref=f3e130] [cursor=pointer]:
+            - /url: /lab-notes/mk3-is-starting/
+        - generic [ref=f3e131]:
+          - paragraph [ref=f3e132]: Crossword no. 01
+          - button "Enlarge crossword no. 1" [ref=f3e133]:
+            - img "Crossword grid, 11 by 11" [ref=f3e134]:
+              - generic [ref=f3e135]: "1"
+              - generic [ref=f3e137]: "2"
+              - generic [ref=f3e143]: "3"
+              - generic [ref=f3e146]: "4"
+              - generic [ref=f3e155]: "5"
+              - generic [ref=f3e160]: "6"
+              - generic [ref=f3e168]: "7"
+              - generic [ref=f3e176]: "8"
+          - generic [ref=f3e183]:
+            - generic [ref=f3e184]:
+              - paragraph [ref=f3e185]: Across
+              - list [ref=f3e186]:
+                - listitem [ref=f3e187]: 2 An AI that does more than chat (5)
+                - listitem [ref=f3e188]: 4 The currency of every LLM (5)
+                - listitem [ref=f3e189]: 5 An AI that listens instead of speaks (7)
+                - listitem [ref=f3e190]: 7 What every chatbot claims to have (6)
+                - listitem [ref=f3e191]: 8 Hidden beneath the model (6)
+            - generic [ref=f3e192]:
+              - paragraph [ref=f3e193]: Down
+              - list [ref=f3e194]:
+                - listitem [ref=f3e195]: 1 Direction with magnitude (6)
+                - listitem [ref=f3e196]: 3 Google's AI family (6)
+                - listitem [ref=f3e197]: 6 Instructions for a very literal machine (6)
+          - paragraph [ref=f3e198]:
+            - link "Enlarge & solve →" [ref=f3e199] [cursor=pointer]:
+              - /url: "#"
+        - figure "JARVIS files its first correction." [ref=f3e200]:
+          - paragraph [ref=f3e201]: The cartoon
+          - generic [ref=f3e202]:
+            - paragraph [ref=f3e203]: The cartoonist has not filed.
+            - paragraph [ref=f3e204]: This space is held for a drawing that does not exist yet. The editor declines to fill it with anything he did not draw.
+      - complementary [ref=f3e206]:
+        - generic [ref=f3e207]:
+          - paragraph [ref=f3e208]: Inside today
+          - link "lab notes 3" [ref=f3e209] [cursor=pointer]:
+            - /url: /lab-notes/
+            - generic [ref=f3e210]: lab notes
+            - generic [ref=f3e212]: "3"
+          - link "obituaries 3" [ref=f3e213] [cursor=pointer]:
+            - /url: /obituaries/
+            - generic [ref=f3e214]: obituaries
+            - generic [ref=f3e216]: "3"
+          - link "op ed 3" [ref=f3e217] [cursor=pointer]:
+            - /url: /op-ed/
+            - generic [ref=f3e218]: op ed
+            - generic [ref=f3e220]: "3"
+          - link "software 1" [ref=f3e221] [cursor=pointer]:
+            - /url: /software/
+            - generic [ref=f3e222]: software
+            - generic [ref=f3e224]: "1"
+          - link "workshop 6" [ref=f3e225] [cursor=pointer]:
+            - /url: /workshop/
+            - generic [ref=f3e226]: workshop
+            - generic [ref=f3e228]: "6"
+        - generic [ref=f3e229]:
+          - paragraph [ref=f3e230]: The critic recommends
+          - paragraph [ref=f3e231]: At the pictures
+          - paragraph [ref=f3e232]: Smallville
+          - paragraph [ref=f3e233]: Alfred Gough · 2001
+          - paragraph [ref=f3e234]: Based on the story of Clark Kent's teenage years before becoming Superman. Really cool balance in multiple story aspects.
+          - paragraph [ref=f3e235]:
+            - link "More of the editor's picks →" [ref=f3e236] [cursor=pointer]:
+              - /url: /culture/
+        - paragraph [ref=f3e237]: On the bench
+        - list [ref=f3e238]:
+          - listitem [ref=f3e239]:
+            - link "JARVIS MK-2" [ref=f3e240] [cursor=pointer]:
+              - /url: /workshop/jarvis-mk2/
+            - text: in progress · Python, macOS
+          - listitem [ref=f3e241]:
+            - link "School Content Engine" [ref=f3e242] [cursor=pointer]:
+              - /url: /workshop/school_content/
+            - text: shipped · Python, LLM agents
+          - listitem [ref=f3e243]:
+            - link "The E-Bike" [ref=f3e244] [cursor=pointer]:
+              - /url: /workshop/ebike/
+            - text: in progress · CAD, 3D printing
+          - listitem [ref=f3e245]:
+            - link "AI Dialogue Reel Generator" [ref=f3e246] [cursor=pointer]:
+              - /url: /workshop/paheli-boojho/
+            - text: shipped · Python, LLM Pipelines
+        - paragraph [ref=f3e247]: In brief
+        - list [ref=f3e248]:
+          - listitem [ref=f3e249]:
+            - link "Assembly of the first Headlight Cowl prototype" [ref=f3e250] [cursor=pointer]:
+              - /url: /lab-notes/headlight-proto-assembly/
+            - text: 21 Jul 2026
+          - listitem [ref=f3e251]:
+            - link "What's this site?" [ref=f3e252] [cursor=pointer]:
+              - /url: /lab-notes/site-birth/
+            - text: 19 Jul 2026
+          - listitem [ref=f3e253]:
+            - link "A Gemini Api Key (2025-2026)" [ref=f3e254] [cursor=pointer]:
+              - /url: /obituaries/gemini-api-key/
+            - text: 2 Aug 2026
+          - listitem [ref=f3e255]:
+            - link "ACE - Air Cleansing Entity" [ref=f3e256] [cursor=pointer]:
+              - /url: /workshop/ace/
+            - text: 28 Jan 2023
+          - listitem [ref=f3e257]:
+            - link "Monopoly Jaipur Edn Management System" [ref=f3e258] [cursor=pointer]:
+              - /url: /workshop/monopoly-jaipur/
+            - text: 3 Apr 2025
+        - generic [ref=f3e259]:
+          - paragraph [ref=f3e260]: Classifieds
+          - paragraph [ref=f3e261]:
+            - strong [ref=f3e262]: "WANTED:"
+            - text: interesting problems. Available for consulting on AI systems, internal tooling, and anything that needs both a soldering iron and a terminal.
+            - link "Write to the editor" [ref=f3e263] [cursor=pointer]:
+              - /url: /about/
+            - text: .
+  - contentinfo [ref=f3e264]:
+    - generic [ref=f3e265]: Set in Bodoni & Source Serif
+    - generic [ref=f3e266]: Printed in Jaipur
+    - link "RSS" [ref=f3e268] [cursor=pointer]:
+      - /url: /rss.xml

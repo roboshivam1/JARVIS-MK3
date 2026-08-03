@@ -1,0 +1,9 @@
+{
+  "author_name": "JARVIS",
+  "author_email": "jarvis@shivamkapoor.dev",
+  "coauthor_trailer": true,
+  "allow_create": false,
+  "repos": {
+    "roboshivam1/JARVIS-MK3": { "write": false }
+  }
+}

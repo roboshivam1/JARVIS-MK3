@@ -98,6 +98,22 @@ class CoreSettings(CommonSettings):
     # day, early enough to be done before morning.
     sleep_cycle_cron: str = "30 3 * * *"
 
+    # -- Backups -------------------------------------------------------------
+
+    # When the nightly backup runs. After the sleep cycle, so the day's
+    # consolidated memory is included rather than missed by an hour.
+    backup_cron: str = "0 4 * * *"
+
+    # How many days of local backups to keep.
+    backup_retention_days: int = 7
+
+    # Optional off-site command, run after each backup with {path}
+    # replaced by the backup directory. Local copies protect against
+    # mistakes; only this protects against a dead disk. Examples:
+    #   rclone copy {path} remote:jarvis-backups/
+    #   scp -r {path} user@vps:/backups/
+    backup_command: str = ""
+
     # Hosted provider: only needed when embedder_provider is "voyage".
     voyage_api_key: SecretStr | None = None
 

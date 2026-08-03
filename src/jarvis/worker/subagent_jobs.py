@@ -23,6 +23,9 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from jarvis.agentloop.mcp_client import McpHost
 from jarvis.agentloop.policies import ENGINEER, OPERATOR, create_guard
+from jarvis.common.capabilities import Gate
+from jarvis.core.queue.registry import PausedForApproval
+from jarvis.worker.git.operations import GitOperations
 from jarvis.agentloop.toolset import InlineTool, Toolset
 from jarvis.jobs.code import CodeTaskIn, CodeTaskOut
 from jarvis.subagents.engineer import run_engineer
@@ -42,10 +45,38 @@ from jarvis.subagents.operator import run_operator
 log = get_logger("worker.subagent_jobs")
 
 
+def _needs_approval(
+    ctx: JobContext,
+    gate: Gate,
+    tool: str,
+    summary: str,
+    detail: str,
+    risk_note: str,
+) -> PausedForApproval:
+    """Build the exception that pauses a job for the owner's say-so.
+
+    The request itself is raised through the job result rather than
+    written directly: a WORKER cannot reach the Core's database, so it
+    reports what it needs and the Core creates the approval. Returning
+    the exception rather than raising it keeps the call site readable
+    as `raise _needs_approval(...)`.
+    """
+    ctx.pending_approval = {
+        "gate": gate.value,
+        "actor": ENGINEER,
+        "tool": tool,
+        "summary": summary,
+        "detail": detail,
+        "risk_note": risk_note,
+    }
+    return PausedForApproval(summary)
+
+
 def register_subagent_jobs(
     registry: JobTypeRegistry,
     llm: LLMLayer,
     mcp: McpHost,
+    git_ops: "GitOperations | None" = None,
 ) -> None:
     """Register subagent job handlers on the worker."""
     guard = create_guard()
@@ -171,6 +202,110 @@ def register_subagent_jobs(
             return f"Saved {args.filename} for the owner."
 
         toolset = Toolset(guard=guard, actor=ENGINEER)
+
+        # -- git tools, when configured ---------------------------------------
+        #
+        # Registered only if there is a token and an allowlist. A worker
+        # without git configuration simply has no git tools, which the
+        # model discovers by not seeing them rather than by being told
+        # about a capability it cannot use.
+        if git_ops is not None:
+            class _RepoArgs(BaseModel):
+                model_config = ConfigDict(extra="forbid")
+                repo: str = Field(description="owner/name, e.g. 'you/project'")
+
+            class _CommitArgs(BaseModel):
+                model_config = ConfigDict(extra="forbid")
+                repo: str
+                message: str = Field(min_length=3)
+
+            class _CreateRepoArgs(BaseModel):
+                model_config = ConfigDict(extra="forbid")
+                name: str = Field(min_length=1)
+                description: str = ""
+                private: bool = True
+
+            async def git_clone(args: _RepoArgs) -> str:
+                return (await git_ops.clone(args.repo)).summary()
+
+            async def git_status(args: _RepoArgs) -> str:
+                return (await git_ops.status(args.repo)).summary()
+
+            async def git_commit(args: _CommitArgs) -> str:
+                return (await git_ops.commit(args.repo, args.message)).summary()
+
+            async def git_push(args: _RepoArgs) -> str:
+                # THE GATE. Everything built since the guard - the
+                # approval service, the Telegram buttons - exists for
+                # this line. The job pauses here and resumes only if the
+                # owner taps approve, possibly hours later.
+                if not ctx.approval_granted:
+                    status = await git_ops.status(args.repo)
+                    await ctx.save_checkpoint({
+                        "pending": "push", "repo": args.repo,
+                    })
+                    raise _needs_approval(
+                        ctx=ctx,
+                        gate=Gate.PUBLISH,
+                        tool="git_push",
+                        summary=f"Push commits to {args.repo}",
+                        detail=(
+                            f"Repository: {args.repo}\n\n"
+                            f"Local state:\n{status.summary()[:1500]}"
+                        ),
+                        risk_note="This publishes to GitHub and cannot be undone.",
+                    )
+                return (await git_ops.push(args.repo)).summary()
+
+            async def git_create_repo(args: _CreateRepoArgs) -> str:
+                if not ctx.approval_granted:
+                    await ctx.save_checkpoint({
+                        "pending": "create_repo", "name": args.name,
+                    })
+                    raise _needs_approval(
+                        ctx=ctx,
+                        gate=Gate.PUBLISH,
+                        tool="git_create_repo",
+                        summary=f"Create repository {args.name}",
+                        detail=(
+                            f"Name: {args.name}\n"
+                            f"Visibility: {'private' if args.private else 'PUBLIC'}\n"
+                            f"Description: {args.description or '(none)'}"
+                        ),
+                        risk_note=(
+                            "Creates a new repository on the owner's GitHub "
+                            "account."
+                        ),
+                    )
+                return (await git_ops.create_repo(
+                    args.name, args.description, args.private
+                )).summary()
+
+            for name, description, model, handler in (
+                ("git_clone",
+                 "Clone or update an allowlisted repository into the local "
+                 "workspace. Do this before reading or changing anything.",
+                 _RepoArgs, git_clone),
+                ("git_status",
+                 "Show uncommitted changes and the current branch.",
+                 _RepoArgs, git_status),
+                ("git_commit",
+                 "Stage everything and commit locally. Nothing leaves the "
+                 "machine until a push.",
+                 _CommitArgs, git_commit),
+                ("git_push",
+                 "Push commits to GitHub. PAUSES for the owner's approval.",
+                 _RepoArgs, git_push),
+                ("git_create_repo",
+                 "Create a new GitHub repository. PAUSES for approval. "
+                 "Private unless told otherwise.",
+                 _CreateRepoArgs, git_create_repo),
+            ):
+                toolset.register(InlineTool(
+                    name=name, description=description,
+                    args_model=model, handler=handler,
+                ))
+
         toolset.register(InlineTool(
             name="sandbox_run_python",
             description=(

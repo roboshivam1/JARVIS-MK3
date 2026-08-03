@@ -48,6 +48,13 @@ class WorkerSettings(CommonSettings):
     # that a human is also using.
     max_concurrency: int = 2
 
+    # GitHub token, for the git capability. Empty disables git entirely.
+    # A fine-grained token scoped to the specific repos in git.json is
+    # much better than a classic token with blanket access - the
+    # allowlist narrows what the agent uses, but the token decides what
+    # is reachable at all if anything goes wrong.
+    github_token: SecretStr = SecretStr("")
+
     @property
     def capabilities(self) -> list[str]:
         """The capability tags this worker advertises."""

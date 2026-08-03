@@ -1,0 +1,65 @@
+- generic [ref=f5e2]:
+  - banner [ref=f5e3]:
+    - generic [ref=f5e4]:
+      - generic [ref=f5e5]: Vol. I · No. 3
+      - generic [ref=f5e6]: Jaipur · Sunday, 2 August 2026
+      - button "Night edition" [ref=f5e7] [cursor=pointer]
+      - generic [ref=f5e8]: Est. 2026
+    - separator [ref=f5e9]
+    - generic [ref=f5e10]:
+      - generic [ref=f5e11]:
+        - generic [ref=f5e12]: Weather
+        - text: Hazy, hot 39° / 28°
+      - generic [ref=f5e13]:
+        - heading [level=1] [ref=f5e14]:
+          - link "The Basement Gazette" [ref=f5e15] [cursor=pointer]:
+            - /url: /
+        - separator [ref=f5e16]
+        - paragraph [ref=f5e17]: software · hardware · things half-built
+      - generic [ref=f5e18]:
+        - generic [ref=f5e19]: Free
+        - text: ★★★ Late Edition Circulation 11
+    - navigation "Sections" [ref=f5e20]:
+      - link "Front page" [ref=f5e21] [cursor=pointer]:
+        - /url: /
+      - link "Workshop" [ref=f5e22] [cursor=pointer]:
+        - /url: /workshop/
+      - link "Motoring" [ref=f5e23] [cursor=pointer]:
+        - /url: /motoring/
+      - link "Pictures" [ref=f5e24] [cursor=pointer]:
+        - /url: /photography/
+      - link "Lab notes" [ref=f5e25] [cursor=pointer]:
+        - /url: /lab-notes/
+      - link "Op-ed" [ref=f5e26] [cursor=pointer]:
+        - /url: /op-ed/
+      - link "Obituaries" [ref=f5e27] [cursor=pointer]:
+        - /url: /obituaries/
+      - link "Archive" [ref=f5e28] [cursor=pointer]:
+        - /url: /archive/
+      - link "About" [ref=f5e29] [cursor=pointer]:
+        - /url: /about/
+  - main [ref=f5e30]:
+    - generic [ref=f5e31]:
+      - paragraph [ref=f5e32]: lab notes
+      - paragraph [ref=f5e33]: Short. Unfinished. Written the same day the thing happened.
+      - list [ref=f5e34]:
+        - listitem [ref=f5e35]:
+          - link "The last version?(apparently)" [ref=f5e36] [cursor=pointer]:
+            - /url: /lab-notes/mk3-is-starting/
+          - paragraph [ref=f5e37]: not adding -final to my directory names from now on.
+          - text: 29 Jul 2026
+        - listitem [ref=f5e38]:
+          - link "Assembly of the first Headlight Cowl prototype" [ref=f5e39] [cursor=pointer]:
+            - /url: /lab-notes/headlight-proto-assembly/
+          - paragraph [ref=f5e40]: 3d prints, foglamps and fevikwik
+          - text: 21 Jul 2026
+        - listitem [ref=f5e41]:
+          - link "What's this site?" [ref=f5e42] [cursor=pointer]:
+            - /url: /lab-notes/site-birth/
+          - paragraph [ref=f5e43]: a portfolio? a blog? something else?
+          - text: 19 Jul 2026
+  - contentinfo [ref=f5e44]:
+    - generic [ref=f5e45]: Set in Bodoni & Source Serif
+    - generic [ref=f5e46]: Printed in Jaipur
+    - link "RSS" [ref=f5e48] [cursor=pointer]:
+      - /url: /rss.xml

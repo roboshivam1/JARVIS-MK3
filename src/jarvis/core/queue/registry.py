@@ -63,6 +63,11 @@ class JobContext:
     # paused for permission check this on resume to know they may now
     # proceed with the action that was blocked.
     approval_granted: bool = False
+    # Set by a handler just before it raises PausedForApproval, holding
+    # the gate details. The executor reads it and gets the request to
+    # wherever approvals actually live - the database on the Core, a
+    # protocol message from a worker.
+    pending_approval: dict[str, Any] | None = None
 
 
 # A core-executable handler: validated payload in, output model back.

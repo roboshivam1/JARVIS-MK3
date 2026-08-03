@@ -44,6 +44,8 @@ from jarvis.core.db.repos.notifications import NotificationsRepo
 from jarvis.core.db.repos.facts import FactsRepo
 from jarvis.core.db.repos.approvals import ApprovalsRepo
 from jarvis.core.db.repos.schedules import SchedulesRepo
+from jarvis.common.ids import utc_now
+from jarvis.core.db.repos.watchers import WatchersRepo
 from jarvis.core.approvals.service import ApprovalService
 from jarvis.common.schedules import Schedule, ScheduleKind
 from jarvis.core.initiative.engine import InitiativeEngine, next_cron_time
@@ -55,6 +57,7 @@ from jarvis.core.observability.traces import TracesRepo, make_db_trace_sink
 from jarvis.core.queue.coreworker import CoreWorker
 from jarvis.core.queue.dispatcher import ReclaimLoop
 from jarvis.core.queue.registry import JobTypeRegistry
+from jarvis.core.initiative.policy import NotificationPolicy
 from jarvis.core.queue.registry_workers import WorkerRegistry
 # Importing the protocol registers its envelope kinds.
 import jarvis.common.worker_protocol  # noqa: F401
@@ -133,9 +136,14 @@ class CoreApp:
             self.settings.tz, self.registry,
         )
         self.notifications = NotificationsRepo(self.db)
+        # One policy object, shared: /quiet mutates it and the notifier
+        # reads it. Two copies would mean the snooze silently did
+        # nothing.
+        self.policy = NotificationPolicy()
         self.notifier = Notifier(
             self.jobs, self.sessions, self.notifications,
             self.artifacts, self.events, self.approvals,
+            policy=self.policy, tz=self.settings.tz,
         )
 
         await self._recover()
@@ -161,6 +169,30 @@ class CoreApp:
             ),
         ))
 
+        # Watchers tick every fifteen minutes. Frequent enough to be
+        # useful, infrequent enough that a dozen watchers cost nothing.
+        await self.schedules.ensure(Schedule(
+            name="nightly backup",
+            kind=ScheduleKind.CRON,
+            cron_expr=self.settings.backup_cron,
+            job_type="system.backup",
+            job_payload={"reason": "scheduled"},
+            priority=8,
+            next_fire_ts=next_cron_time(
+                self.settings.backup_cron, self.settings.tz
+            ),
+        ))
+
+        await self.schedules.ensure(Schedule(
+            name="watcher tick",
+            kind=ScheduleKind.INTERVAL,
+            interval_s=900,
+            job_type="watch.check",
+            job_payload={"reason": "scheduled"},
+            priority=7,
+            next_fire_ts=utc_now(),
+        ))
+
         # Memory: an embedder (local or hosted, per config), the fact
         # vault, and the standing profile document.
         self.memory = MemoryService(
@@ -183,6 +215,18 @@ class CoreApp:
         register_browser_job_metadata(self.registry)
         register_code_job_metadata(self.registry)
         
+        from jarvis.jobs.backup import register_backup_jobs
+        from jarvis.jobs.watch import register_watch_jobs
+        from jarvis.jobs.writing import register_writing_jobs
+        register_writing_jobs(self.registry, self.llm, self.artifacts)
+
+        register_backup_jobs(self.registry, self.settings)
+        self.watchers = WatchersRepo(self.db)
+        register_watch_jobs(
+            self.registry, self.watchers, self.notifications,
+            self.events, self.traces,
+        )
+
         register_maintenance_jobs(
             self.registry, self.llm, self.memory, FactsRepo(self.db),
             self.sessions, self.profile, self.events,
@@ -191,6 +235,8 @@ class CoreApp:
         orchestrator = Orchestrator(
             self.llm, self.settings, self.jobs, self.events,
             self.registry, self.memory,
+            watchers=self.watchers, schedules=self.schedules,
+            tz=self.settings.tz,
         )
         self.session_mgr = SessionManager(
             self.sessions, self.events, orchestrator,
@@ -208,6 +254,7 @@ class CoreApp:
             events=self.events,
             artifacts=self.artifacts,
             job_types=self.registry,
+            approvals=self.approval_service,
         )
 
         # Telegram bridge, only if configured.
@@ -221,6 +268,7 @@ class CoreApp:
                 status_provider=lambda: build_status_snapshot(self.gateway_deps),  # type: ignore[arg-type]
                 approval_service=self.approval_service,
                 approvals_repo=self.approvals,
+                policy=self.policy, tz=self.settings.tz,
             )
         # The bridge is now also a delivery surface for unprompted
             # messages, not just a request/response client.

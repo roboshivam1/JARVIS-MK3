@@ -11,6 +11,9 @@
 
 from __future__ import annotations
 
+import json
+from datetime import datetime
+
 import aiosqlite
 
 from jarvis.common.ids import utc_now
@@ -36,8 +39,8 @@ class NotificationsRepo:
                 "INSERT INTO notifications "
                 "(id, ts, priority, status, client_kind, text, session_id, "
                 " job_id, artifact_id, approval_id, delivered_ts, "
-                " suppress_reason, trace_id) "
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                " suppress_reason, trace_id, not_before, digest_of) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 (
                     notification.id, notification.ts.isoformat(),
                     notification.priority, notification.status.value,
@@ -47,6 +50,9 @@ class NotificationsRepo:
                     notification.delivered_ts.isoformat()
                         if notification.delivered_ts else None,
                     notification.suppress_reason, notification.trace_id,
+                    notification.not_before.isoformat()
+                        if notification.not_before else None,
+                    json.dumps(notification.digest_of),
                 ),
             )
             return True
@@ -54,12 +60,26 @@ class NotificationsRepo:
             return False
 
     async def pending(self, limit: int = 20) -> list[Notification]:
-        """Undelivered notifications, oldest first."""
+        """Undelivered notifications that are DUE, oldest first.
+
+        A notification held by policy keeps its pending status and
+        simply is not due yet - which is how deferral avoids being
+        deletion.
+        """
         rows = await self._db.query(
-            "SELECT * FROM notifications WHERE status = ? ORDER BY id ASC LIMIT ?",
-            (NotificationStatus.PENDING.value, limit),
+            "SELECT * FROM notifications WHERE status = ? "
+            "AND (not_before IS NULL OR not_before <= ?) "
+            "ORDER BY id ASC LIMIT ?",
+            (NotificationStatus.PENDING.value, utc_now().isoformat(), limit),
         )
         return [self._to_notification(r) for r in rows]
+
+    async def defer(self, notification_id: str, until: datetime) -> None:
+        """Hold a notification until a later moment."""
+        await self._db.execute(
+            "UPDATE notifications SET not_before = ? WHERE id = ?",
+            (until.isoformat(), notification_id),
+        )
 
     async def mark_delivered(self, notification_id: str) -> None:
         await self._db.execute(
@@ -119,6 +139,8 @@ class NotificationsRepo:
             "job_id": row["job_id"],
             "artifact_id": row["artifact_id"],
             "approval_id": row["approval_id"],
+            "not_before": row["not_before"],
+            "digest_of": json.loads(row["digest_of"] or "[]"),
             "delivered_ts": row["delivered_ts"],
             "suppress_reason": row["suppress_reason"],
             "trace_id": row["trace_id"],

@@ -7,4 +7,5 @@ __pycache__/
 
 secret.txt
 data/
-.playwright-mcp/
+.playwright-mcp/git.json
+data/git-workspace/

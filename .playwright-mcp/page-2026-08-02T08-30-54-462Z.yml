@@ -1,0 +1,86 @@
+- generic [ref=f4e2]:
+  - banner [ref=f4e3]:
+    - generic [ref=f4e4]:
+      - generic [ref=f4e5]: Vol. I · No. 3
+      - generic [ref=f4e6]: Jaipur · Sunday, 2 August 2026
+      - button "Night edition" [ref=f4e7] [cursor=pointer]
+      - generic [ref=f4e8]: Est. 2026
+    - separator [ref=f4e9]
+    - generic [ref=f4e10]:
+      - generic [ref=f4e11]:
+        - generic [ref=f4e12]: Weather
+        - text: Hazy, hot 39° / 28°
+      - generic [ref=f4e13]:
+        - heading [level=1] [ref=f4e14]:
+          - link "The Basement Gazette" [ref=f4e15] [cursor=pointer]:
+            - /url: /
+        - separator [ref=f4e16]
+        - paragraph [ref=f4e17]: software · hardware · things half-built
+      - generic [ref=f4e18]:
+        - generic [ref=f4e19]: Free
+        - text: ★★★ Late Edition Circulation 11
+    - navigation "Sections" [ref=f4e20]:
+      - link "Front page" [ref=f4e21] [cursor=pointer]:
+        - /url: /
+      - link "Workshop" [ref=f4e22] [cursor=pointer]:
+        - /url: /workshop/
+      - link "Motoring" [ref=f4e23] [cursor=pointer]:
+        - /url: /motoring/
+      - link "Pictures" [ref=f4e24] [cursor=pointer]:
+        - /url: /photography/
+      - link "Lab notes" [ref=f4e25] [cursor=pointer]:
+        - /url: /lab-notes/
+      - link "Op-ed" [ref=f4e26] [cursor=pointer]:
+        - /url: /op-ed/
+      - link "Obituaries" [ref=f4e27] [cursor=pointer]:
+        - /url: /obituaries/
+      - link "Archive" [ref=f4e28] [cursor=pointer]:
+        - /url: /archive/
+      - link "About" [ref=f4e29] [cursor=pointer]:
+        - /url: /about/
+  - main [ref=f4e30]:
+    - generic [ref=f4e31]:
+      - paragraph [ref=f4e32]: The workshop
+      - paragraph [ref=f4e33]: Everything currently on the bench, and everything that made it off.
+      - generic [ref=f4e34]:
+        - generic [ref=f4e35]:
+          - heading [level=3] [ref=f4e37]:
+            - link "JARVIS MK-2" [ref=f4e38] [cursor=pointer]:
+              - /url: /workshop/jarvis-mk2/
+          - paragraph [ref=f4e39]: A multi-agent assistant living on a Mac, with opinions about what deserves your attention
+          - paragraph [ref=f4e40]: in progress · 12 Jul 2026
+        - generic [ref=f4e41]:
+          - heading [level=3] [ref=f4e43]:
+            - link "School Content Engine" [ref=f4e44] [cursor=pointer]:
+              - /url: /workshop/school_content/
+          - paragraph [ref=f4e45]: Teaching a machine how to make 'tasteful' school posters
+          - paragraph [ref=f4e46]: shipped · 12 Jul 2026
+        - generic [ref=f4e47]:
+          - heading [level=3] [ref=f4e49]:
+            - link "The E-Bike" [ref=f4e50] [cursor=pointer]:
+              - /url: /workshop/ebike/
+          - paragraph [ref=f4e51]: One frame. Many lives.
+          - paragraph [ref=f4e52]: in progress · 20 Jun 2026
+        - generic [ref=f4e53]:
+          - heading [level=3] [ref=f4e55]:
+            - link "AI Dialogue Reel Generator" [ref=f4e56] [cursor=pointer]:
+              - /url: /workshop/paheli-boojho/
+          - paragraph [ref=f4e57]: Paheli and Boojho from NCERT are now genz and explaining FastAPI for some reason.
+          - paragraph [ref=f4e58]: shipped · 3 Jun 2025
+        - generic [ref=f4e59]:
+          - heading [level=3] [ref=f4e61]:
+            - link "Monopoly Jaipur Edn Management System" [ref=f4e62] [cursor=pointer]:
+              - /url: /workshop/monopoly-jaipur/
+          - paragraph [ref=f4e63]: Client project. (the client was my younger sis)
+          - paragraph [ref=f4e64]: shipped · 3 Apr 2025
+        - generic [ref=f4e65]:
+          - heading [level=3] [ref=f4e67]:
+            - link "ACE - Air Cleansing Entity" [ref=f4e68] [cursor=pointer]:
+              - /url: /workshop/ace/
+          - paragraph [ref=f4e69]: How four fourteen-year-olds bolted a filter to a set of wheels, measured airflow with a garbage bag, and drove it to IIT Madras.
+          - paragraph [ref=f4e70]: shipped · 28 Jan 2023
+  - contentinfo [ref=f4e71]:
+    - generic [ref=f4e72]: Set in Bodoni & Source Serif
+    - generic [ref=f4e73]: Printed in Jaipur
+    - link "RSS" [ref=f4e75] [cursor=pointer]:
+      - /url: /rss.xml

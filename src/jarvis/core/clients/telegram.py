@@ -27,8 +27,11 @@
 from __future__ import annotations
 
 import asyncio
+import re
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Awaitable, Callable
+from zoneinfo import ZoneInfo
 
 from aiogram import Bot, Dispatcher, F
 from aiogram.client.default import DefaultBotProperties
@@ -44,6 +47,9 @@ from jarvis.common.log import get_logger
 from jarvis.core.approvals.service import ApprovalService
 from jarvis.core.db.repos.approvals import ApprovalsRepo
 from jarvis.core.db.repos.sessions import SessionsRepo
+from jarvis.core.initiative.policy import NotificationPolicy
+from jarvis.core.initiative.policy import NotificationPolicy
+from jarvis.core.initiative.policy import NotificationPolicy
 from jarvis.core.sessionmgr import SessionManager
 
 log = get_logger("core.telegram")
@@ -141,6 +147,8 @@ class TelegramBridge:
         status_provider: StatusProvider,
         approval_service: ApprovalService | None = None,
         approvals_repo: ApprovalsRepo | None = None,
+        policy: "NotificationPolicy | None" = None,
+        tz: "ZoneInfo | None" = None,
     ) -> None:
         if owner_id <= 0:
             raise ValueError(
@@ -153,6 +161,8 @@ class TelegramBridge:
         self._status = status_provider
         self._approval_service = approval_service
         self._approvals = approvals_repo
+        self._policy = policy
+        self._tz = tz or ZoneInfo("UTC")
         self._bot = Bot(token, default=DefaultBotProperties(parse_mode=None))
         self._dp = Dispatcher()
         self._dp.message.register(self._on_message)
@@ -295,8 +305,82 @@ class TelegramBridge:
         elif command == "/approvals":
             await self._list_approvals(message)
 
+        elif command == "/quiet":
+            await self._snooze(message, text)
+
         else:
             await message.answer(f"No such command, sir: {command}")
+
+    async def _snooze(self, message: Message, text: str) -> None:
+        """Silence everything but urgent for a while.
+
+        Runtime state, not persisted: a snooze that survives a restart
+        is a snooze the owner forgets he set, and then wonders why
+        JARVIS has gone quiet.
+        """
+        if self._policy is None:
+            await message.answer("Notification policy is not available.")
+            return
+
+        parts = text.split()
+        duration = parts[1] if len(parts) > 1 else "2h"
+
+        if duration.lower() == "off":
+            self._policy.snooze_until = None
+            await message.answer("Listening again, sir.")
+            return
+        match = re.fullmatch(r"(\d+)([hm])", duration.lower())
+        if not match:
+            await message.answer(
+                "Usage: /quiet 2h, or /quiet 30m. /quiet off to cancel."
+            )
+            return
+
+        amount, unit = int(match.group(1)), match.group(2)
+        delta = (
+            timedelta(hours=amount) if unit == "h" else timedelta(minutes=amount)
+        )
+        until = datetime.now(timezone.utc) + delta
+        self._policy.snooze_until = until
+
+        local = until.astimezone(self._tz).strftime("%H:%M")
+        await message.answer(
+            f"Quiet until {local}, sir. Approvals will still reach you - "
+            f"work stops without them."
+        )
+
+    async def _snooze(self, message: Message, text: str) -> None:
+        """Silence everything but urgent for a while.
+
+        Runtime state, not persisted: a snooze that survives a restart
+        is a snooze the owner forgets he set, and then wonders why
+        JARVIS has gone quiet.
+        """
+        if self._policy is None:
+            await message.answer("Notification policy is not available.")
+            return
+
+        parts = text.split()
+        duration = parts[1] if len(parts) > 1 else "2h"
+        match = re.fullmatch(r"(\d+)([hm])", duration.lower())
+        if not match:
+            await message.answer(
+                "Usage: /quiet 2h, or /quiet 30m. /quiet off to cancel."
+            )
+            return
+
+        amount, unit = int(match.group(1)), match.group(2)
+        delta = (
+            timedelta(hours=amount) if unit == "h" else timedelta(minutes=amount)
+        )
+        until = datetime.now(timezone.utc) + delta
+        self._policy.snooze_until = until
+
+        local = until.astimezone(self._tz).strftime("%H:%M")
+        await message.answer(
+            f"Quiet until {local}, sir. Approvals will still reach you - "
+            f"work stops without them."
+        )
 
     async def _list_approvals(self, message: Message) -> None:
         """Re-present anything still waiting - useful when a request was

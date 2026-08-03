@@ -86,6 +86,26 @@ class WorkerJobCheckpoint(BaseModel):
     checkpoint: dict[str, Any] = Field(default_factory=dict)
 
 
+class WorkerNeedsApproval(BaseModel):
+    """A gated action stopped this job; the owner must decide.
+
+    Workers have no database, so they cannot create an approval request
+    themselves - they describe what they want to do and the Core raises
+    the gate. The job then pauses until the owner answers, possibly
+    hours later and possibly resuming on a different worker.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    job_id: str
+    gate: str                    # outbound | publish | credential | ...
+    actor: str                   # which subagent asked
+    tool: str                    # what it wanted to run
+    summary: str                 # one line for the notification
+    detail: str                  # the EXACT action, in full
+    risk_note: str = ""
+
+
 class WorkerJobResult(BaseModel):
     """Terminal report. Must arrive AFTER every artifact it references is
     fully uploaded, so a crash cannot leave a succeeded job whose files
@@ -180,6 +200,7 @@ WORKER_JOB_STARTED = "worker.job_started"
 WORKER_JOB_PROGRESS = "worker.job_progress"
 WORKER_JOB_CHECKPOINT = "worker.job_checkpoint"
 WORKER_JOB_RESULT = "worker.job_result"
+WORKER_NEEDS_APPROVAL = "worker.needs_approval"
 WORKER_ARTIFACT_BEGIN = "worker.artifact_begin"
 WORKER_ARTIFACT_CHUNK = "worker.artifact_chunk"
 WORKER_ARTIFACT_END = "worker.artifact_end"
@@ -197,6 +218,7 @@ register_kind(WORKER_JOB_STARTED, WorkerJobStarted)
 register_kind(WORKER_JOB_PROGRESS, WorkerJobProgress)
 register_kind(WORKER_JOB_CHECKPOINT, WorkerJobCheckpoint)
 register_kind(WORKER_JOB_RESULT, WorkerJobResult)
+register_kind(WORKER_NEEDS_APPROVAL, WorkerNeedsApproval)
 register_kind(WORKER_ARTIFACT_BEGIN, WorkerArtifactBegin)
 register_kind(WORKER_ARTIFACT_CHUNK, WorkerArtifactChunk)
 register_kind(WORKER_ARTIFACT_END, WorkerArtifactEnd)
