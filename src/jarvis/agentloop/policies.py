@@ -70,6 +70,9 @@ DEFAULT_POLICIES: dict[str, ActorPolicy] = {
         actor=ENGINEER,
         tools=(
             "sandbox_*", "file_*", "git_*", "artifact_*",
+            # file_read/write/edit/list/tree and the project tools all
+            # match the globs above; listed here for readability rather
+            # than because the patterns need widening.
             "mcp__filesystem__*", "mcp__github__*",
         ),
         description=(

@@ -141,6 +141,10 @@ class JobRunner:
             progress=progress,
             write_artifact=write_artifact,
             approval_granted=offer.approval_granted,
+            input_files={
+                name: base64.b64decode(data)
+                for name, data in offer.input_files.items()
+            },
         )
 
         try:

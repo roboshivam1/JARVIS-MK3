@@ -117,8 +117,12 @@ class WorkerApp:
                     "repos": sorted(git_config.repos),
                 })
 
+            from jarvis.worker.workspace import Workspace
+            workspace = Workspace(Path(self._settings.workspace_dir))
+            log.info("workspace ready", extra={"path": str(workspace.root)})
+
             register_subagent_jobs(
-                self._registry, self._llm, self.mcp, git_ops
+                self._registry, self._llm, self.mcp, workspace
             )
 
         while not self._stop.is_set():

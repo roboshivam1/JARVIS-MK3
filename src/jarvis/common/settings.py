@@ -90,6 +90,34 @@ class CoreSettings(CommonSettings):
     # Voyage model name.
     model_embedder: str = "nomic-embed-text"
 
+    # -- Voice ---------------------------------------------------------------
+
+    # Groq, for speech to text. Their hosted Whisper is typically faster
+    # than running it locally and costs little. Absent means voice input
+    # is off; typing is unaffected.
+    groq_api_key: SecretStr | None = None
+    model_transcriber: str = "whisper-large-v3-turbo"
+
+    # Speech out: kokoro | groq | none
+    #   kokoro - local, free, private. Needs the model files below.
+    #   groq   - Orpheus, hosted. Uses the same key as transcription,
+    #            and caps input at 200 characters per request.
+    #   none   - replies stay text.
+    tts_provider: str = "kokoro"
+
+    # Voice name. Kokoro: am_michael, am_adam, af_bella, af_sarah,
+    # bm_george. Groq Orpheus: troy, austin, daniel, autumn, diana,
+    # hannah.
+    tts_voice: str = "am_michael"
+
+    # Only used when the provider is groq.
+    tts_model: str = "canopylabs/orpheus-v1-english"
+
+    # Where the Kokoro model files live. Downloaded once; the command
+    # is in .env.example.
+    kokoro_model_path: str = "~/.cache/jarvis/kokoro-v1.0.onnx"
+    kokoro_voices_path: str = "~/.cache/jarvis/voices-v1.0.bin"
+
     # Local provider: where the Ollama server listens.
     ollama_base_url: str = "http://localhost:11434"
 

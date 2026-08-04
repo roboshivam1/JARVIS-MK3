@@ -36,6 +36,7 @@ from jarvis.common.log import get_logger
 from jarvis.common.sessions import Session, Turn, TurnRole
 from jarvis.core.db.repos.events import EventsRepo
 from jarvis.core.db.repos.sessions import SessionsRepo
+from jarvis.core.db.repos.artifacts import ArtifactsRepo
 from jarvis.core.memory.profile import ProfileStore
 from jarvis.core.memory.service import MemoryService
 from jarvis.core.orchestrator.agent import Orchestrator
@@ -49,6 +50,12 @@ SOURCE = "core.sessionmgr"
 # conversation; the rolling summary will cover older ground when the
 # memory phase arrives.
 CONTEXT_TURNS = 20
+
+# Attached text files are inlined up to this size. Beyond it the file
+# is described and its id given instead - a megabyte of CSV in the
+# prompt costs more than handing it to DAEDALUS, who can actually
+# compute over it.
+_MAX_INLINE_BYTES = 100_000
 
 
 @dataclass(frozen=True)
@@ -72,6 +79,7 @@ class SessionManager:
         orchestrator: Orchestrator,
         memory: MemoryService | None = None,
         profile: ProfileStore | None = None,
+        artifacts: "ArtifactsRepo | None" = None,
     ) -> None:
         self._sessions = sessions
         self._events = events
@@ -80,6 +88,7 @@ class SessionManager:
         # memory system; absent simply means no memory in context.
         self._memory = memory
         self._profile = profile
+        self._artifacts = artifacts
         # session id -> the task currently generating its reply
         self._inflight: dict[str, asyncio.Task[LoopResult]] = {}
 
@@ -88,6 +97,7 @@ class SessionManager:
         client_kind: str,
         text: str,
         on_text: TextCallback | None = None,
+        attachments: list[str] | None = None,
     ) -> TurnResult:
         """The one entry point for user messages, all clients."""
         session = await self._sessions.get_or_create_default(client_kind)
@@ -108,7 +118,10 @@ class SessionManager:
         await self._cancel_inflight(session.id, trace_id)
 
         # 2. Persist the question before thinking about it.
-        user_turn = Turn(session_id=session.id, role=TurnRole.USER, content=text)
+        user_turn = Turn(
+            session_id=session.id, role=TurnRole.USER, content=text,
+            attachments=attachments or [],
+        )
         await self._sessions.append_turn(user_turn)
         await self._events.append(Event(
             kind=EventKind.SESSION_TURN_USER,
@@ -122,6 +135,16 @@ class SessionManager:
         #    facts retrieved with THIS message as the query.
         turns = await self._sessions.recent_turns(session.id, limit=CONTEXT_TURNS)
         messages = _turns_to_messages(turns)
+
+        # Attached files become part of the message the model sees.
+        # Without this the artifact exists, is catalogued, and is
+        # invisible - JARVIS truthfully reports that nothing came
+        # through, which is a confusing thing to hear about a file you
+        # just watched upload.
+        if attachments and self._artifacts is not None:
+            described = await self._describe_attachments(attachments)
+            if described:
+                messages[-1]["content"] += "\n\n" + described
 
         profile_doc = await self._profile.current() if self._profile else ""
         retrieved_memory = ""
@@ -209,6 +232,48 @@ class SessionManager:
             payload={},
         ))
         log.info("interrupted in-flight turn", extra={"session_id": session_id})
+
+
+    async def _describe_attachments(self, artifact_ids: list[str]) -> str:
+        """Render attached files into the message.
+
+        Text-shaped files are INLINED, because the point of attaching a
+        CSV is usually that JARVIS should read it. Binary files get a
+        line describing them plus their id, which is enough for him to
+        hand them to a subagent - DAEDALUS can load a spreadsheet the
+        model cannot.
+        """
+        parts: list[str] = []
+        for artifact_id in artifact_ids:
+            artifact = await self._artifacts.get(artifact_id)
+            if artifact is None:
+                continue
+
+            inlineable = (
+                artifact.mime.startswith("text/")
+                or artifact.mime in ("application/json", "application/xml")
+                or artifact.name.endswith((".md", ".txt", ".csv", ".py", ".json"))
+            )
+
+            if inlineable and artifact.size <= _MAX_INLINE_BYTES:
+                try:
+                    content = self._artifacts.read_bytes(artifact).decode(
+                        "utf-8", errors="replace"
+                    )
+                except Exception:
+                    content = "(could not be read)"
+                parts.append(
+                    f"[Attached: {artifact.name}, artifact id {artifact.id}]\n"
+                    f"{content}"
+                )
+            else:
+                parts.append(
+                    f"[Attached: {artifact.name} ({artifact.mime}, "
+                    f"{artifact.size} bytes), artifact id {artifact.id}. "
+                    f"Not readable as text - pass this id to a subagent "
+                    f"that can handle it.]"
+                )
+        return "\n\n".join(parts)
 
 
 def _turns_to_messages(turns: list[Turn]) -> list[dict[str, Any]]:

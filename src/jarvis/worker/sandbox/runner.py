@@ -124,6 +124,7 @@ def _apply_limits(memory_mb: int, cpu_s: int) -> None:
 async def run_python(
     code: str,
     input_files: dict[str, bytes] | None = None,
+    workdir: Path | None = None,
     timeout_s: int = DEFAULT_TIMEOUT_S,
     memory_mb: int = DEFAULT_MEMORY_MB,
     allow_network: bool = False,
@@ -136,7 +137,15 @@ async def run_python(
     # directory, and the sandbox cannot open its own script:
     #
     #     can't open file '.../_run.py': [Errno 1] Operation not permitted
-    workdir = Path(tempfile.mkdtemp(prefix="jarvis-sandbox-")).resolve()
+    # A caller-supplied directory PERSISTS - that is how a project's
+    # files survive between runs. Without one, a fresh temp directory
+    # is made and destroyed, which is right for one-off computation.
+    ephemeral = workdir is None
+    if workdir is None:
+        workdir = Path(tempfile.mkdtemp(prefix="jarvis-sandbox-")).resolve()
+    else:
+        workdir = workdir.expanduser().resolve()
+        workdir.mkdir(parents=True, exist_ok=True)
     policy_path = write_policy(workdir, allow_network=allow_network)
 
     try:
@@ -200,5 +209,8 @@ async def run_python(
         return result
 
     finally:
-        shutil.rmtree(workdir, ignore_errors=True)
+        # Only clean up what we created. A project directory belongs to
+        # the owner and outlives the run.
+        if ephemeral:
+            shutil.rmtree(workdir, ignore_errors=True)
         policy_path.unlink(missing_ok=True)

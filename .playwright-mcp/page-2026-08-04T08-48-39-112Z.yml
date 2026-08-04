@@ -1,0 +1,491 @@
+- generic [ref=e1]:
+  - generic [ref=e2]:
+    - banner [ref=e4]:
+      - generic [ref=e6]:
+        - generic [ref=e7]:
+          - button "Guide" [ref=e9] [cursor=pointer]
+          - generic [ref=e13]:
+            - link "YouTube Home" [ref=e14] [cursor=pointer]:
+              - /url: /
+            - generic [ref=e20]: IN
+          - button "Skip navigation" [ref=e24] [cursor=pointer]
+        - generic [ref=e28]:
+          - search [ref=e29]:
+            - generic [ref=e31]:
+              - generic [ref=e32]:
+                - combobox "Search" [expanded] [ref=e34]: Stand By Me
+                - button "Clear search query" [ref=e103] [cursor=pointer]
+              - button "Search" [ref=e35] [cursor=pointer]
+          - generic [ref=e40]:
+            - button "Search with your voice" [ref=e42] [cursor=pointer]
+            - tooltip "tooltip"
+        - generic [ref=e47]:
+          - button "Settings" [ref=e52] [cursor=pointer]
+          - link "Sign in" [ref=e56] [cursor=pointer]:
+            - /url: https://accounts.google.com/ServiceLogin?service=youtube&uilel=3&passive=true&continue=https%3A%2F%2Fwww.youtube.com%2Fsignin%3Faction_handle_signin%3Dtrue%26app%3Ddesktop%26hl%3Den-GB%26next%3D%252Fwatch%253Fv%253DhwZNL7QVJjE%2526list%253DRDhwZNL7QVJjE%2526start_radio%253D1%2526pp%253DygULU3RhbmQgQnkgTWWgBwE%25253D&hl=en-GB&ec=65620
+    - generic [ref=e78]:
+      - main [ref=e1425]:
+        - generic [ref=e1426]:
+          - generic [ref=e1428]:
+            - complementary [ref=e1435]:
+              - generic "YouTube Video Player" [ref=e1438]:
+                - generic [ref=e1440]:
+                  - generic:
+                    - generic [ref=e1442] [cursor=pointer]:
+                      - generic [ref=e1445]:
+                        - generic "Pond's India" [ref=e1446]
+                        - generic "www.amazon.in" [ref=e1447]
+                      - link "Shop now! This link opens in new tab" [ref=e1448]:
+                        - generic [ref=e1449]: Shop now!
+                    - generic [ref=e1450]:
+                      - generic "Sponsored" [ref=e1452]
+                      - button "My Ad Centre" [ref=e1454] [cursor=pointer]
+                      - generic [ref=e1456]:
+                        - text: •
+                        - generic "1 of 2" [ref=e1457]
+                      - link "amazon.in This link opens in new tab" [ref=e1458]:
+                        - generic [ref=e1459] [cursor=pointer]: amazon.in
+                - generic [ref=e1461]:
+                  - generic [ref=e1462]: कन्नौज में कोरियोग्राफर और केपॉप के सपने
+                  - generic [ref=e1464]: वो क्या है ना
+                - generic [ref=e1468]:
+                  - slider "Seek slider" [disabled] [ref=e1470]
+                  - generic [ref=e1480]:
+                    - generic [ref=e1481]:
+                      - button "Play (k)" [ref=e1482] [cursor=pointer]
+                      - button "Previous (SHIFT+p)" [ref=e1483] [cursor=pointer]
+                      - button "Next (SHIFT+n)" [ref=e1484] [cursor=pointer]
+                      - generic [ref=e1485]:
+                        - button "Mute (m)" [ref=e1487] [cursor=pointer]
+                        - slider "Volume"
+                      - button "0 Minutes 2 Seconds of 0 Minutes 20 Seconds" [ref=e1491] [cursor=pointer]: 0:02 / 0:20
+                    - generic [ref=e1492]:
+                      - generic [ref=e1493]:
+                        - button "Subtitles/closed captions unavailable" [pressed] [ref=e1494] [cursor=pointer]
+                        - button "Settings" [ref=e1496] [cursor=pointer]
+                      - generic [ref=e1497]:
+                        - button "Cinema mode (t)" [ref=e1498] [cursor=pointer]
+                        - button "Full screen (f)" [ref=e1499] [cursor=pointer]
+            - generic [ref=e1500]:
+              - generic [ref=e1501]:
+                - generic [ref=e1503]:
+                  - heading "Ben E. King - Stand By Me (Audio)" [level=1] [ref=e1506]
+                  - generic [ref=e1507]:
+                    - generic [ref=e1508]:
+                      - generic [ref=e1509]:
+                        - link [ref=e1510] [cursor=pointer]:
+                          - /url: /@SoulfulSounds
+                          - img "Soulful Sounds" [ref=e1512]
+                        - generic [ref=e1513]:
+                          - generic [ref=e1514]:
+                            - generic "Soulful Sounds" [ref=e1517]:
+                              - link "Soulful Sounds" [ref=e1518] [cursor=pointer]:
+                                - /url: /@SoulfulSounds
+                            - img "Verified" [ref=e1523]
+                          - generic "845 thousand subscribers" [ref=e1527]: 845k subscribers
+                      - button "Subscribe to Soulful Sounds." [ref=e1533] [cursor=pointer]:
+                        - generic: Subscribe
+                    - generic [ref=e1540]:
+                      - generic [ref=e1541]:
+                        - generic [ref=e1545]:
+                          - button "like this video along with 4,424,717 other people" [ref=e1549] [cursor=pointer]:
+                            - generic: 4.4m
+                          - button "Dislike this video" [ref=e1556] [cursor=pointer]
+                        - button "Share" [ref=e1562] [cursor=pointer]
+                      - button "Save to playlist" [ref=e1569] [cursor=pointer]:
+                        - generic: Save
+                      - button "More actions" [ref=e1574] [cursor=pointer]
+                  - generic [ref=e1580] [cursor=pointer]:
+                    - generic [ref=e1581]:
+                      - generic [ref=e1583]:
+                        - text: 589m views 16 years ago
+                        - link "#BenEKing" [ref=e1584]:
+                          - /url: /hashtag/beneking
+                        - link "#StandByMe" [ref=e1585]:
+                          - /url: /hashtag/standbyme
+                      - tooltip "tooltip"
+                    - generic [ref=e1586]:
+                      - generic [ref=e1587]:
+                        - generic [ref=e1588]: Ben E. King performing Stand By Me, from the album Don't Play That Song! "Stand by Me" is a song originally performed in 1961 by American singer-songwriter Ben E. King and written by him, along
+                        - generic: …
+                      - button "...more" [ref=e1591]
+                - text: •
+              - heading "Comments" [level=2] [ref=e1598]
+          - generic [ref=e1672]:
+            - generic [ref=e1677]:
+              - generic [ref=e1678]:
+                - 'heading "Next: Elvis Presley - Can''t Help Falling In Love (Official Audio) 3 minutes, 1 second" [level=3] [ref=e1679]':
+                  - generic [ref=e1680]: "Next:"
+                  - generic "Elvis Presley - Can't Help Falling In Love (Official Audio) 3 minutes, 1 second" [ref=e1681]: Elvis Presley - Can't Help Falling In Love (Official Audio)
+                - generic [ref=e1682]:
+                  - generic "Mix – Ben E. King - Stand By Me (Audio)" [ref=e1683]
+                  - text: "-"
+              - button "Expand" [ref=e1685] [cursor=pointer]
+            - generic [ref=e1689]:
+              - generic [ref=e1698] [cursor=pointer]:
+                - generic "Sponsored – Pond's India www.amazon.in" [ref=e1700]:
+                  - button "Pond's India" [ref=e1704]
+                  - generic [ref=e1707]:
+                    - generic [ref=e1708]: Pond's India
+                    - generic [ref=e1709]:
+                      - generic [ref=e1711]:
+                        - generic [ref=e1712]: Sponsored
+                        - text: ·
+                      - generic [ref=e1713]: www.amazon.in
+                - link "Shop now!" [ref=e1716]:
+                  - /url: https://www.googleadservices.com/pagead/aclk?sa=L&ai=C30X6YadxarI8nsDSvg_j7LKpCYGf0eWIAZSPoraYFrCQHxABIABg5fLng9QOggEXY2EtcHViLTYyMTk4MTE3NDcwNDkzNzGgAYKVntpBqQK_EGFe44VGPqgDBKoE9gNP0GPpH07AmxjLHWfMc_rAabURv7dXmjzlvd-a93iEGcB0B-Z0CazBLJWjhGmCXBvirPS0GUmmyrOOwvscb6F7InLWocKSXr73Tm-aBna5PoGJqQ_5wtxUEFQglK7n3_pgN46eGdrm2Q4wfZhgsYhgveWFAW437U9ypGBr_ZvaVlpOvFAh0t951D2LBlrpNTo4UA-AN7Bsy_kF6954rS9tBicFkfpUKgZkmiMIwowtnVSXw7oPoH9_GhsThsRK0uuXxfzaR84o1JMvX-AO5IMXBVMvVhJk3KTzY0Diyu6eBGYuOYowSx1yyeB_jKJhUZb_nqSEmvHbctpYkuPwh8FdumdrMwOGCNxabKnXGovNI0L44bwbIgZq7yWB1gea4WBzvENCTeMKslGN9ofVdD7tWQG0GghqCwwd6-V-M2cQ43h_uyMbzz8C5_T-REcQxeuR0tTdaNY-Hyi6TO0AfgrbtdORUlXeuSv5iUgaENPOt3mRHozutzsRdH9thW0CwR2j-hXm9D4A7zA2PGe0MIMj3PVI1So7p6bbmYVFy04V8wZ-lFdJBMXOhwr9ATPpTUjsdxzvK_Mc7SnqkfCJ1PkDidrPoqbleURuVNWQUtByR560e0RdGXHUkGxOtt1nsDmiHxfYoJsphd-cS2iCvxK-Qvy472M6iAX4457dWcAFiQGgBleAB4LN7rkckAcEqAfywLECqAe4xLECqAfhtrECqAelz7ECqAfnnbECqAfonbECqAfvtbECqAfwtbECqAf507ECqAfJ2rECqAep4LECqAeECKgHptSxAqgHqNIbqAe2B6gHsJuxAqgHrrGxAqgH_bKxAqgHyM-xAqgHyc-xAqgHzcexAqgH8dGxAqgH_NWxAqgH-9WxAqgHjNaxAqgHi9axAqgHmuKxAqgHm-KxAqgHndexAqgHndSxAqgHgcYbqAf8r7ECqAe-2bECqAe_2bECqAerxRuoB7ehsQKoB9WpsQKoB-fasQKoB961sQKoB-qxsQKoB763sQKoB5m1sQKoB4XBsQKoB-ulsQKoB8qpsQKSCAtwUnh0cXBBVWRDSdIILgiAQRABGF4yAoICOg-AQoDAgICAgICAAqqAgBBI2aDSNVAUWLDj_8HLhpYDYAHyCB9jYS15dC1ob3N0LXB1Yi05MzM4NTU3MTExOTEyNjE2mglwaHR0cHM6Ly93d3cuYW1hem9uLmluL1BPTkRTLURyZWFtZmxvd2VyLUZyYWdyYW50LVRhbGMtTGlsbHkvZHAvQjAwQ1E0MTRMVy9yZWY9c3JfMV81X2luX2YzXzBvX2ZzX21vZF9wcmltYXJ5X2FsbbEJHjryOKAD6I3ICRnICbEByAnCAaELp9ufnY-tvVy6C0cIARABGAYgAigBMBBAAUgBYABoAHACiAEAmAEBogESCgAYACAAWAFgAHABqAIB2AICqAEB2AEDgAIBiAIHugMHdmlzaW5yYtALE-ALAdIMAhAB2gwlCgoQoIDa9Jjju6szEgIBAxoNGPjjnt1ZIKD41tP5BUABSgIQH5oNAROqDQJJTsgNAdIN6gpodHRwczovL2FkLmRvdWJsZWNsaWNrLm5ldC9kZG0vdHJhY2tjbGsvTjYzMzYuMTE4NTg0MVlPVVRVQkUuQ09NV0FUQ0gvQjM2MzM3OTMzLjQ1MzcyMjgyNjtkY190cmtfYWlkPTY0NzQxOTkyMTtkY190cmtfY2lkPTE1NTgyMTM3MDtkY19kYm1fdG9rZW49QU9qZUxORUFBQUE2Q2pRS0RBZ0FGUUFBQUFBZEFBQUFBQklNQ0FBVkFBQUFBQjBBQUFBQUloUUktT09lM1Ztb0FvT1d2OVljc0FLbW01THJBMEE3RU83NlRyb2R0TTNnbG5qdW9QcGtvWHpPTEcwPTtkY19sYXQ9O2RjX3JkaWQ9O3RhZ19mb3JfY2hpbGRfZGlyZWN0ZWRfdHJlYXRtZW50PTt0ZnVhPTtsdGQ9O2RjX3Rkdj0xO2RjX3RyYW5zcGFyZW50PTE7ZGNfcnVpPTE7ZGNfZXBzPUFIYXM4Y0JNVEhOWVNJQ1hQUG42OGhNR0JXdkthd3FkMnh3dXNOVHk0NE8wVFhPRUdOQ0d6RXdGa1hrZ1E3X3pXdlIyT2NMbzZLWF9IUDVUOVpHN0NBO2RjX3B1YmlkPTI_aHR0cHM6Ly93d3cuYW1hem9uLmluL1BPTkRTLURyZWFtZmxvd2VyLUZyYWdyYW50LVRhbGMtTGlsbHkvZHAvQjAwQ1E0MTRMVy9yZWY9c3JfMV81X2luX2YzXzBvX2ZzX21vZF9wcmltYXJ5X2FsbT9jcmlkPTNGTDVWUDY5NUlZTVcmZGliPWV5SjJJam9pTVNKOS5jRmhKVEtDMUFIYnRoby1zMW9mZVJvcmZ1ZnduakkwSV85NXhnbHNlR3V6WWRRMWJIdmRLR3JGOG1LZlU3TkJOc00wZTBkV2Jqa0JwcmdoMW94b2pzNkNQVGxhbGtsZUNqb3ZZZjJNZVZnWjVwR0FySVl2cTUzZ05SYnpkRmNsUG9XUV9EeGYxa1BVSlVOYl9PV1J6Y3ExU2NrMktZNHMySVBvOEEtakZMR2VGTVJVX2dDb3IwM2VqYkNZQ3dTWWNJVGxqNklFdVRheHdfMVlscnMyRlFOaXVEMGhsWGdyUEVENlVHQ0NtVTU1LVV1M0lPaGVPcDNVZVI1SXVlN1UyTkhTTmFiajEwd3h4UWVnbUJqNENtVEZ4U05HakhmdFVPZkpOdTU3M1Jldy5ya1NURzJNWk9BR3JmYl82RW9tVVZfazNlOXI4U0NEMmt4ZW9KbWRtUEVZJmRpYl90YWc9c2Uma2V5d29yZHM9cG9uZCUyN3MlMkJkcmVhbWZsb3dlciUyQmZsb3JhbCUyQnBlcmZ1bWVkJTJCcG93ZGVyJnFpZD0xNzcyNDQ4MTY3JnNibz1tNkRqZnBNek1MRG1MOHBTTUtYOGh3JTNEJTNEJnNwcmVmaXg9UG9uZCUyN3MlMkJkcmVhbWZsb3dlciUyQiUyQ2FwcyUyQzM5MiZzcj04LTUmdGg9MSZ1dG1fY2FtcGFpZ249QnJhbmRpbmdfU2tpbl9DYXJlX1BvbmRzX0RmX1RhbGNfRGlnaXRhbF9QaG9lbml4X19Qb25kc19fU0NJQklEU19BVUcyMDI2JnV0bV9tZWRpdW09VmlkZW8mdXRtX3NvdXJjZT1Zb3V0dWJlJnV0bV90ZXJtPU1pbmRzaGFyZSZ1dG1fY29udGVudD1Ob25za2lwX0dlblBvcF9ISElfVG9wXzIxX190b181MF9fbm8xcGRfQ3VzdF9uYV9fJnVuaXF1ZT0wNzMzM2RiYzMyYWYxNWZlNDQ2YmI5ZjE5OTA1YzAyNiZnYWRfc291cmNlPTKwE8DA7CO4E____________wGwFAHAFcmAgEDQFQHYFQGQFgGoFgGAFwGKFxgIAxgBIAEoATABOAFAAUgBUAFYAWACaAGaFwIgAKAXAboXBigAMAA4AdAYAfAYAQ&ase=2&gclid=EAIaIQobChMI8vD_wcuGlgMVHqDUAR1jtiyVEAEYASAAEgJDAPD_BwE&num=1&cid=CAASwwHkaM3oZ0rdqPTc6mSYBXEDxB-i5IHrCBpFhLMlGhRRvIvQ4p1p-1CjYQri-uOyIMTvhAAPV9ldZZx-UNDRKinL3RKoxKOsED-zdHvDzvblgfcNpBAMOPBUKmDzvUIct_EAgatpqXfTFyZ8y1bc_4GXhJlYWj2yMTilm993n9p9NV4I3UtpX8NE5UTqf9_D9Y3j37DuOcEkLGAg4-E7N1CIWYvCva42KnsuRQxV54Tfe1NLN1W9OiT7maHf7RDdO2bz1gk&sig=AOD64_36pOQW4kvo9n_sTCoK9Bfd5N4UAQ&ctype=137&ms=%5BCLICK_MS%5D&adclksrc=%5BCLICK_SOURCE%5D
+                - button "My Ad Centre" [ref=e1722]
+              - generic [ref=e1729]:
+                - generic [ref=e1731] [cursor=pointer]:
+                  - link [ref=e1732]:
+                    - /url: /watch?v=RBumgq5yVrA&list=RDRBumgq5yVrA&start_radio=1&pp=oAcB
+                    - generic [ref=e1733]: 4:15
+                  - generic [ref=e1744]:
+                    - generic [ref=e1745]:
+                      - heading "Passenger | Let Her Go (Official Video)" [level=3] [ref=e1746]:
+                        - link "Passenger | Let Her Go (Official Video) 4 minutes, 15 seconds" [ref=e1747]:
+                          - /url: /watch?v=RBumgq5yVrA&list=RDRBumgq5yVrA&start_radio=1&pp=oAcB
+                          - text: Passenger | Let Her Go (Official Video)
+                      - generic [ref=e1749]:
+                        - group [ref=e1750]:
+                          - generic [ref=e1751]: Passenger
+                        - group [ref=e1757]:
+                          - generic "4.1 billion views" [ref=e1761]: 4.1bn
+                          - generic "14 years ago" [ref=e1762]: 14 yr ago
+                    - button "More actions" [ref=e1765]
+                - generic [ref=e1770] [cursor=pointer]:
+                  - link [ref=e1771]:
+                    - /url: /watch?v=6EEW-9NDM5k&list=RD6EEW-9NDM5k&start_radio=1&pp=oAcB
+                    - generic [ref=e1772]: 4:24
+                  - generic [ref=e1783]:
+                    - generic [ref=e1784]:
+                      - heading "Akon - Lonely (Official Music Video)" [level=3] [ref=e1785]:
+                        - link "Akon - Lonely (Official Music Video) 4 minutes, 24 seconds" [ref=e1786]:
+                          - /url: /watch?v=6EEW-9NDM5k&list=RD6EEW-9NDM5k&start_radio=1&pp=oAcB
+                          - text: Akon - Lonely (Official Music Video)
+                      - generic [ref=e1788]:
+                        - group [ref=e1789]:
+                          - generic [ref=e1790]: Akon
+                        - group [ref=e1796]:
+                          - generic "1.3 billion views" [ref=e1800]: 1.3bn
+                          - generic "17 years ago" [ref=e1801]: 17 yr ago
+                    - button "More actions" [ref=e1804]
+                - generic [ref=e1809] [cursor=pointer]:
+                  - link [ref=e1810]:
+                    - /url: /watch?v=6POZlJAZsok&list=RD6POZlJAZsok&start_radio=1&pp=oAcB
+                    - generic [ref=e1811]: 7:19
+                  - generic [ref=e1822]:
+                    - generic [ref=e1823]:
+                      - heading "Just the Two of Us (feat. Bill Withers)" [level=3] [ref=e1824]:
+                        - link "Just the Two of Us (feat. Bill Withers) 7 minutes, 19 seconds" [ref=e1825]:
+                          - /url: /watch?v=6POZlJAZsok&list=RD6POZlJAZsok&start_radio=1&pp=oAcB
+                          - text: Just the Two of Us (feat. Bill Withers)
+                      - generic [ref=e1827]:
+                        - group [ref=e1828]:
+                          - generic [ref=e1829]: Grover Washington, Jr. - Topic
+                        - group [ref=e1835]:
+                          - generic "207 million views" [ref=e1839]: 207m
+                          - generic "9 years ago" [ref=e1840]: 9 yr ago
+                    - button "More actions" [ref=e1843]
+                - generic [ref=e1848] [cursor=pointer]:
+                  - link [ref=e1849]:
+                    - /url: /watch?v=vGJTaP6anOU&list=RDvGJTaP6anOU&start_radio=1&pp=oAcB0gcJCaMLAYcqIYzv
+                    - generic [ref=e1850]: 3:01
+                  - generic [ref=e1861]:
+                    - generic [ref=e1862]:
+                      - heading "Elvis Presley - Can't Help Falling In Love (Official Audio)" [level=3] [ref=e1863]:
+                        - link "Elvis Presley - Can't Help Falling In Love (Official Audio) 3 minutes, 1 second" [ref=e1864]:
+                          - /url: /watch?v=vGJTaP6anOU&list=RDvGJTaP6anOU&start_radio=1&pp=oAcB0gcJCaMLAYcqIYzv
+                          - text: Elvis Presley - Can't Help Falling In Love (Official Audio)
+                      - generic [ref=e1866]:
+                        - group [ref=e1867]:
+                          - generic [ref=e1868]: Elvis Presley
+                        - group [ref=e1874]:
+                          - generic "478 million views" [ref=e1878]: 478m
+                          - generic "13 years ago" [ref=e1879]: 13 yr ago
+                    - button "More actions" [ref=e1882]
+                - generic [ref=e1887] [cursor=pointer]:
+                  - link [ref=e1888]:
+                    - /url: /watch?v=8WPSPuRKUYQ&list=RD8WPSPuRKUYQ&start_radio=1&pp=oAcB
+                    - generic [ref=e1889]: 17:31
+                  - generic [ref=e1900]:
+                    - generic [ref=e1901]:
+                      - heading "Christina Perri - A Thousand Years ( Lyrics)" [level=3] [ref=e1902]:
+                        - link "Christina Perri - A Thousand Years ( Lyrics) 17 minutes" [ref=e1903]:
+                          - /url: /watch?v=8WPSPuRKUYQ&list=RD8WPSPuRKUYQ&start_radio=1&pp=oAcB
+                          - text: Christina Perri - A Thousand Years ( Lyrics)
+                      - generic [ref=e1905]:
+                        - group [ref=e1906]:
+                          - generic [ref=e1907]: Feel & Sound
+                        - group [ref=e1908]:
+                          - generic "66 thousand views" [ref=e1912]: 66k
+                          - generic "13 days ago" [ref=e1913]
+                    - button "More actions" [ref=e1916]
+                - generic [ref=e1921] [cursor=pointer]:
+                  - link [ref=e1922]:
+                    - /url: /watch?v=Yl_ScoRcHgg&list=RDYl_ScoRcHgg&start_radio=1&pp=oAcB
+                    - generic [ref=e1923]: 52:40
+                  - generic [ref=e1934]:
+                    - generic [ref=e1935]:
+                      - heading "Ray Charles • B.B. King • George Benson | 70s & 80s Midnight Jazz Soul Blues | Classic Love Songs" [level=3] [ref=e1936]:
+                        - link "Ray Charles • B.B. King • George Benson | 70s & 80s Midnight Jazz Soul Blues | Classic Love Songs 52 minutes" [ref=e1937]:
+                          - /url: /watch?v=Yl_ScoRcHgg&list=RDYl_ScoRcHgg&start_radio=1&pp=oAcB
+                          - text: Ray Charles • B.B. King • George Benson | 70s & 80s Midnight Jazz Soul Blues | Classic Love Songs
+                      - generic [ref=e1939]:
+                        - group [ref=e1940]:
+                          - generic [ref=e1941]: Blue Note Midnight
+                        - group [ref=e1942]:
+                          - generic "58 thousand views" [ref=e1946]: 58k
+                          - generic "2 weeks ago" [ref=e1947]: 2 wk ago
+                    - button "More actions" [ref=e1950]
+                - generic [ref=e1955] [cursor=pointer]:
+                  - link [ref=e1956]:
+                    - /url: /watch?v=dpwTb9ecLXE&list=RDdpwTb9ecLXE&start_radio=1&pp=oAcB
+                    - generic [ref=e1957]: 4:30
+                  - generic [ref=e1968]:
+                    - generic [ref=e1969]:
+                      - heading "Dildara - Stand By Me (Lyrical) | Ra.One | Shah Rukh Khan | Kareena K | Vishal-Sheykhar,Shafqat A" [level=3] [ref=e1970]:
+                        - link "Dildara - Stand By Me (Lyrical) | Ra.One | Shah Rukh Khan | Kareena K | Vishal-Sheykhar,Shafqat A 4 minutes, 30 seconds" [ref=e1971]:
+                          - /url: /watch?v=dpwTb9ecLXE&list=RDdpwTb9ecLXE&start_radio=1&pp=oAcB
+                          - text: Dildara - Stand By Me (Lyrical) | Ra.One | Shah Rukh Khan | Kareena K | Vishal-Sheykhar,Shafqat A
+                      - generic [ref=e1973]:
+                        - group [ref=e1974]:
+                          - generic [ref=e1975]: T-Series
+                        - group [ref=e1981]:
+                          - generic "2.1 million views" [ref=e1985]: 2.1m
+                          - generic "3 months ago" [ref=e1986]: 3 mo ago
+                    - button "More actions" [ref=e1989]
+                - generic [ref=e1994] [cursor=pointer]:
+                  - link [ref=e1995]:
+                    - /url: /watch?v=x2yd-XZtkvk&list=RDx2yd-XZtkvk&start_radio=1&pp=oAcB
+                    - generic [ref=e1996]: 6:32
+                  - generic [ref=e2007]:
+                    - generic [ref=e2008]:
+                      - heading "Eagles - Hotel California | Lyric Video | Lirik Indonesia | Indo Subtitle | Lirik Terjemahan" [level=3] [ref=e2009]:
+                        - link "Eagles - Hotel California | Lyric Video | Lirik Indonesia | Indo Subtitle | Lirik Terjemahan 6 minutes, 32 seconds" [ref=e2010]:
+                          - /url: /watch?v=x2yd-XZtkvk&list=RDx2yd-XZtkvk&start_radio=1&pp=oAcB
+                          - text: Eagles - Hotel California | Lyric Video | Lirik Indonesia | Indo Subtitle | Lirik Terjemahan
+                      - generic [ref=e2012]:
+                        - group [ref=e2013]:
+                          - generic [ref=e2014]: Pop Paling Panas
+                        - group [ref=e2015]:
+                          - generic "35 million views" [ref=e2019]: 35m
+                          - generic "1 year ago" [ref=e2020]: 1 yr ago
+                    - button "More actions" [ref=e2023]
+                - generic [ref=e2028] [cursor=pointer]:
+                  - link [ref=e2029]:
+                    - /url: /watch?v=681cGdUURxM&list=RD681cGdUURxM&start_radio=1&pp=oAcB
+                    - generic [ref=e2030]: 41:33
+                  - generic [ref=e2041]:
+                    - generic [ref=e2042]:
+                      - heading "Best Whiskey Blues Songs | Melodies for Evening Chill" [level=3] [ref=e2043]:
+                        - link "Best Whiskey Blues Songs | Melodies for Evening Chill 41 minutes" [ref=e2044]:
+                          - /url: /watch?v=681cGdUURxM&list=RD681cGdUURxM&start_radio=1&pp=oAcB
+                          - text: Best Whiskey Blues Songs | Melodies for Evening Chill
+                      - generic [ref=e2046]:
+                        - group [ref=e2047]:
+                          - generic [ref=e2048]: Chicago Blues Ballads
+                        - group [ref=e2049]:
+                          - generic "2.7 million views" [ref=e2053]: 2.7m
+                          - generic "7 months ago" [ref=e2054]: 7 mo ago
+                    - button "More actions" [ref=e2057]
+                - generic [ref=e2062] [cursor=pointer]:
+                  - link [ref=e2063]:
+                    - /url: /watch?v=2nGKqH26xlg&list=RD2nGKqH26xlg&start_radio=1&pp=oAcB
+                    - generic [ref=e2064]: 3:37
+                  - generic [ref=e2075]:
+                    - generic [ref=e2076]:
+                      - heading "Louis Armstrong - What A Wonderful World (Original Spoken Intro Version) ABC Records 1967, 1970" [level=3] [ref=e2077]:
+                        - link "Louis Armstrong - What A Wonderful World (Original Spoken Intro Version) ABC Records 1967, 1970 3 minutes, 37 seconds" [ref=e2078]:
+                          - /url: /watch?v=2nGKqH26xlg&list=RD2nGKqH26xlg&start_radio=1&pp=oAcB
+                          - text: Louis Armstrong - What A Wonderful World (Original Spoken Intro Version) ABC Records 1967, 1970
+                      - generic [ref=e2080]:
+                        - group [ref=e2081]:
+                          - generic [ref=e2082]: RoundMidnightTV
+                        - group [ref=e2083]:
+                          - generic "96 million views" [ref=e2087]: 96m
+                          - generic "14 years ago" [ref=e2088]: 14 yr ago
+                    - button "More actions" [ref=e2091]
+                - generic [ref=e2096] [cursor=pointer]:
+                  - link [ref=e2097]:
+                    - /url: /watch?v=4ONfrkskNp4&list=RD4ONfrkskNp4&start_radio=1&pp=oAcB
+                    - generic [ref=e2098]: 3:34
+                  - generic [ref=e2109]:
+                    - generic [ref=e2110]:
+                      - heading "Stand By Me - Music Travel Love (At Al Ain)" [level=3] [ref=e2111]:
+                        - link "Stand By Me - Music Travel Love (At Al Ain) 3 minutes, 34 seconds" [ref=e2112]:
+                          - /url: /watch?v=4ONfrkskNp4&list=RD4ONfrkskNp4&start_radio=1&pp=oAcB
+                          - text: Stand By Me - Music Travel Love (At Al Ain)
+                      - generic [ref=e2114]:
+                        - group [ref=e2115]:
+                          - generic [ref=e2116]: Music Travel Love
+                        - group [ref=e2122]:
+                          - generic "83 million views" [ref=e2126]: 83m
+                          - generic "3 years ago" [ref=e2127]: 3 yr ago
+                    - button "More actions" [ref=e2130]
+                - generic [ref=e2135] [cursor=pointer]:
+                  - link [ref=e2136]:
+                    - /url: /watch?v=pOpYAsaDzNg&list=RDpOpYAsaDzNg&start_radio=1&pp=oAcB
+                    - generic [ref=e2137]: 5:20
+                  - generic [ref=e2148]:
+                    - generic [ref=e2149]:
+                      - heading "Emotional Blues Ballad |When Your Name Breaks Me — The Song That Breaks Your Heart | Y. Stone" [level=3] [ref=e2150]:
+                        - link "Emotional Blues Ballad |When Your Name Breaks Me — The Song That Breaks Your Heart | Y. Stone 5 minutes, 20 seconds" [ref=e2151]:
+                          - /url: /watch?v=pOpYAsaDzNg&list=RDpOpYAsaDzNg&start_radio=1&pp=oAcB
+                          - text: Emotional Blues Ballad |When Your Name Breaks Me — The Song That Breaks Your Heart | Y. Stone
+                      - generic [ref=e2153]:
+                        - group [ref=e2154]:
+                          - generic [ref=e2155]: Y. Stone studio
+                        - group [ref=e2156]:
+                          - generic "620 views" [ref=e2160]: "620"
+                          - generic "8 months ago" [ref=e2161]: 8 mo ago
+                    - button "More actions" [ref=e2164]
+                - generic [ref=e2169] [cursor=pointer]:
+                  - link [ref=e2170]:
+                    - /url: /watch?v=09839DpTctU&list=RD09839DpTctU&start_radio=1&pp=oAcB
+                    - generic [ref=e2171]: 6:45
+                  - generic [ref=e2182]:
+                    - generic [ref=e2183]:
+                      - heading "Eagles - Hotel California (Live 1977) (Official Video) [HD]" [level=3] [ref=e2184]:
+                        - link "Eagles - Hotel California (Live 1977) (Official Video) [HD] 6 minutes, 45 seconds" [ref=e2185]:
+                          - /url: /watch?v=09839DpTctU&list=RD09839DpTctU&start_radio=1&pp=oAcB
+                          - text: Eagles - Hotel California (Live 1977) (Official Video) [HD]
+                      - generic [ref=e2187]:
+                        - group [ref=e2188]:
+                          - generic [ref=e2189]: Eagles
+                        - group [ref=e2195]:
+                          - generic "889 million views" [ref=e2199]: 889m
+                          - generic "3 years ago" [ref=e2200]: 3 yr ago
+                    - button "More actions" [ref=e2203]
+                - generic [ref=e2208] [cursor=pointer]:
+                  - link [ref=e2209]:
+                    - /url: /watch?v=MqazV4hbu8E&list=RDMqazV4hbu8E&start_radio=1&pp=oAcB
+                    - generic [ref=e2210]: 3:03
+                  - generic [ref=e2221]:
+                    - generic [ref=e2222]:
+                      - heading "Elvis Presley - Can't Help Falling in Love (Lyrics)" [level=3] [ref=e2223]:
+                        - link "Elvis Presley - Can't Help Falling in Love (Lyrics) 3 minutes, 3 seconds" [ref=e2224]:
+                          - /url: /watch?v=MqazV4hbu8E&list=RDMqazV4hbu8E&start_radio=1&pp=oAcB
+                          - text: Elvis Presley - Can't Help Falling in Love (Lyrics)
+                      - generic [ref=e2226]:
+                        - group [ref=e2227]:
+                          - generic [ref=e2228]: 7clouds
+                        - group [ref=e2234]:
+                          - generic "65 million views" [ref=e2238]: 65m
+                          - generic "3 years ago" [ref=e2239]: 3 yr ago
+                    - button "More actions" [ref=e2242]
+                - generic [ref=e2247] [cursor=pointer]:
+                  - link [ref=e2248]:
+                    - /url: /watch?v=58RgLQ_0Ars&list=RD58RgLQ_0Ars&start_radio=1&pp=oAcB0gcJCaMLAYcqIYzv
+                    - generic [ref=e2249]: 4:22
+                  - generic [ref=e2260]:
+                    - generic [ref=e2261]:
+                      - heading "I Just Called To Say I Love You" [level=3] [ref=e2262]:
+                        - link "I Just Called To Say I Love You 4 minutes, 22 seconds" [ref=e2263]:
+                          - /url: /watch?v=58RgLQ_0Ars&list=RD58RgLQ_0Ars&start_radio=1&pp=oAcB0gcJCaMLAYcqIYzv
+                          - text: I Just Called To Say I Love You
+                      - generic [ref=e2265]:
+                        - group [ref=e2266]:
+                          - generic [ref=e2267]: Stevie Wonder
+                        - group [ref=e2273]:
+                          - generic "112 million views" [ref=e2277]: 112m
+                          - generic "7 years ago" [ref=e2278]: 7 yr ago
+                    - button "More actions" [ref=e2281]
+                - generic [ref=e2286] [cursor=pointer]:
+                  - link [ref=e2287]:
+                    - /url: /watch?v=S9bCLPwzSC0&list=RDS9bCLPwzSC0&start_radio=1&pp=oAcB
+                    - generic [ref=e2288]: 4:18
+                  - generic [ref=e2299]:
+                    - generic [ref=e2300]:
+                      - heading "Eminem - Mockingbird [Official Music Video]" [level=3] [ref=e2301]:
+                        - link "Eminem - Mockingbird [Official Music Video] 4 minutes, 18 seconds" [ref=e2302]:
+                          - /url: /watch?v=S9bCLPwzSC0&list=RDS9bCLPwzSC0&start_radio=1&pp=oAcB
+                          - text: Eminem - Mockingbird [Official Music Video]
+                      - generic [ref=e2304]:
+                        - group [ref=e2305]:
+                          - generic [ref=e2306]: EminemMusic
+                        - group [ref=e2312]:
+                          - generic "1.5 billion views" [ref=e2316]: 1.5bn
+                          - generic "16 years ago" [ref=e2317]: 16 yr ago
+                    - button "More actions" [ref=e2320]
+                - generic [ref=e2325] [cursor=pointer]:
+                  - link [ref=e2326]:
+                    - /url: /watch?v=h5NxBAYlGZQ&list=RDh5NxBAYlGZQ&start_radio=1&pp=oAcB
+                    - generic [ref=e2327]: 3:16
+                  - generic [ref=e2338]:
+                    - generic [ref=e2339]:
+                      - heading "John Denver - Take Me Home, Country Roads (Lyrics)" [level=3] [ref=e2340]:
+                        - link "John Denver - Take Me Home, Country Roads (Lyrics) 3 minutes, 16 seconds" [ref=e2341]:
+                          - /url: /watch?v=h5NxBAYlGZQ&list=RDh5NxBAYlGZQ&start_radio=1&pp=oAcB
+                          - text: John Denver - Take Me Home, Country Roads (Lyrics)
+                      - generic [ref=e2343]:
+                        - group [ref=e2344]:
+                          - generic [ref=e2345]: Unique Sound
+                        - group [ref=e2351]:
+                          - generic "38 million views" [ref=e2355]: 38m
+                          - generic "3 years ago" [ref=e2356]: 3 yr ago
+                    - button "More actions" [ref=e2359]
+                - generic [ref=e2364] [cursor=pointer]:
+                  - link [ref=e2365]:
+                    - /url: /watch?v=syFZfO_wfMQ&list=RDsyFZfO_wfMQ&start_radio=1&pp=oAcB0gcJCaMLAYcqIYzv
+                    - generic [ref=e2366]: 4:01
+                  - generic [ref=e2377]:
+                    - generic [ref=e2378]:
+                      - heading "One Direction - Night Changes" [level=3] [ref=e2379]:
+                        - link "One Direction - Night Changes 4 minutes, 1 second" [ref=e2380]:
+                          - /url: /watch?v=syFZfO_wfMQ&list=RDsyFZfO_wfMQ&start_radio=1&pp=oAcB0gcJCaMLAYcqIYzv
+                          - text: One Direction - Night Changes
+                      - generic [ref=e2382]:
+                        - group [ref=e2383]:
+                          - generic [ref=e2384]: One Direction
+                        - group [ref=e2390]:
+                          - generic "1.2 billion views" [ref=e2394]: 1.2bn
+                          - generic "11 years ago" [ref=e2395]: 11 yr ago
+                    - button "More actions" [ref=e2398]
+                - generic [ref=e2403] [cursor=pointer]:
+                  - link [ref=e2404]:
+                    - /url: /watch?v=CaCSuzR4DwM&list=RDCaCSuzR4DwM&start_radio=1&pp=oAcB
+                    - generic [ref=e2405]: 2:26
+                  - generic [ref=e2416]:
+                    - generic [ref=e2417]:
+                      - heading "Louis Armstrong - What A Wonderful World (At The BBC)" [level=3] [ref=e2418]:
+                        - link "Louis Armstrong - What A Wonderful World (At The BBC) 2 minutes, 26 seconds" [ref=e2419]:
+                          - /url: /watch?v=CaCSuzR4DwM&list=RDCaCSuzR4DwM&start_radio=1&pp=oAcB
+                          - text: Louis Armstrong - What A Wonderful World (At The BBC)
+                      - generic [ref=e2421]:
+                        - group [ref=e2422]:
+                          - generic [ref=e2423]: Louis Armstrong
+                        - group [ref=e2429]:
+                          - generic "33 million views" [ref=e2433]: 33m
+                          - generic "2 years ago" [ref=e2434]: 2 yr ago
+                    - button "More actions" [ref=e2437]
+                - generic [ref=e2442] [cursor=pointer]:
+                  - link [ref=e2443]:
+                    - /url: /watch?v=greA6f6phZM&list=RDgreA6f6phZM&start_radio=1&pp=oAcB
+                    - generic [ref=e2444]: 11:35
+                  - generic [ref=e2455]:
+                    - generic [ref=e2456]:
+                      - heading "Gotye - Somebody That I Used To Know (Mick Benjamins' Extended Edit)" [level=3] [ref=e2457]:
+                        - link "Gotye - Somebody That I Used To Know (Mick Benjamins' Extended Edit) 11 minutes, 35 seconds" [ref=e2458]:
+                          - /url: /watch?v=greA6f6phZM&list=RDgreA6f6phZM&start_radio=1&pp=oAcB
+                          - text: Gotye - Somebody That I Used To Know (Mick Benjamins' Extended Edit)
+                      - generic [ref=e2460]:
+                        - group [ref=e2461]:
+                          - generic [ref=e2462]: TheEchelonProject
+                        - group [ref=e2463]:
+                          - generic "15 million views" [ref=e2467]: 15m
+                          - generic "13 years ago" [ref=e2468]: 13 yr ago
+                    - button "More actions" [ref=e2471]
+      - text: • • · • • • • • • • • • • • • • • • • • •
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - generic:
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic "YouTube Video Player" [active]

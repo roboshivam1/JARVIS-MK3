@@ -1,0 +1,895 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>JARVIS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+/* ==========================================================================
+   The Basement Gazette, as an interface.
+
+   Newspapers are dense because paper costs money; a screen does not. So
+   the type, rules, and boxes carry over, but with room to breathe -
+   this is read in a chair, not on a commute.
+   ========================================================================== */
+
+:root {
+  --ink: #ece5d8;          /* cream, the text */
+  --paper: #17171a;        /* near-black, the ground */
+  --paper-raised: #1e1e22; /* boxes and input */
+  --rule: #3a3a40;         /* hairlines */
+  --muted: #8a8a92;        /* metadata */
+  --accent: #d4685f;       /* the red, used sparingly */
+  --accent-dim: #8f4842;
+
+  --serif: 'Source Serif 4', Georgia, serif;
+  --mono: 'JetBrains Mono', ui-monospace, monospace;
+  --display: var(--mono);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: 16px;
+  line-height: 1.65;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* -- masthead ------------------------------------------------------------- */
+
+header {
+  border-bottom: 1px solid var(--rule);
+  padding: 14px 24px 12px;
+  display: flex;
+  align-items: baseline;
+  gap: 24px;
+  flex-shrink: 0;
+}
+
+.masthead {
+  font-family: var(--display);
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: 0.34em;
+  line-height: 1;
+}
+
+.dateline {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.connection {
+  margin-left: auto;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.connection.live { color: var(--accent); }
+
+/* -- layout --------------------------------------------------------------- */
+
+main {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  min-height: 0;
+}
+
+#transcript {
+  overflow-y: auto;
+  padding: 28px 40px 20px;
+  scroll-behavior: smooth;
+}
+
+aside {
+  border-left: 1px solid var(--rule);
+  overflow-y: auto;
+  padding: 24px 20px;
+}
+
+/* -- the conversation ------------------------------------------------------ */
+
+.turn { margin-bottom: 28px; max-width: 68ch; }
+
+.byline {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 6px;
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+}
+.turn.owner .byline { color: var(--accent-dim); }
+
+.body { white-space: pre-wrap; font-size: 17px; }
+
+/* The owner's own words sit slightly apart - a letter to the editor
+   rather than the article itself. */
+.turn.owner .body {
+  border-left: 2px solid var(--accent-dim);
+  padding-left: 14px;
+  color: #d8d2c6;
+}
+
+.thinking {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--muted);
+  font-style: normal;
+  letter-spacing: 0.04em;
+}
+.thinking::after {
+  content: '';
+  animation: dots 1.4s steps(4, end) infinite;
+}
+@keyframes dots {
+  0%   { content: ''; }
+  25%  { content: '.'; }
+  50%  { content: '..'; }
+  75%  { content: '...'; }
+}
+
+.notice {
+  border: 1px solid var(--rule);
+  border-left: 3px solid var(--accent);
+  padding: 12px 16px;
+  margin-bottom: 24px;
+  max-width: 68ch;
+  background: var(--paper-raised);
+}
+.notice .label {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 6px;
+}
+.notice .body { font-size: 15px; }
+
+.approval-actions { margin-top: 12px; display: flex; gap: 10px; }
+
+/* -- the sidebar ----------------------------------------------------------- */
+
+.panel { margin-bottom: 28px; }
+
+.panel h2 {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent);
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--rule);
+  margin-bottom: 10px;
+}
+
+.row {
+  font-family: var(--mono);
+  font-size: 12px;
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 3px 0;
+  color: var(--ink);
+}
+.row .dim { color: var(--muted); }
+.empty { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+
+/* -- input ----------------------------------------------------------------- */
+
+footer {
+  border-top: 1px solid var(--rule);
+  padding: 14px 24px 16px;
+  flex-shrink: 0;
+  background: var(--paper);
+}
+
+.composer { display: flex; gap: 10px; align-items: flex-end; }
+
+textarea {
+  flex: 1;
+  background: var(--paper-raised);
+  border: 1px solid var(--rule);
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: 16px;
+  line-height: 1.5;
+  padding: 10px 14px;
+  resize: none;
+  max-height: 160px;
+  outline: none;
+}
+textarea:focus { border-color: var(--accent-dim); }
+
+button {
+  background: transparent;
+  border: 1px solid var(--rule);
+  color: var(--ink);
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 10px 16px;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+button:hover { border-color: var(--accent); color: var(--accent); }
+button.primary { border-color: var(--accent-dim); color: var(--accent); }
+button.recording {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(212, 104, 95, 0.12);
+}
+
+.attachments {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 8px;
+  min-height: 0;
+}
+.attachments:not(:empty) { min-height: 20px; }
+
+/* -- drag and drop --------------------------------------------------------- */
+
+body.dragging::after {
+  content: 'RELEASE TO ATTACH';
+  position: fixed;
+  inset: 20px;
+  border: 2px dashed var(--accent);
+  display: grid;
+  place-items: center;
+  font-family: var(--mono);
+  font-size: 14px;
+  letter-spacing: 0.2em;
+  color: var(--accent);
+  background: rgba(23, 23, 26, 0.92);
+  pointer-events: none;
+  z-index: 100;
+}
+
+/* -- token prompt ---------------------------------------------------------- */
+
+#gate {
+  position: fixed;
+  inset: 0;
+  background: var(--paper);
+  display: grid;
+  place-items: center;
+  z-index: 200;
+}
+#gate .inner { text-align: center; max-width: 340px; }
+#gate input {
+  width: 100%;
+  margin-top: 18px;
+  background: var(--paper-raised);
+  border: 1px solid var(--rule);
+  color: var(--ink);
+  font-family: var(--mono);
+  font-size: 13px;
+  padding: 10px 14px;
+  outline: none;
+}
+
+/* -- phone ----------------------------------------------------------------- */
+
+@media (max-width: 760px) {
+  main { grid-template-columns: 1fr; }
+  aside {
+    display: none;
+    border-left: none;
+    border-top: 1px solid var(--rule);
+  }
+  body.show-panel aside { display: block; }
+  body.show-panel #transcript { display: none; }
+  #transcript { padding: 20px 18px; }
+  .masthead { font-size: 22px; }
+  .dateline { display: none; }
+}
+</style>
+</head>
+<body>
+
+<div id="gate">
+  <div class="inner">
+    <div class="masthead">JARVIS</div>
+    <input id="token-input" type="password" placeholder="access token" autocomplete="off">
+  </div>
+</div>
+
+<header>
+  <span class="masthead">JARVIS</span>
+  <span class="dateline" id="dateline"></span>
+  <span class="connection" id="connection">connecting</span>
+</header>
+
+<main>
+  <div id="transcript"></div>
+  <aside>
+    <div class="panel">
+      <h2>Machines</h2>
+      <div id="workers"><div class="empty">none connected</div></div>
+    </div>
+    <div class="panel">
+      <h2>In Progress</h2>
+      <div id="jobs"><div class="empty">nothing running</div></div>
+    </div>
+    <div class="panel">
+      <h2>Watching</h2>
+      <div id="watchers"><div class="empty">nothing watched</div></div>
+    </div>
+    <div class="panel">
+      <h2>Ledger</h2>
+      <div id="ledger"><div class="empty">-</div></div>
+    </div>
+  </aside>
+</main>
+
+<footer>
+  <div class="attachments" id="attachments"></div>
+  <div class="composer">
+    <textarea id="input" rows="1" placeholder="Speak freely, sir."></textarea>
+    <button id="talk">Hold to Talk</button>
+    <button id="attach">Attach</button>
+    <button id="send" class="primary">Send</button>
+  </div>
+  <input type="file" id="file-input" multiple hidden>
+</footer>
+
+<script>
+/* ==========================================================================
+   No framework, on purpose. This is six hundred readable lines rather
+   than a build step and a dependency tree, and the whole thing fits in
+   one file you can read end to end.
+   ========================================================================== */
+
+const state = {
+  token: localStorage.getItem('jarvis_token') || '',
+  socket: null,
+  currentTurn: null,      // the assistant bubble being streamed into
+  attachments: [],        // artifact ids awaiting the next message
+  reconnectDelay: 1000,
+};
+
+const $ = (id) => document.getElementById(id);
+
+// -- the gate ---------------------------------------------------------------
+
+function showGate() {
+  $('gate').style.display = 'grid';
+  $('token-input').focus();
+}
+
+$('token-input').addEventListener('keydown', (event) => {
+  if (event.key !== 'Enter') return;
+  const token = event.target.value.trim();
+  if (!token) return;
+  state.token = token;
+  localStorage.setItem('jarvis_token', token);
+  $('gate').style.display = 'none';
+  connect();
+});
+
+// -- the socket -------------------------------------------------------------
+
+function connect() {
+  // wss over HTTPS, ws over plain HTTP. Behind Tailscale's proxy the
+  // page is served over HTTPS while the Core listens on plain HTTP
+  // locally - so the scheme must follow the PAGE, not the Core.
+  const scheme = location.protocol === 'https:' ? 'wss' : 'ws';
+  const socket = new WebSocket(`${scheme}://${location.host}/ws/client`);
+  state.socket = socket;
+
+  socket.onopen = () => {
+    send('client.hello', {
+      token: state.token,
+      client_kind: 'web',
+      label: navigator.platform || 'browser',
+    });
+  };
+
+  socket.onmessage = (event) => handle(JSON.parse(event.data));
+
+  socket.onclose = () => {
+    setConnection('offline', false);
+    // Reconnect with backoff: a closed laptop lid or a Core restart
+    // should heal itself without a page refresh.
+    setTimeout(connect, state.reconnectDelay);
+    state.reconnectDelay = Math.min(state.reconnectDelay * 2, 30000);
+  };
+}
+
+function send(kind, payload) {
+  if (!state.socket || state.socket.readyState !== WebSocket.OPEN) return;
+  state.socket.send(JSON.stringify({
+    v: 1,
+    id: crypto.randomUUID().replace(/-/g, '').slice(0, 26).toUpperCase(),
+    ts: new Date().toISOString(),
+    kind,
+    payload,
+  }));
+}
+
+function handle(envelope) {
+  const { kind, payload } = envelope;
+
+  if (kind === 'core.ready') {
+    setConnection('live', true);
+    state.reconnectDelay = 1000;
+    refreshStatus();
+  }
+  else if (kind === 'core.assistant_delta') appendDelta(payload.text);
+  else if (kind === 'core.assistant_done') finishTurn();
+  else if (kind === 'core.transcript') {
+  // A new utterance: reset the audio sequence for the reply to come.
+  nextSeq = 0;
+  audioClips.clear();
+  addTurn('owner', payload.text);
+}
+  else if (kind === 'core.thinking') showThinking(payload.note);
+  else if (kind === 'core.audio') queueAudio(payload.seq, payload.data_b64);
+  else if (kind === 'core.audio_done') { /* the queue drains itself */ }
+  else if (kind === 'core.notification') addNotice(payload);
+  else if (kind === 'core.status') renderStatus(payload.payload);
+  else if (kind === 'core.error') addNotice({ text: payload.message, priority: 2 });
+}
+
+function setConnection(text, live) {
+  const el = $('connection');
+  el.textContent = text;
+  el.classList.toggle('live', live);
+}
+
+// -- the transcript ---------------------------------------------------------
+
+function timestamp() {
+  return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+function addTurn(who, text) {
+  const turn = document.createElement('div');
+  turn.className = `turn ${who}`;
+  turn.innerHTML = `
+    <div class="byline">
+      <span>${who === 'owner' ? 'Shivam' : 'JARVIS'}</span>
+      <span>${timestamp()}</span>
+    </div>
+    <div class="body"></div>`;
+  turn.querySelector('.body').textContent = text;
+  $('transcript').appendChild(turn);
+  scrollDown();
+  return turn;
+}
+
+function showThinking(note) {
+  if (!state.currentTurn) {
+    state.currentTurn = addTurn('jarvis', '');
+  }
+  const body = state.currentTurn.querySelector('.body');
+  if (!body.textContent) {
+    body.className = 'body thinking';
+    body.textContent = note;
+  }
+}
+
+function appendDelta(text) {
+  if (!state.currentTurn) state.currentTurn = addTurn('jarvis', '');
+  const body = state.currentTurn.querySelector('.body');
+  // The first real token replaces whatever progress note was showing.
+  if (body.classList.contains('thinking')) {
+    body.className = 'body';
+    body.textContent = '';
+  }
+  body.textContent += text;
+  scrollDown();
+}
+
+function finishTurn() {
+  state.currentTurn = null;
+  refreshStatus();
+}
+
+function addNotice(notification) {
+  const notice = document.createElement('div');
+  notice.className = 'notice';
+  const label = notification.approval_id ? 'Permission Needed'
+    : notification.priority <= 2 ? 'Urgent' : 'Notice';
+  notice.innerHTML = `<div class="label">${label}</div><div class="body"></div>`;
+  notice.querySelector('.body').textContent = notification.text;
+
+  if (notification.approval_id) {
+    const actions = document.createElement('div');
+    actions.className = 'approval-actions';
+    for (const decision of ['approve', 'reject']) {
+      const button = document.createElement('button');
+      button.textContent = decision;
+      button.onclick = () => {
+        send('client.command', {
+          name: decision,
+          args: { approval_id: notification.approval_id },
+        });
+        actions.remove();
+      };
+      actions.appendChild(button);
+    }
+    notice.appendChild(actions);
+  }
+
+  $('transcript').appendChild(notice);
+  scrollDown();
+}
+
+function scrollDown() {
+  const el = $('transcript');
+  el.scrollTop = el.scrollHeight;
+}
+
+// -- the sidebar ------------------------------------------------------------
+
+async function refreshStatus() {
+  try {
+    const response = await fetch('/status', {
+      headers: { Authorization: `Bearer ${state.token}` },
+    });
+    if (response.ok) renderStatus(await response.json());
+  } catch (_) { /* the socket will reconnect and try again */ }
+}
+
+function rows(container, items, emptyText) {
+  const el = $(container);
+  el.innerHTML = '';
+  if (!items.length) {
+    el.innerHTML = `<div class="empty">${emptyText}</div>`;
+    return;
+  }
+  for (const [left, right] of items) {
+    const row = document.createElement('div');
+    row.className = 'row';
+    row.innerHTML = `<span>${left}</span><span class="dim">${right}</span>`;
+    el.appendChild(row);
+  }
+}
+
+function renderStatus(status) {
+  rows('workers',
+    (status.workers || []).map(w => [w.id, w.capabilities.join(' ')]),
+    'none connected');
+
+  rows('ledger', [
+    ['today', `$${(status.cost_today_usd || 0).toFixed(3)}`],
+    ['calls', String(status.llm_calls || 0)],
+    ['turns', String(status.turns || 0)],
+  ], '-');
+}
+
+// -- attachments ------------------------------------------------------------
+
+async function upload(file) {
+  const form = new FormData();
+  form.append('file', file);
+  const response = await fetch('/upload', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${state.token}` },
+    body: form,
+  });
+  if (!response.ok) {
+    addNotice({ text: `Upload failed: ${file.name}`, priority: 3 });
+    return;
+  }
+  const artifact = await response.json();
+  state.attachments.push(artifact);
+  renderAttachments();
+}
+
+function renderAttachments() {
+  $('attachments').textContent = state.attachments.length
+    ? 'attached: ' + state.attachments.map(a => a.name).join(', ')
+    : '';
+}
+
+$('attach').onclick = () => $('file-input').click();
+$('file-input').onchange = (event) => {
+  for (const file of event.target.files) upload(file);
+  event.target.value = '';
+};
+
+// Drag and drop anywhere on the page.
+document.addEventListener('dragover', (event) => {
+  event.preventDefault();
+  document.body.classList.add('dragging');
+});
+document.addEventListener('dragleave', (event) => {
+  if (event.relatedTarget === null) document.body.classList.remove('dragging');
+});
+document.addEventListener('drop', (event) => {
+  event.preventDefault();
+  document.body.classList.remove('dragging');
+  for (const file of event.dataTransfer.files) upload(file);
+});
+
+// -- sending ----------------------------------------------------------------
+
+function submit() {
+  const input = $('input');
+  const text = input.value.trim();
+  if (!text) return;
+
+  addTurn('owner', text);
+  send('client.user_message', {
+    text,
+    attachments: state.attachments.map(a => a.artifact_id),
+  });
+
+  input.value = '';
+  input.style.height = 'auto';
+  state.attachments = [];
+  renderAttachments();
+}
+
+$('send').onclick = submit;
+
+// -- speech playback -------------------------------------------------------
+//
+// Sentences arrive faster than they play, so they queue. Playing them
+// as they land would overlap voices into noise.
+
+// Clips arrive OUT OF ORDER, because they are synthesised
+// concurrently and short sentences finish before long ones. Each
+// carries its position in the reply, and playback follows that number
+// rather than arrival - otherwise a short closing line jumps ahead of
+// the paragraph it belongs after.
+const audioClips = new Map();   // seq -> Blob (or null when synthesis failed)
+let nextSeq = 0;
+let playing = false;
+let audioUnlocked = false;
+
+// ONE PERSISTENT AUDIO ELEMENT, not one per clip.
+//
+// iOS Safari permits playback only from an element that a user gesture
+// started. Creating a fresh Audio() per sentence means each one is a
+// new unauthorised playback and gets blocked - the silent-clip trick
+// that works elsewhere does not survive newer Safari. Unlocking THIS
+// element once, on a real tap, and then only changing its source keeps
+// the permission.
+const player = new Audio();
+player.addEventListener('ended', () => playNext());
+player.addEventListener('error', () => playNext());
+
+function unlockAudio() {
+  if (audioUnlocked) return;
+  // Start and immediately pause the real element during the gesture.
+  // That is what iOS remembers; a different element played later is
+  // not covered by it.
+  player.src = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAgD'
+             + '4AAAB9AAACABAAZGF0YQAAAAA=';
+  player.play().then(() => {
+    player.pause();
+    audioUnlocked = true;
+  }).catch(() => {
+    // The gesture was not enough - a later tap will try again.
+  });
+}
+
+['touchend', 'mouseup', 'keyup'].forEach((event) => {
+  document.addEventListener(event, unlockAudio);
+});
+
+function queueAudio(seq, b64) {
+  if (!b64) {
+    // Synthesis failed for this sentence. Record the gap so playback
+    // steps over it rather than waiting for a clip that never comes.
+    audioClips.set(seq, null);
+  } else {
+    const binary = atob(b64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    audioClips.set(seq, new Blob([bytes], { type: 'audio/wav' }));
+  }
+  if (!playing) playNext();
+}
+
+function playNext() {
+  // Step over failed clips sitting at the head of the queue.
+  while (audioClips.has(nextSeq) && audioClips.get(nextSeq) === null) {
+    audioClips.delete(nextSeq);
+    nextSeq++;
+  }
+
+  if (!audioClips.has(nextSeq)) {
+    // The next clip in order has not arrived. Stop rather than play
+    // something later; this resumes when that clip lands.
+    playing = false;
+    return;
+  }
+
+  playing = true;
+  const blob = audioClips.get(nextSeq);
+  audioClips.delete(nextSeq);
+  nextSeq++;
+
+  // Release the previous object URL before replacing it, or a long
+  // conversation leaks a blob per sentence.
+  if (player.src.startsWith('blob:')) URL.revokeObjectURL(player.src);
+  player.src = URL.createObjectURL(blob);
+  player.play().catch((error) => {
+    if (error && error.name === 'NotAllowedError') {
+      addNotice({
+        text: 'Audio is still blocked. Tap the page once, then ask again.',
+        priority: 4,
+      });
+      playing = false;
+      return;
+    }
+    playNext();
+  });
+}
+
+function stopSpeaking() {
+  audioClips.clear();
+  nextSeq = 0;
+  playing = false;
+  player.pause();
+}
+
+// -- push to talk -----------------------------------------------------------
+//
+// Hold the button, speak, release. Not wake word: push-to-talk removes
+// an entire class of failure - no false triggers, no "did it hear me",
+// no always-on microphone - while everything downstream is debugged.
+//
+// Audio streams up in chunks WHILE recording rather than as one file
+// afterwards, so transcription can start the moment the button is
+// released instead of after an upload.
+
+let recorder = null;
+let chunkSeq = 0;
+let stopping = false;
+
+async function startTalking() {
+  if (recorder) return;
+  // Barge-in: if he is talking and you start, he stops. The queue is
+  // dropped rather than paused - what he was about to say is stale the
+  // moment you interrupt.
+  stopSpeaking();
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    recorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+    chunkSeq = 0;
+
+    stopping = false;
+
+    recorder.ondataavailable = async (event) => {
+      if (!event.data.size) {
+        // Even an empty final chunk must close the utterance, or the
+        // Core waits forever for audio that is not coming.
+        if (stopping) send('client.audio_end', {});
+        return;
+      }
+      const buffer = await event.data.arrayBuffer();
+      const bytes = new Uint8Array(buffer);
+      let binary = '';
+      for (const byte of bytes) binary += String.fromCharCode(byte);
+      send('client.audio_chunk', {
+        seq: chunkSeq++,
+        data_b64: btoa(binary),
+        mime: 'audio/webm',
+      });
+
+      // THE FINAL CHUNK ARRIVES AFTER onstop, asynchronously. Sending
+      // audio_end from onstop therefore closed the utterance before the
+      // last fragment of speech had been sent - which is why the last
+      // word or two went missing every time, consistently enough to
+      // look like the model mishearing.
+      if (stopping) send('client.audio_end', {});
+    };
+
+    recorder.onstop = () => {
+      // Release the microphone so the browser stops showing the
+      // recording indicator - holding it open between utterances is
+      // both rude and a privacy smell.
+      stream.getTracks().forEach(track => track.stop());
+      recorder = null;
+    };
+
+    // One chunk per second while recording, so the upload finishes
+    // roughly when the speaking does.
+    recorder.start(1000);
+    $('talk').classList.add('recording');
+    $('talk').textContent = 'Listening';
+  } catch (error) {
+    addNotice({
+      text: 'Microphone unavailable. On a phone this needs HTTPS; '
+          + 'on this machine, check browser permissions.',
+      priority: 3,
+    });
+    recorder = null;
+  }
+}
+
+function stopTalking() {
+  if (!recorder) return;
+  // A moment of grace: people finish a word slightly after letting go
+  // of a button, and clipping their last syllable is the difference
+  // between voice that works and voice that is annoying.
+  const current = recorder;
+  setTimeout(() => {
+    if (current.state === 'recording') {
+      stopping = true;
+      current.stop();
+    }
+  }, 300);
+  $('talk').classList.remove('recording');
+  $('talk').textContent = 'Hold to Talk';
+}
+
+$('talk').addEventListener('mousedown', startTalking);
+$('talk').addEventListener('mouseup', stopTalking);
+$('talk').addEventListener('mouseleave', stopTalking);
+$('talk').addEventListener('touchstart', (e) => { e.preventDefault(); startTalking(); });
+$('talk').addEventListener('touchend', (e) => { e.preventDefault(); stopTalking(); });
+
+// Spacebar as push-to-talk when not typing. repeat guards against the
+// key-repeat storm a held key produces.
+document.addEventListener('keydown', (event) => {
+  if (event.code !== 'Space' || event.repeat) return;
+  if (document.activeElement === $('input')) return;
+  event.preventDefault();
+  startTalking();
+});
+document.addEventListener('keyup', (event) => {
+  if (event.code !== 'Space') return;
+  if (document.activeElement === $('input')) return;
+  stopTalking();
+});
+
+$('input').addEventListener('keydown', (event) => {
+  // Enter sends; shift-enter is a newline. The opposite of a document
+  // editor, and the right way round for a conversation.
+  if (event.key === 'Enter' && !event.shiftKey) {
+    event.preventDefault();
+    submit();
+  }
+});
+
+$('input').addEventListener('input', (event) => {
+  event.target.style.height = 'auto';
+  event.target.style.height = Math.min(event.target.scrollHeight, 160) + 'px';
+});
+
+// -- boot -------------------------------------------------------------------
+
+$('dateline').textContent = new Date().toLocaleDateString([], {
+  weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+}) + ' \u00b7 Jaipur';
+
+if (state.token) {
+  $('gate').style.display = 'none';
+  connect();
+} else {
+  showGate();
+}
+
+setInterval(refreshStatus, 15000);
+</script>
+</body>
+</html>

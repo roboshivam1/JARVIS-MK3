@@ -1,0 +1,717 @@
+- generic [ref=e1]:
+  - generic [ref=e2]:
+    - banner [ref=e4]:
+      - generic [ref=e6]:
+        - generic [ref=e7]:
+          - button "Guide" [active] [ref=e9] [cursor=pointer]
+          - generic [ref=e13]:
+            - link "YouTube Home" [ref=e14] [cursor=pointer]:
+              - /url: /
+            - generic [ref=e20]: IN
+          - button "Skip navigation" [ref=e24] [cursor=pointer]
+        - generic [ref=e28]:
+          - search [ref=e29]:
+            - generic [ref=e31]:
+              - generic [ref=e32]:
+                - combobox "Search" [expanded] [ref=e34]: Stand By Me
+                - button "Clear search query" [ref=e103] [cursor=pointer]
+              - button "Search" [ref=e35] [cursor=pointer]
+          - generic [ref=e40]:
+            - button "Search with your voice" [ref=e42] [cursor=pointer]
+            - tooltip "tooltip"
+        - generic [ref=e47]:
+          - button "Settings" [ref=e52] [cursor=pointer]
+          - link "Sign in" [ref=e56] [cursor=pointer]:
+            - /url: https://accounts.google.com/ServiceLogin?service=youtube&uilel=3&passive=true&continue=https%3A%2F%2Fwww.youtube.com%2Fsignin%3Faction_handle_signin%3Dtrue%26app%3Ddesktop%26hl%3Den-GB%26next%3D%252Fresults%253Fsearch_query%253DStand%252BBy%252BMe&hl=en-GB&ec=65620
+    - navigation [ref=e60]:
+      - generic [ref=e61]:
+        - link "Home" [ref=e63] [cursor=pointer]:
+          - /url: /
+        - link "Shorts" [ref=e67] [cursor=pointer]:
+          - /url: /shorts/
+        - link "Subscriptions" [ref=e71] [cursor=pointer]:
+          - /url: /feed/subscriptions
+        - link "You" [ref=e75] [cursor=pointer]:
+          - /url: /feed/you
+    - generic [ref=e78]:
+      - text: •
+      - main [ref=e111]:
+        - generic [ref=e112]:
+          - generic [ref=e114]:
+            - tablist [ref=e119]:
+              - tab "All" [selected] [ref=e123] [cursor=pointer]
+              - tab "Shorts" [ref=e132] [cursor=pointer]
+              - tab "Unwatched" [ref=e141] [cursor=pointer]
+              - tab "Watched" [ref=e150] [cursor=pointer]
+              - tab "Videos" [ref=e159] [cursor=pointer]
+              - tab "Recently uploaded" [ref=e168] [cursor=pointer]
+              - tab "Live" [ref=e177] [cursor=pointer]
+            - generic [ref=e184]:
+              - button "Search filters" [ref=e186] [cursor=pointer]:
+                - generic: Filters
+              - tooltip "tooltip"
+          - generic [ref=e195]:
+            - generic [ref=e197] [cursor=pointer]:
+              - link [ref=e198]:
+                - /url: /watch?v=WjyEJDSqY5U&list=PLKvQf7JNnWS1i4rnWIc2pdtcUwzBn6Y6G
+                - generic [ref=e199]: 30 videos
+              - generic [ref=e213]:
+                - 'heading "【ENG SUB】Stand by Me 那些回不去的年少时光☘️Cast: Zhao Jinmai | Bai Yufan【MangoTV English】" [level=3] [ref=e214]':
+                  - 'link "【ENG SUB】Stand by Me 那些回不去的年少时光☘️Cast: Zhao Jinmai | Bai Yufan【MangoTV English】" [ref=e215]':
+                    - /url: /watch?v=WjyEJDSqY5U&list=PLKvQf7JNnWS1i4rnWIc2pdtcUwzBn6Y6G
+                - generic [ref=e217]:
+                  - group [ref=e218]:
+                    - link "MangoTV English" [ref=e221]:
+                      - /url: /@MangoTVEnglishOfficial
+                    - generic [ref=e222]: •
+                    - link "Playlist" [ref=e225]:
+                      - /url: /@MangoTVEnglishOfficial
+                  - group [ref=e226]
+                  - group [ref=e227]:
+                    - link "【ENG SUB】EP01 Embark on a Journey of Growth, Love, Friendship | Stand by Me | MangoTV English · 44:56" [ref=e229]:
+                      - /url: /watch?v=WjyEJDSqY5U&list=PLKvQf7JNnWS1i4rnWIc2pdtcUwzBn6Y6G
+                  - group [ref=e230]:
+                    - link "【ENG SUB】EP02 Embark on a Journey of Growth & Love | Stand by Me | MangoTV English · 46:45" [ref=e232]:
+                      - /url: /watch?v=BcU6Pp_azf8&list=PLKvQf7JNnWS1i4rnWIc2pdtcUwzBn6Y6G
+                  - group [ref=e233]
+                  - group [ref=e234]:
+                    - link "View full playlist" [ref=e237]:
+                      - /url: /playlist?list=PLKvQf7JNnWS1i4rnWIc2pdtcUwzBn6Y6G
+            - generic [ref=e239]:
+              - link [ref=e241] [cursor=pointer]:
+                - /url: /watch?v=hwZNL7QVJjE&list=RDhwZNL7QVJjE&start_radio=1&pp=ygULU3RhbmQgQnkgTWWgBwE%3D
+                - img [ref=e246]:
+                  - generic [ref=e248]: 2:58
+                - generic: Now playing
+              - generic [ref=e249] [cursor=pointer]:
+                - generic [ref=e250]:
+                  - heading [level=3] [ref=e252]:
+                    - link "Ben E. King - Stand By Me (Audio) 2 minutes, 58 seconds" [ref=e253]:
+                      - /url: /watch?v=hwZNL7QVJjE&list=RDhwZNL7QVJjE&start_radio=1&pp=ygULU3RhbmQgQnkgTWWgBwE%3D
+                      - text: Ben E. King - Stand By Me (Audio)
+                  - generic [ref=e256]:
+                    - generic [ref=e257]: 589m views
+                    - generic [ref=e258]: •16 years ago
+                - generic [ref=e259]:
+                  - link "Go to channel Soulful Sounds" [ref=e260]:
+                    - /url: /@SoulfulSounds
+                  - generic [ref=e262]:
+                    - link "Soulful Sounds" [ref=e266]:
+                      - /url: /@SoulfulSounds
+                    - img "Verified" [ref=e271]
+                - generic [ref=e273]:
+                  - generic [ref=e274]: Ben E. King performing Stand By Me, from the album Don't Play That Song! "Stand by Me" is a song originally performed in 1961 ...
+                  - tooltip "tooltip"
+                - img "8K" [ref=e279]
+            - generic [ref=e282]:
+              - link [ref=e284] [cursor=pointer]:
+                - /url: /watch?v=7rZyI7kPZMI&list=RD7rZyI7kPZMI&start_radio=1&pp=ygULU3RhbmQgQnkgTWWgBwE%3D
+              - generic [ref=e286] [cursor=pointer]:
+                - generic [ref=e287]:
+                  - heading [level=3] [ref=e289]:
+                    - link "Ben E King - Stand By Me (Lyrics) 3 minutes, 4 seconds" [ref=e290]:
+                      - /url: /watch?v=7rZyI7kPZMI&list=RD7rZyI7kPZMI&start_radio=1&pp=ygULU3RhbmQgQnkgTWWgBwE%3D
+                      - text: Ben E King - Stand By Me (Lyrics)
+                  - generic [ref=e293]:
+                    - generic [ref=e294]: 32m views
+                    - generic [ref=e295]: •4 years ago
+                - generic [ref=e296]:
+                  - link "Go to channel Young Pilgrim Music" [ref=e297]:
+                    - /url: /@YoungPilgrimMusic
+                  - link "Young Pilgrim Music" [ref=e303]:
+                    - /url: /@YoungPilgrimMusic
+                - generic [ref=e304]:
+                  - text: Support The Channel - https://www.buymeacoffee.com/YoungPilgrim.
+                  - tooltip "tooltip"
+            - generic [ref=e317] [cursor=pointer]:
+              - generic [ref=e318]:
+                - link "Generate variations in seconds." [ref=e321]:
+                  - /url: https://www.googleadservices.com/pagead/aclk?sa=L&ai=CuwjUWqdxasnNFvD7v_gP74Ok2QGz2fTEiAGkm_mjqBSwkB8QASAAYOXy54PUDoIBF2NhLXB1Yi02MjE5ODExNzQ3MDQ5MzcxoAGL4oqgAagDBMgDCqoEugJP0BS3P-iJ-zTj2D3dN2lsQ_oDFyBiM4onEUuMuaMr4xSDLBJfhJZ53HhQ6ttXme0xcJU7uYmm9oOQYctVDF4LiQlIi7ZJKY5Ce_OSCvIAOwHaOv9w7I67QLVgT5q-MXdI8pHTRqKw-TZ2PcMf0F965KnNmu7ShVnzEaqCNewZ9AEg_ovcjFa4O1nzlGrg_A2Sbf4SSCcCjKvdGXksf8jogd-lihU3xuJCZYyAioxquEzfHSLfxIXgPzlxxJu3tUqdZ0csm2DPhftRxINKG0JT_fPpiyG9oHx5oOR59sy5q1VxLoM64OgEv9uL2dpov50IQ8ztbGubZ6cE0G-v7fsAXLnpT23moXgwWOddtr43mNpUiul1XZZyGjWZyvrtiEY0DD25pZ9bINlVdgmar9gZpbN5J7y3pYWqEIgFnpPkzlWSBQgIE3iLgPDgAqAGboAH3Z313wKQBwSoB_LAsQKoB7jEsQKoB-G2sQKoB6XPsQKoB-edsQKoB-idsQKoB--1sQKoB_C1sQKoB_nTsQKoB8nasQKoB6ngsQKoB4QIqAem1LECqAeo0huoB7YHqAex3BuoB7CbsQKoB66xsQKoB_2ysQKoB8jPsQKoB8nPsQKoB83HsQKoB_HRsQKoB_zVsQKoB_vVsQKoB4zWsQKoB4vWsQKoB5risQKoB5visQKoB53XsQKoB53UsQKoB4HGG6gH_K-xAqgHvtmxAqgHv9mxAqgHq8UbqAe3obECqAfVqbECqAfetbECqAfqsbECqAe-t7ECqAeZtbECqAeFwbECqAfrpbECqAfKqbEC0gguCIBBEAEYXjICggI6D4BCgMCAgICAgIACqoCAEEjZoNI1UBRY-KjqvsuGlgNgAZoJK2h0dHBzOi8vd3d3LmFkb2JlLmNvbS9pbi9jcmVhdGl2ZWNsb3VkLmh0bWyxCRDloLHRD9CYyAkAyAmKAsgJlwK6Cz8IAxAFGAQgCCgBMBxAAUgAWE5gAGgAcAGIAQCYAQGiAQgKAKgCAdgCAqgBAdgBA4ACAYgCBboDB3Zpc2lucmLQCxLgCwGiDB1qFgoUY29tLmFkb2JlLnNwYXJrLnBvc3R4AIgBANIMAhAB2gwlCgoQoKzUm92-j_N3EgIBAxoNGJ6T5M5VIJ6hmPSzBUABSgIQH5oNARKqDQJJTsgNAdINqwRodHRwczovL2FkLmRvdWJsZWNsaWNrLm5ldC9kZG0vdHJhY2tjbGsvTjk3Mjk1Mi4yNzkzODJCSURNQU5BR0VSX0RGQVNJVEUvQjI2MTI2MjAwLjMxNzEzOTQ1OTtkY190cmtfYWlkPTUwOTk2Mjg3MztkY190cmtfY2lkPTE1OTk0MzMxNztkY19kYm1fdG9rZW49QU9qZUxORUFBQUE3Q2pRS0RBZ0FGUUFBQUFBZEFBQUFBQklNQ0FBVkFBQUFBQjBBQUFBQUloUUlucFBremxXb0FvdUE4T0FDc0FMRW11UG1BMEE3RUpmbnVnRmpzU05IMHdCeV9Ubi0yVWo2MWRLaDtkY19sYXQ9O2RjX3JkaWQ9O3RhZ19mb3JfY2hpbGRfZGlyZWN0ZWRfdHJlYXRtZW50PTt0ZnVhPTtsdGQ9O2RjX3Rkdj0xO2RjX3RyYW5zcGFyZW50PTE7ZGNfcnVpPTE7ZGNfZXBzPUFIYXM4Y0N5R2N3UGpSTEYySV9SS28wZmV4NUZfTUg1RjlueW5HMkRUdXhaVnhTek03ZldOM0Q4MVlnakxpRHFtSEZEblpQZ1c1Q0Vsc0ZQU0EtLUdBO2RjX3B1YmlkPTY_aHR0cHM6Ly93d3cuYWRvYmUuY29tL2luL2NyZWF0aXZlY2xvdWQuaHRtbD9zZGlkPTkxQkY0TFhTJm12PXNvY2lhbCZtdjI9cGFpZHNvYyZnYWRfc291cmNlPTKwE-2CwiK4E____________wGIFAGwFAPAFYGAgEDQFQHYFQGYFgGoFgHiFgIIAYAXAYoXGAgDGAEgASgBMAE4AUABSAFQAVgBYAJoAaAXAakXV7_CAho-GPC6FwYoADAAOAHQGAHwGAE&ase=2&gclid=EAIaIQobChMIyeLqvsuGlgMV8P0PCR3vASkbEAEYASAAEgLf9fD_BwE&num=1&cid=CAASwwHkaIWuCq1F-WpbqPR2wNSy44c3Re7MNlf8d4ObQlg1w83hIMJnb92EbefTGsxljhXAioZWQATKYScMaEkI7uf-JJvxNedZNHsjOxguD8mCJlFrvtql0zt5viqCMcke_G-Ni3RbFSP4Q9tlTb94a6-ag9BT-iVCNlGhr9w6NPFoCfL7kkVBLRW9__xhCkKbBz_N_0KIt-ZhJ0KgAi64VGElsDSPaprWdhDyrTBz7qsV6ZcXTwHIS9gkhsMB40D3XoRmfGs&sig=AOD64_2VTAdK_2PzJQx-WOhBovhoIPL8CA&ms=%5BCLICK_MS%5D&nb=0&nx=%5BNX%5D&ny=%5BNY%5D&dim=%5BDIM%5D
+                - link "Shallu delivers colour variations quickly with generative AI tools in Creative Cloud Pro." [ref=e324]:
+                  - /url: https://www.googleadservices.com/pagead/aclk?sa=L&ai=CuwjUWqdxasnNFvD7v_gP74Ok2QGz2fTEiAGkm_mjqBSwkB8QASAAYOXy54PUDoIBF2NhLXB1Yi02MjE5ODExNzQ3MDQ5MzcxoAGL4oqgAagDBMgDCqoEugJP0BS3P-iJ-zTj2D3dN2lsQ_oDFyBiM4onEUuMuaMr4xSDLBJfhJZ53HhQ6ttXme0xcJU7uYmm9oOQYctVDF4LiQlIi7ZJKY5Ce_OSCvIAOwHaOv9w7I67QLVgT5q-MXdI8pHTRqKw-TZ2PcMf0F965KnNmu7ShVnzEaqCNewZ9AEg_ovcjFa4O1nzlGrg_A2Sbf4SSCcCjKvdGXksf8jogd-lihU3xuJCZYyAioxquEzfHSLfxIXgPzlxxJu3tUqdZ0csm2DPhftRxINKG0JT_fPpiyG9oHx5oOR59sy5q1VxLoM64OgEv9uL2dpov50IQ8ztbGubZ6cE0G-v7fsAXLnpT23moXgwWOddtr43mNpUiul1XZZyGjWZyvrtiEY0DD25pZ9bINlVdgmar9gZpbN5J7y3pYWqEIgFnpPkzlWSBQgIE3iLgPDgAqAGboAH3Z313wKQBwSoB_LAsQKoB7jEsQKoB-G2sQKoB6XPsQKoB-edsQKoB-idsQKoB--1sQKoB_C1sQKoB_nTsQKoB8nasQKoB6ngsQKoB4QIqAem1LECqAeo0huoB7YHqAex3BuoB7CbsQKoB66xsQKoB_2ysQKoB8jPsQKoB8nPsQKoB83HsQKoB_HRsQKoB_zVsQKoB_vVsQKoB4zWsQKoB4vWsQKoB5risQKoB5visQKoB53XsQKoB53UsQKoB4HGG6gH_K-xAqgHvtmxAqgHv9mxAqgHq8UbqAe3obECqAfVqbECqAfetbECqAfqsbECqAe-t7ECqAeZtbECqAeFwbECqAfrpbECqAfKqbEC0gguCIBBEAEYXjICggI6D4BCgMCAgICAgIACqoCAEEjZoNI1UBRY-KjqvsuGlgNgAZoJK2h0dHBzOi8vd3d3LmFkb2JlLmNvbS9pbi9jcmVhdGl2ZWNsb3VkLmh0bWyxCRDloLHRD9CYyAkAyAmKAsgJlwK6Cz8IAxAFGAQgCCgBMBxAAUgAWE5gAGgAcAGIAQCYAQGiAQgKAKgCAdgCAqgBAdgBA4ACAYgCBboDB3Zpc2lucmLQCxLgCwGiDB1qFgoUY29tLmFkb2JlLnNwYXJrLnBvc3R4AIgBANIMAhAB2gwlCgoQoKzUm92-j_N3EgIBAxoNGJ6T5M5VIJ6hmPSzBUABSgIQH5oNARKqDQJJTsgNAdINqwRodHRwczovL2FkLmRvdWJsZWNsaWNrLm5ldC9kZG0vdHJhY2tjbGsvTjk3Mjk1Mi4yNzkzODJCSURNQU5BR0VSX0RGQVNJVEUvQjI2MTI2MjAwLjMxNzEzOTQ1OTtkY190cmtfYWlkPTUwOTk2Mjg3MztkY190cmtfY2lkPTE1OTk0MzMxNztkY19kYm1fdG9rZW49QU9qZUxORUFBQUE3Q2pRS0RBZ0FGUUFBQUFBZEFBQUFBQklNQ0FBVkFBQUFBQjBBQUFBQUloUUlucFBremxXb0FvdUE4T0FDc0FMRW11UG1BMEE3RUpmbnVnRmpzU05IMHdCeV9Ubi0yVWo2MWRLaDtkY19sYXQ9O2RjX3JkaWQ9O3RhZ19mb3JfY2hpbGRfZGlyZWN0ZWRfdHJlYXRtZW50PTt0ZnVhPTtsdGQ9O2RjX3Rkdj0xO2RjX3RyYW5zcGFyZW50PTE7ZGNfcnVpPTE7ZGNfZXBzPUFIYXM4Y0N5R2N3UGpSTEYySV9SS28wZmV4NUZfTUg1RjlueW5HMkRUdXhaVnhTek03ZldOM0Q4MVlnakxpRHFtSEZEblpQZ1c1Q0Vsc0ZQU0EtLUdBO2RjX3B1YmlkPTY_aHR0cHM6Ly93d3cuYWRvYmUuY29tL2luL2NyZWF0aXZlY2xvdWQuaHRtbD9zZGlkPTkxQkY0TFhTJm12PXNvY2lhbCZtdjI9cGFpZHNvYyZnYWRfc291cmNlPTKwE-2CwiK4E____________wGIFAGwFAPAFYGAgEDQFQHYFQGYFgGoFgHiFgIIAYAXAYoXGAgDGAEgASgBMAE4AUABSAFQAVgBYAJoAaAXAakXV7_CAho-GPC6FwYoADAAOAHQGAHwGAE&ase=2&gclid=EAIaIQobChMIyeLqvsuGlgMV8P0PCR3vASkbEAEYASAAEgLf9fD_BwE&num=1&cid=CAASwwHkaIWuCq1F-WpbqPR2wNSy44c3Re7MNlf8d4ObQlg1w83hIMJnb92EbefTGsxljhXAioZWQATKYScMaEkI7uf-JJvxNedZNHsjOxguD8mCJlFrvtql0zt5viqCMcke_G-Ni3RbFSP4Q9tlTb94a6-ag9BT-iVCNlGhr9w6NPFoCfL7kkVBLRW9__xhCkKbBz_N_0KIt-ZhJ0KgAi64VGElsDSPaprWdhDyrTBz7qsV6ZcXTwHIS9gkhsMB40D3XoRmfGs&sig=AOD64_2VTAdK_2PzJQx-WOhBovhoIPL8CA&ms=%5BCLICK_MS%5D&nb=7&nx=%5BNX%5D&ny=%5BNY%5D&dim=%5BDIM%5D
+                - generic [ref=e325]:
+                  - generic [ref=e327]:
+                    - generic [ref=e328]: Sponsored
+                    - text: ·
+                  - generic [ref=e329]: Adobe Creative Cloud Pro
+              - button "My Ad Centre" [ref=e333]
+            - generic [ref=e338]:
+              - link [ref=e340] [cursor=pointer]:
+                - /url: /watch?v=tTt--POJ3Nc&pp=ygULU3RhbmQgQnkgTWXSBwkJowsBhyohjO8%3D
+              - generic [ref=e342] [cursor=pointer]:
+                - generic [ref=e343]:
+                  - heading [level=3] [ref=e345]:
+                    - link "stand by me one Doraemon full movie in Hindi 1 hour, 35 minutes" [ref=e346]:
+                      - /url: /watch?v=tTt--POJ3Nc&pp=ygULU3RhbmQgQnkgTWXSBwkJowsBhyohjO8%3D
+                      - text: stand by me one Doraemon full movie in Hindi
+                  - generic [ref=e349]:
+                    - generic [ref=e350]: 446k views
+                    - generic [ref=e351]: •1 year ago
+                - generic [ref=e352]:
+                  - link "Go to channel Md Rakin" [ref=e353]:
+                    - /url: /@MdRakin-b8q
+                  - link "Md Rakin" [ref=e358]:
+                    - /url: /@MdRakin-b8q
+            - generic [ref=e360]:
+              - link [ref=e362] [cursor=pointer]:
+                - /url: /watch?v=4ONfrkskNp4&list=RD4ONfrkskNp4&start_radio=1&pp=ygULU3RhbmQgQnkgTWWgBwE%3D
+              - generic [ref=e364] [cursor=pointer]:
+                - generic [ref=e365]:
+                  - heading [level=3] [ref=e367]:
+                    - link "Stand By Me - Music Travel Love (At Al Ain) 3 minutes, 34 seconds" [ref=e368]:
+                      - /url: /watch?v=4ONfrkskNp4&list=RD4ONfrkskNp4&start_radio=1&pp=ygULU3RhbmQgQnkgTWWgBwE%3D
+                      - text: Stand By Me - Music Travel Love (At Al Ain)
+                  - generic [ref=e371]:
+                    - generic [ref=e372]: 83m views
+                    - generic [ref=e373]: •3 years ago
+                - generic [ref=e374]:
+                  - link "Go to channel Music Travel Love" [ref=e375]:
+                    - /url: /channel/UCLxAS02eWvfZK4icRNzWD_g
+                  - generic [ref=e376]:
+                    - link "Music Travel Love" [ref=e380]:
+                      - /url: /channel/UCLxAS02eWvfZK4icRNzWD_g
+                    - img "Official Artist Channel" [ref=e385]
+                - generic [ref=e387]:
+                  - generic [ref=e388]: "Get \"Stand By Me\": Smart URL: https://lnk.to/sbmmtl Spotify: https://spoti.fi/3LNmXoq iTunes: https://apple.co/44m1pGE Amazon: ..."
+                  - tooltip "tooltip"
+                - img "4K" [ref=e393]
+            - generic [ref=e396]:
+              - link [ref=e398] [cursor=pointer]:
+                - /url: /watch?v=ZF47bKTCuiQ&list=RDZF47bKTCuiQ&start_radio=1&pp=ygULU3RhbmQgQnkgTWWgBwE%3D
+              - generic [ref=e400] [cursor=pointer]:
+                - generic [ref=e401]:
+                  - heading [level=3] [ref=e403]:
+                    - link "Deep Chahal - Stand By (Official Video) | New Punjabi Songs 2026 | Latest Punjabi Songs 2026 2 minutes, 24 seconds" [ref=e404]:
+                      - /url: /watch?v=ZF47bKTCuiQ&list=RDZF47bKTCuiQ&start_radio=1&pp=ygULU3RhbmQgQnkgTWWgBwE%3D
+                      - text: Deep Chahal - Stand By (Official Video) | New Punjabi Songs 2026 | Latest Punjabi Songs 2026
+                  - generic [ref=e407]:
+                    - generic [ref=e408]: 4.9m views
+                    - generic [ref=e409]: •3 months ago
+                - generic [ref=e410]:
+                  - link "Go to channel Deep Chahal" [ref=e411]:
+                    - /url: /channel/UC-XG5kNOf4ICx3KDNz9fbAw
+                  - generic [ref=e412]:
+                    - link "Deep Chahal" [ref=e416]:
+                      - /url: /channel/UC-XG5kNOf4ICx3KDNz9fbAw
+                    - img "Official Artist Channel" [ref=e421]
+                - generic [ref=e423]:
+                  - text: Deep Chahal presents official video for most awaited song “ Standby “ Stay connected with us for latest songs ...
+                  - tooltip "tooltip"
+                - img "4K" [ref=e428]
+            - generic [ref=e431]:
+              - link [ref=e433] [cursor=pointer]:
+                - /url: /watch?v=dpwTb9ecLXE&list=RDdpwTb9ecLXE&start_radio=1&pp=ygULU3RhbmQgQnkgTWWgBwE%3D
+              - generic [ref=e435] [cursor=pointer]:
+                - generic [ref=e436]:
+                  - heading [level=3] [ref=e438]:
+                    - link "Dildara - Stand By Me (Lyrical) | Ra.One | Shah Rukh Khan | Kareena K | Vishal-Sheykhar,Shafqat A 4 minutes, 30 seconds" [ref=e439]:
+                      - /url: /watch?v=dpwTb9ecLXE&list=RDdpwTb9ecLXE&start_radio=1&pp=ygULU3RhbmQgQnkgTWWgBwE%3D
+                      - text: Dildara - Stand By Me (Lyrical) | Ra.One | Shah Rukh Khan | Kareena K | Vishal-Sheykhar,Shafqat A
+                  - generic [ref=e442]:
+                    - generic [ref=e443]: 2.1m views
+                    - generic [ref=e444]: •3 months ago
+                - generic [ref=e445]:
+                  - link "Go to channel T-Series" [ref=e446]:
+                    - /url: /@tseries
+                  - generic [ref=e447]:
+                    - link "T-Series" [ref=e451]:
+                      - /url: /@tseries
+                    - img "Verified" [ref=e456]
+                - generic [ref=e458]:
+                  - text: "Presenting the Lyrical Video Song \"Dildara\" from the film Ra.One. Starring Shah Rukh Khan & Kareena Kapoor Khan. Credits: ..."
+                  - tooltip "tooltip"
+                - img "4K" [ref=e463]
+            - generic [ref=e466]:
+              - link [ref=e468] [cursor=pointer]:
+                - /url: /watch?v=T2bcUxUOUQg&list=RDT2bcUxUOUQg&start_radio=1&pp=ygULU3RhbmQgQnkgTWWgBwE%3D
+              - generic [ref=e470] [cursor=pointer]:
+                - generic [ref=e471]:
+                  - heading [level=3] [ref=e473]:
+                    - link "Skylar Grey - Stand By Me (Official) 2 minutes, 28 seconds" [ref=e474]:
+                      - /url: /watch?v=T2bcUxUOUQg&list=RDT2bcUxUOUQg&start_radio=1&pp=ygULU3RhbmQgQnkgTWWgBwE%3D
+                      - text: Skylar Grey - Stand By Me (Official)
+                  - generic [ref=e477]:
+                    - generic [ref=e478]: 40m views
+                    - generic [ref=e479]: •8 years ago
+                - generic [ref=e480]:
+                  - link "Go to channel SkylarGreyVEVO" [ref=e481]:
+                    - /url: /channel/UCRdVg6Xj_Az9YOsqDzLRbtA
+                  - generic [ref=e482]:
+                    - link "Skylar Grey" [ref=e486]:
+                      - /url: /channel/UCRdVg6Xj_Az9YOsqDzLRbtA
+                    - img "Official Artist Channel" [ref=e491]
+                - generic [ref=e493]:
+                  - generic [ref=e494]: "Skylar Grey's cover of “Stand By Me” is out now. http://smarturl.it/StandByMeSG For more, visit: ..."
+                  - tooltip "tooltip"
+                - img "Closed captions" [ref=e499]:
+                  - generic [ref=e500]: Subtitles
+            - generic [ref=e502]:
+              - link [ref=e504] [cursor=pointer]:
+                - /url: /watch?v=_BdYgy_gLIU&list=RD_BdYgy_gLIU&start_radio=1&pp=ygULU3RhbmQgQnkgTWWgBwE%3D
+              - generic [ref=e506] [cursor=pointer]:
+                - generic [ref=e507]:
+                  - heading [level=3] [ref=e509]:
+                    - link "Stand by Me 3 minutes, 18 seconds" [ref=e510]:
+                      - /url: /watch?v=_BdYgy_gLIU&list=RD_BdYgy_gLIU&start_radio=1&pp=ygULU3RhbmQgQnkgTWWgBwE%3D
+                      - text: Stand by Me
+                  - generic [ref=e511]: 6.2m views
+                - generic [ref=e515]:
+                  - link "Go to channel XANIYA - Topic" [ref=e516]:
+                    - /url: /channel/UCdYS9BWjOQ9sElq-CbRrGtg
+                  - generic [ref=e517]:
+                    - link "XANIYA" [ref=e521]:
+                      - /url: /channel/UCdYS9BWjOQ9sElq-CbRrGtg
+                    - img "Official Artist Channel" [ref=e526]
+                - generic [ref=e528]:
+                  - generic [ref=e529]: "Provided to YouTube by Ditto Music Stand by Me · XANIYA Stand by Me ℗ Elon Lee Released on: 2026-02-16 Bass Guitar: Rudra ..."
+                  - tooltip "tooltip"
+            - generic [ref=e531]:
+              - link [ref=e533] [cursor=pointer]:
+                - /url: /watch?v=Us-TVg40ExM&list=RDUs-TVg40ExM&start_radio=1&pp=ygULU3RhbmQgQnkgTWWgBwE%3D
+              - generic [ref=e535] [cursor=pointer]:
+                - generic [ref=e536]:
+                  - heading [level=3] [ref=e538]:
+                    - link "Stand By Me | Playing For Change | Song Around The World 5 minutes, 28 seconds" [ref=e539]:
+                      - /url: /watch?v=Us-TVg40ExM&list=RDUs-TVg40ExM&start_radio=1&pp=ygULU3RhbmQgQnkgTWWgBwE%3D
+                      - text: Stand By Me | Playing For Change | Song Around The World
+                  - generic [ref=e542]:
+                    - generic [ref=e543]: 227m views
+                    - generic [ref=e544]: •17 years ago
+                - generic [ref=e545]:
+                  - link "Go to channel Playing For Change" [ref=e546]:
+                    - /url: /@PlayingForChange
+                  - generic [ref=e547]:
+                    - link "Playing For Change" [ref=e551]:
+                      - /url: /@PlayingForChange
+                    - img "Verified" [ref=e556]
+                - generic [ref=e558]:
+                  - text: "Watch our New Song Around The World \"Acontecer\": https://youtu.be/fRY0Rojs5Nw From the award-winning documentary, ..."
+                  - tooltip "tooltip"
+                - img "Closed captions" [ref=e563]:
+                  - generic [ref=e564]: Subtitles
+            - generic [ref=e566]:
+              - link [ref=e568] [cursor=pointer]:
+                - /url: /watch?v=Xqc-Ht3LBKU&list=RDXqc-Ht3LBKU&start_radio=1&pp=ygULU3RhbmQgQnkgTWWgBwE%3D
+              - generic [ref=e570] [cursor=pointer]:
+                - generic [ref=e571]:
+                  - heading [level=3] [ref=e573]:
+                    - link "Stand By - Deep Chahal (Official Audio) | Latest Punjabi Song 2026 | New Punjabi Songs 2 minutes, 24 seconds" [ref=e574]:
+                      - /url: /watch?v=Xqc-Ht3LBKU&list=RDXqc-Ht3LBKU&start_radio=1&pp=ygULU3RhbmQgQnkgTWWgBwE%3D
+                      - text: Stand By - Deep Chahal (Official Audio) | Latest Punjabi Song 2026 | New Punjabi Songs
+                  - generic [ref=e577]:
+                    - generic [ref=e578]: 397k views
+                    - generic [ref=e579]: •4 months ago
+                - generic [ref=e580]:
+                  - link "Go to channel Deep Chahal" [ref=e581]:
+                    - /url: /channel/UC-XG5kNOf4ICx3KDNz9fbAw
+                  - generic [ref=e582]:
+                    - link "Deep Chahal" [ref=e586]:
+                      - /url: /channel/UC-XG5kNOf4ICx3KDNz9fbAw
+                    - img "Official Artist Channel" [ref=e591]
+                - generic [ref=e593]:
+                  - text: Deep Chahal presents most awaited song “StandBy“ from the EP, VELORA Stay connected with us for latest songs ...
+                  - tooltip "tooltip"
+            - generic [ref=e594]:
+              - heading "Shorts" [level=2] [ref=e602]
+              - generic [ref=e604]:
+                - generic [ref=e607]:
+                  - link [ref=e608] [cursor=pointer]:
+                    - /url: /shorts/IMxslsW8XwE
+                  - generic [ref=e612] [cursor=pointer]:
+                    - 'link "Stand By Me lyrics - Ben E. King #lyrics #standbyme #beneking" [ref=e613]':
+                      - /url: /shorts/IMxslsW8XwE
+                    - generic [ref=e614]: 527k views
+                  - button "More actions" [ref=e616] [cursor=pointer]
+                - generic [ref=e622]:
+                  - link [ref=e623] [cursor=pointer]:
+                    - /url: /shorts/i_myEhIchpc
+                  - generic [ref=e627] [cursor=pointer]:
+                    - link "Doremon Last episode||Stand by Me||#shorts#viralvideos#dubbing#doremon#nobita#voiceactor#ytshorts" [ref=e628]:
+                      - /url: /shorts/i_myEhIchpc
+                    - generic [ref=e629]: 128k views
+                  - button "More actions" [ref=e631] [cursor=pointer]
+                - generic [ref=e637]:
+                  - link [ref=e638] [cursor=pointer]:
+                    - /url: /shorts/tAiUGQ6GjSI
+                  - generic [ref=e642] [cursor=pointer]:
+                    - link "STAND BY ME 2 DORAEMON MOVIE FRIENDSHIP SCENE and please like" [ref=e643]:
+                      - /url: /shorts/tAiUGQ6GjSI
+                    - generic [ref=e644]: 26k views
+                  - button "More actions" [ref=e646] [cursor=pointer]
+                - generic [ref=e652]:
+                  - link [ref=e653] [cursor=pointer]:
+                    - /url: /shorts/cSbYYK1l4o8
+                  - generic [ref=e657] [cursor=pointer]:
+                    - link "Ben E King - Stand By Me (Live, 1961) | Love Songs | Love Song | Romantic Songs" [ref=e658]:
+                      - /url: /shorts/cSbYYK1l4o8
+                    - generic [ref=e659]: 308k views
+                  - button "More actions" [ref=e661] [cursor=pointer]
+                - generic [ref=e667]:
+                  - link [ref=e668] [cursor=pointer]:
+                    - /url: /shorts/Rl0rJe02YzQ
+                  - generic [ref=e672] [cursor=pointer]:
+                    - 'link "Stand By Me (1986) 💙 #tubi" [ref=e673]':
+                      - /url: /shorts/Rl0rJe02YzQ
+                    - generic [ref=e674]: 442k views
+                  - button "More actions" [ref=e676] [cursor=pointer]
+            - generic [ref=e681]:
+              - link [ref=e683] [cursor=pointer]:
+                - /url: /watch?v=maTP315XZCQ&list=RDmaTP315XZCQ&start_radio=1&pp=ygULU3RhbmQgQnkgTWWgBwE%3D
+              - generic [ref=e685] [cursor=pointer]:
+                - generic [ref=e686]:
+                  - heading [level=3] [ref=e688]:
+                    - link "Oasis - Stand By Me (Official Video) 5 minutes, 58 seconds" [ref=e689]:
+                      - /url: /watch?v=maTP315XZCQ&list=RDmaTP315XZCQ&start_radio=1&pp=ygULU3RhbmQgQnkgTWWgBwE%3D
+                      - text: Oasis - Stand By Me (Official Video)
+                  - generic [ref=e692]:
+                    - generic [ref=e693]: 183m views
+                    - generic [ref=e694]: •14 years ago
+                - generic [ref=e695]:
+                  - link "Go to channel OasisVEVO" [ref=e696]:
+                    - /url: /channel/UCUDVBtnOQi4c7E8jebpjc9Q
+                  - generic [ref=e697]:
+                    - link "Oasis" [ref=e701]:
+                      - /url: /channel/UCUDVBtnOQi4c7E8jebpjc9Q
+                    - img "Official Artist Channel" [ref=e706]
+                - generic [ref=e708]:
+                  - generic [ref=e709]: Oasis - 'stand by me' (Official Video) Taken from the album 'Be Here Now' SUBSCRIBE ▶︎ https://Oasis.lnk.to/YTSubscribeYo ...
+                  - tooltip "tooltip"
+                - img "Closed captions" [ref=e714]:
+                  - generic [ref=e715]: Subtitles
+            - generic [ref=e717]:
+              - link [ref=e719] [cursor=pointer]:
+                - /url: /watch?v=YqB8Dm65X18&list=RDYqB8Dm65X18&start_radio=1&pp=ygULU3RhbmQgQnkgTWWgBwE%3D
+              - generic [ref=e721] [cursor=pointer]:
+                - generic [ref=e722]:
+                  - heading [level=3] [ref=e724]:
+                    - link "STAND BY ME. (Ultimate Mix, 2020) - John Lennon (official music video HD) 3 minutes, 33 seconds" [ref=e725]:
+                      - /url: /watch?v=YqB8Dm65X18&list=RDYqB8Dm65X18&start_radio=1&pp=ygULU3RhbmQgQnkgTWWgBwE%3D
+                      - text: STAND BY ME. (Ultimate Mix, 2020) - John Lennon (official music video HD)
+                  - generic [ref=e728]:
+                    - generic [ref=e729]: 204m views
+                    - generic [ref=e730]: •9 years ago
+                - generic [ref=e731]:
+                  - link "Go to channel johnlennon" [ref=e732]:
+                    - /url: /channel/UCYU4eunPInnHTNWfGvOgkbg
+                  - generic [ref=e733]:
+                    - link "johnlennon" [ref=e737]:
+                      - /url: /channel/UCYU4eunPInnHTNWfGvOgkbg
+                    - img "Official Artist Channel" [ref=e742]
+                - generic [ref=e744]:
+                  - text: JOHN LENNON. GIMME SOME TRUTH. THE ULTIMATE MIXES. The Very Best of John Lennon. 36 tracks completely remixed ...
+                  - tooltip "tooltip"
+                - img "Closed captions" [ref=e749]:
+                  - generic [ref=e750]: Subtitles
+            - generic [ref=e752]:
+              - heading "Channels new to you" [level=2] [ref=e755]
+              - generic [ref=e759]:
+                - generic [ref=e760]:
+                  - generic [ref=e762]:
+                    - link [ref=e764] [cursor=pointer]:
+                      - /url: /watch?v=xUjwiQAlsOI&list=RDxUjwiQAlsOI&start_radio=1&pp=ygULU3RhbmQgQnkgTWWgBwE%3D
+                    - generic [ref=e766] [cursor=pointer]:
+                      - generic [ref=e767]:
+                        - heading [level=3] [ref=e769]:
+                          - link "Ben E. King - Stand By Me | Lyrics 2 minutes, 55 seconds" [ref=e770]:
+                            - /url: /watch?v=xUjwiQAlsOI&list=RDxUjwiQAlsOI&start_radio=1&pp=ygULU3RhbmQgQnkgTWWgBwE%3D
+                            - text: Ben E. King - Stand By Me | Lyrics
+                        - generic [ref=e773]:
+                          - generic [ref=e774]: 11m views
+                          - generic [ref=e775]: •4 months ago
+                      - generic [ref=e776]:
+                        - link "Go to channel Sunset Sounds" [ref=e777]:
+                          - /url: /@sunsetsoundsofficial
+                        - link "Sunset Sounds" [ref=e782]:
+                          - /url: /@sunsetsoundsofficial
+                      - generic [ref=e783]:
+                        - text: "Subscribe And Watch Today's Hottest Pop Lyric Videos Daily Only On Sunset Sounds! Listen To Hot Trending Playlists: ..."
+                        - tooltip "tooltip"
+                  - generic [ref=e785]:
+                    - link [ref=e787] [cursor=pointer]:
+                      - /url: /watch?v=36LxHcAPOrY&list=RD36LxHcAPOrY&start_radio=1&pp=ygULU3RhbmQgQnkgTWWgBwE%3D
+                    - generic [ref=e789] [cursor=pointer]:
+                      - generic [ref=e790]:
+                        - heading [level=3] [ref=e792]:
+                          - link "Stand By Me 2 minutes, 52 seconds" [ref=e793]:
+                            - /url: /watch?v=36LxHcAPOrY&list=RD36LxHcAPOrY&start_radio=1&pp=ygULU3RhbmQgQnkgTWWgBwE%3D
+                            - text: Stand By Me
+                        - generic [ref=e794]: 22k views
+                      - generic [ref=e798]:
+                        - link "Go to channel Ben E. King - Topic" [ref=e799]:
+                          - /url: /channel/UCCddFtYmhs64qDBlr3yJM8A
+                        - generic [ref=e800]:
+                          - link "Ben E. King" [ref=e804]:
+                            - /url: /channel/UCCddFtYmhs64qDBlr3yJM8A
+                          - img "Official Artist Channel" [ref=e809]
+                      - generic [ref=e811]:
+                        - generic [ref=e812]: "Provided to YouTube by Wagram Stand By Me · Ben E. King 60's Masterpieces : The Very Best Of The Beatles, Bob Dylan, Brigitte ..."
+                        - tooltip "tooltip"
+                  - generic [ref=e814]:
+                    - link [ref=e816] [cursor=pointer]:
+                      - /url: /watch?v=f_pnOxjV4Bc&list=RDf_pnOxjV4Bc&start_radio=1&pp=ygULU3RhbmQgQnkgTWWgBwE%3D
+                    - generic [ref=e818] [cursor=pointer]:
+                      - generic [ref=e819]:
+                        - heading [level=3] [ref=e821]:
+                          - link "Stand By Me - Ben E. King | Gritty Blues Rock Version 2026 8 minutes, 12 seconds" [ref=e822]:
+                            - /url: /watch?v=f_pnOxjV4Bc&list=RDf_pnOxjV4Bc&start_radio=1&pp=ygULU3RhbmQgQnkgTWWgBwE%3D
+                            - text: Stand By Me - Ben E. King | Gritty Blues Rock Version 2026
+                        - generic [ref=e825]:
+                          - generic [ref=e826]: 573k views
+                          - generic [ref=e827]: •3 months ago
+                      - generic [ref=e828]:
+                        - link "Go to channel 𝐀𝐅𝐑𝐎 𝐂𝐋𝐔𝐁" [ref=e829]:
+                          - /url: /@Afro_club
+                        - link "𝐀𝐅𝐑𝐎 𝐂𝐋𝐔𝐁" [ref=e834]:
+                          - /url: /@Afro_club
+                      - generic [ref=e835]:
+                        - generic [ref=e836]: "BluesRock #ClassicSoul #SoulBlues Blues Rock Imagine presents a soulful blues rock interpretation of Stand By Me, originally ..."
+                        - tooltip "tooltip"
+                - button "+5 more" [ref=e838] [cursor=pointer]
+            - generic [ref=e840]:
+              - link [ref=e842] [cursor=pointer]:
+                - /url: /watch?v=DGepOrAcD4g&list=RDDGepOrAcD4g&start_radio=1&pp=ygULU3RhbmQgQnkgTWWgBwHSBwkJowsBhyohjO8%3D
+              - generic [ref=e844] [cursor=pointer]:
+                - generic [ref=e845]:
+                  - heading [level=3] [ref=e847]:
+                    - link "SHINee 샤이니 'Stand By Me' SMTOWN LIVE in NEW YORK 4 minutes, 1 second" [ref=e848]:
+                      - /url: /watch?v=DGepOrAcD4g&list=RDDGepOrAcD4g&start_radio=1&pp=ygULU3RhbmQgQnkgTWWgBwHSBwkJowsBhyohjO8%3D
+                      - text: SHINee 샤이니 'Stand By Me' SMTOWN LIVE in NEW YORK
+                  - generic [ref=e851]:
+                    - generic [ref=e852]: 15m views
+                    - generic [ref=e853]: •14 years ago
+                - generic [ref=e854]:
+                  - link "Go to channel SMTOWN" [ref=e855]:
+                    - /url: /@SMTOWN
+                  - generic [ref=e856]:
+                    - link "SMTOWN" [ref=e860]:
+                      - /url: /@SMTOWN
+                    - img "Verified" [ref=e865]
+                - generic [ref=e867]:
+                  - text: "Download on iTunes : http://itunes.apple.com/us/album/hello-the-2nd-album-repackage/id396649555 ☞ For more Information ..."
+                  - tooltip "tooltip"
+            - generic [ref=e869]:
+              - link [ref=e871] [cursor=pointer]:
+                - /url: /watch?v=8ancK3tdU-c&pp=ygULU3RhbmQgQnkgTWU%3D
+              - generic [ref=e873] [cursor=pointer]:
+                - generic [ref=e874]:
+                  - heading [level=3] [ref=e876]:
+                    - link "Stand By Me • Ben E. King 3 minutes, 5 seconds" [ref=e877]:
+                      - /url: /watch?v=8ancK3tdU-c&pp=ygULU3RhbmQgQnkgTWU%3D
+                      - text: Stand By Me • Ben E. King
+                  - generic [ref=e880]:
+                    - generic [ref=e881]: 3.4m views
+                    - generic [ref=e882]: •2 years ago
+                - generic [ref=e883]:
+                  - link "Go to channel HD Film Tributes" [ref=e884]:
+                    - /url: /@HDFilmTributes
+                  - link "HD Film Tributes" [ref=e889]:
+                    - /url: /@HDFilmTributes
+                - generic [ref=e890]:
+                  - generic [ref=e891]: Soundtrack from the 1986 Rob Reiner film "Stand By Me" with Wil Wheaton, River Phoenix, Corey Feldman, Jerry O'Connell, ...
+                  - tooltip "tooltip"
+            - generic [ref=e892]:
+              - heading "Shorts" [level=2] [ref=e900]
+              - generic [ref=e901]:
+                - generic [ref=e902]:
+                  - generic [ref=e905]:
+                    - link [ref=e906] [cursor=pointer]:
+                      - /url: /shorts/p2i8zaIAh40
+                    - generic [ref=e910] [cursor=pointer]:
+                      - link "Stand by me 🤝" [ref=e911]:
+                        - /url: /shorts/p2i8zaIAh40
+                      - generic [ref=e912]: 295k views
+                    - button "More actions" [ref=e914] [cursor=pointer]
+                  - generic [ref=e920]:
+                    - link [ref=e921] [cursor=pointer]:
+                      - /url: /shorts/dpYzzN4sYjA
+                    - generic [ref=e925] [cursor=pointer]:
+                      - link "HE ALMOST DIED... || Stand by Me" [ref=e926]:
+                        - /url: /shorts/dpYzzN4sYjA
+                      - generic [ref=e927]: 272k views
+                    - button "More actions" [ref=e929] [cursor=pointer]
+                  - generic [ref=e935]:
+                    - link [ref=e936] [cursor=pointer]:
+                      - /url: /shorts/5v1Lxp_czUA
+                    - generic [ref=e940] [cursor=pointer]:
+                      - link "Stand by me 2023#cdrama#kdrama#chinesedrama#ckdrama#standbyme#shorts#viralshorts#trendingshorts" [ref=e941]:
+                        - /url: /shorts/5v1Lxp_czUA
+                      - generic [ref=e942]: 57k views
+                    - button "More actions" [ref=e944] [cursor=pointer]
+                  - generic [ref=e950]:
+                    - link [ref=e951] [cursor=pointer]:
+                      - /url: /shorts/Dbesp6BK-3c
+                      - img [ref=e956]:
+                        - generic [ref=e957]: New
+                    - generic [ref=e958] [cursor=pointer]:
+                      - 'link "Ben E. King - Stand By Me Guitar Lesson #strumly #guitar #guitartutorial" [ref=e959]':
+                        - /url: /shorts/Dbesp6BK-3c
+                      - generic [ref=e960]: 3.8k views
+                    - button "More actions" [ref=e962] [cursor=pointer]
+                  - generic [ref=e968]:
+                    - link [ref=e969] [cursor=pointer]:
+                      - /url: /shorts/eSuDBo0s1yw
+                    - generic [ref=e973] [cursor=pointer]:
+                      - 'link "series- stand by me #standbyme #chinesebl #blseries #boyslove #china" [ref=e974]':
+                        - /url: /shorts/eSuDBo0s1yw
+                      - generic [ref=e975]: 2.2m views
+                    - button "More actions" [ref=e977] [cursor=pointer]
+                - generic [ref=e981]:
+                  - generic [ref=e984]:
+                    - link [ref=e985] [cursor=pointer]:
+                      - /url: /shorts/oWa-5xdCVMw
+                    - generic [ref=e989] [cursor=pointer]:
+                      - 'link "Doraemon Movie Edit | Doraemon Movie Stand By Me 2 | Part - 3 | #shorts" [ref=e990]':
+                        - /url: /shorts/oWa-5xdCVMw
+                      - generic [ref=e991]: 94k views
+                    - button "More actions" [ref=e993] [cursor=pointer]
+                  - generic [ref=e999]:
+                    - link [ref=e1000] [cursor=pointer]:
+                      - /url: /shorts/tcNwU3ply9U
+                    - generic [ref=e1004] [cursor=pointer]:
+                      - link "STAND BY ME (1986) CAST THEN AND NOW 2025" [ref=e1005]:
+                        - /url: /shorts/tcNwU3ply9U
+                      - generic [ref=e1006]: 98k views
+                    - button "More actions" [ref=e1008] [cursor=pointer]
+                  - generic [ref=e1014]:
+                    - link [ref=e1015] [cursor=pointer]:
+                      - /url: /shorts/NWr6Nu2AmaQ
+                    - generic [ref=e1019] [cursor=pointer]:
+                      - link "How to Play “Stand By Me” - Ben E" [ref=e1020]:
+                        - /url: /shorts/NWr6Nu2AmaQ
+                      - generic [ref=e1021]: 353k views
+                    - button "More actions" [ref=e1023] [cursor=pointer]
+                  - generic [ref=e1029]:
+                    - link [ref=e1030] [cursor=pointer]:
+                      - /url: /shorts/zT-Tx4DAJOY
+                    - generic [ref=e1034] [cursor=pointer]:
+                      - link "Stand By Me - Lyrics Ben E King" [ref=e1035]:
+                        - /url: /shorts/zT-Tx4DAJOY
+                      - generic [ref=e1036]: 176k views
+                    - button "More actions" [ref=e1038] [cursor=pointer]
+                  - generic [ref=e1044]:
+                    - link [ref=e1045] [cursor=pointer]:
+                      - /url: /shorts/Z6i4P2gf4bg
+                      - img [ref=e1050]:
+                        - generic [ref=e1051]: New
+                    - generic [ref=e1052] [cursor=pointer]:
+                      - link "Learn how to play Stand By Me on guitar with this quick tutorial! 🎸✨" [ref=e1053]:
+                        - /url: /shorts/Z6i4P2gf4bg
+                      - generic [ref=e1054]: 593 views
+                    - button "More actions" [ref=e1056] [cursor=pointer]
+              - button "Show more" [ref=e1063] [cursor=pointer]
+            - generic [ref=e1068]:
+              - link [ref=e1070] [cursor=pointer]:
+                - /url: /watch?v=BR-ynPJ1dj0&list=RDBR-ynPJ1dj0&start_radio=1&pp=ygULU3RhbmQgQnkgTWWgBwE%3D
+              - generic [ref=e1072] [cursor=pointer]:
+                - generic [ref=e1073]:
+                  - heading [level=3] [ref=e1075]:
+                    - link "샤이니 SHINee - STAND BY ME (Boys Over Flowers OST) (Han/Rom/Eng) Lyrics 4 minutes, 1 second" [ref=e1076]:
+                      - /url: /watch?v=BR-ynPJ1dj0&list=RDBR-ynPJ1dj0&start_radio=1&pp=ygULU3RhbmQgQnkgTWWgBwE%3D
+                      - text: 샤이니 SHINee - STAND BY ME (Boys Over Flowers OST) (Han/Rom/Eng) Lyrics
+                  - generic [ref=e1079]:
+                    - generic [ref=e1080]: 14m views
+                    - generic [ref=e1081]: •6 years ago
+                - generic [ref=e1082]:
+                  - link "Go to channel kaneki min" [ref=e1083]:
+                    - /url: /@kanekimin2960
+                  - link "kaneki min" [ref=e1088]:
+                    - /url: /@kanekimin2960
+                - generic [ref=e1089]:
+                  - text: No copyright infringement intended. I do not own the song or pictures. All rights reserved to Boy Over Flowers OST, SHINEE, SM ...
+                  - tooltip "tooltip"
+            - generic [ref=e1091]:
+              - link [ref=e1093] [cursor=pointer]:
+                - /url: /watch?v=hfjpbXys2hk&list=RDhfjpbXys2hk&start_radio=1&pp=ygULU3RhbmQgQnkgTWWgBwE%3D
+              - generic [ref=e1095] [cursor=pointer]:
+                - generic [ref=e1096]:
+                  - heading [level=3] [ref=e1098]:
+                    - link "Lil Durk - Stand By Me 3 minutes, 40 seconds" [ref=e1099]:
+                      - /url: /watch?v=hfjpbXys2hk&list=RDhfjpbXys2hk&start_radio=1&pp=ygULU3RhbmQgQnkgTWWgBwE%3D
+                      - text: Lil Durk - Stand By Me
+                  - generic [ref=e1102]:
+                    - generic [ref=e1103]: 13m views
+                    - generic [ref=e1104]: •3 years ago
+                - generic [ref=e1105]:
+                  - link "Go to channel LilDurkVEVO" [ref=e1106]:
+                    - /url: /channel/UCaxOQZrF5llUMp-JjesUz1A
+                  - generic [ref=e1107]:
+                    - link "Lil Durk" [ref=e1111]:
+                      - /url: /channel/UCaxOQZrF5llUMp-JjesUz1A
+                    - img "Official Artist Channel" [ref=e1116]
+                - generic [ref=e1118]:
+                  - text: "Almost Healed, the new album from Lil Durk. Out Now: https://LilDurk.lnk.to/AlmostHealed Tour On Sale Friday: ..."
+                  - tooltip "tooltip"
+            - generic [ref=e1120]:
+              - link [ref=e1122] [cursor=pointer]:
+                - /url: /watch?v=EjievCRb1zc&pp=ygULU3RhbmQgQnkgTWU%3D
+              - generic [ref=e1124] [cursor=pointer]:
+                - generic [ref=e1125]:
+                  - heading [level=3] [ref=e1127]:
+                    - link "DORAEMON STAND BY ME | 2014 | FULL MOVIE IN HINDI 1 hour, 34 minutes" [ref=e1128]:
+                      - /url: /watch?v=EjievCRb1zc&pp=ygULU3RhbmQgQnkgTWU%3D
+                      - text: DORAEMON STAND BY ME | 2014 | FULL MOVIE IN HINDI
+                  - generic [ref=e1131]:
+                    - generic [ref=e1132]: 376k views
+                    - generic [ref=e1133]: •1 year ago
+                - generic [ref=e1134]:
+                  - link "Go to channel ONLY DORAEMON MOVIES" [ref=e1135]:
+                    - /url: /@Only_Doraemonmovies
+                  - link "ONLY DORAEMON MOVIES" [ref=e1140]:
+                    - /url: /@Only_Doraemonmovies
+                - generic [ref=e1141]:
+                  - generic [ref=e1142]: "Doraemon: Stand by Me – An Emotional Journey In this video, we explore Doraemon: Stand by Me, a heart-touching story about ..."
+                  - tooltip "tooltip"
+            - generic [ref=e1144]:
+              - link [ref=e1146] [cursor=pointer]:
+                - /url: /watch?v=AyFlLjdNqk8&list=RDAyFlLjdNqk8&start_radio=1&pp=ygULU3RhbmQgQnkgTWWgBwE%3D
+              - generic [ref=e1148] [cursor=pointer]:
+                - generic [ref=e1149]:
+                  - heading [level=3] [ref=e1151]:
+                    - link "'Stand by Me' performed by Karen Gibson and The Kingdom Choir - The Royal Wedding - BBC 3 minutes, 34 seconds" [ref=e1152]:
+                      - /url: /watch?v=AyFlLjdNqk8&list=RDAyFlLjdNqk8&start_radio=1&pp=ygULU3RhbmQgQnkgTWWgBwE%3D
+                      - text: "'Stand by Me' performed by Karen Gibson and The Kingdom Choir - The Royal Wedding - BBC"
+                  - generic [ref=e1155]:
+                    - generic [ref=e1156]: 28m views
+                    - generic [ref=e1157]: •8 years ago
+                - generic [ref=e1158]:
+                  - link "Go to channel BBC" [ref=e1159]:
+                    - /url: /@BBC
+                  - generic [ref=e1160]:
+                    - link "BBC" [ref=e1164]:
+                      - /url: /@BBC
+                    - img "Verified" [ref=e1169]
+                - generic [ref=e1171]:
+                  - text: Subscribe and to the BBC https://bit.ly/BBCYouTubeSub Watch the BBC first on iPlayer https://bbc.in/iPlayer-Home Get all ...
+                  - tooltip "tooltip"
+                - img "Closed captions" [ref=e1176]:
+                  - generic [ref=e1177]: Subtitles
+            - generic [ref=e1179]:
+              - link [ref=e1181] [cursor=pointer]:
+                - /url: /watch?v=dTd2ylacYNU&list=RDdTd2ylacYNU&start_radio=1&pp=ygULU3RhbmQgQnkgTWWgBwE%3D
+              - generic [ref=e1183] [cursor=pointer]:
+                - generic [ref=e1184]:
+                  - heading [level=3] [ref=e1186]:
+                    - link "Ben E. King - Stand By Me (HQ Video Remastered In 1080p) 3 minutes, 1 second" [ref=e1187]:
+                      - /url: /watch?v=dTd2ylacYNU&list=RDdTd2ylacYNU&start_radio=1&pp=ygULU3RhbmQgQnkgTWWgBwE%3D
+                      - text: Ben E. King - Stand By Me (HQ Video Remastered In 1080p)
+                  - generic [ref=e1190]:
+                    - generic [ref=e1191]: 20m views
+                    - generic [ref=e1192]: •13 years ago
+                - generic [ref=e1193]:
+                  - link "Go to channel PRIMITIV RECORD" [ref=e1194]:
+                    - /url: /@TheBigHitSongChannel
+                  - link "PRIMITIV RECORD" [ref=e1199]:
+                    - /url: /@TheBigHitSongChannel
+                - generic [ref=e1200]:
+                  - text: "Restored By: CrisMate 100% sound reworked (replace sound with CD-DA\" Compact Disc Digital Audio\"). Original Source: VIDEO."
+                  - tooltip "tooltip"
+  - generic [ref=e1226]:
+    - link "Ben E. King - Stand By Me (Audio) 2 minutes, 58 seconds":
+      - /url: /watch?v=hwZNL7QVJjE&list=RDhwZNL7QVJjE&start_radio=1&pp=ygULU3RhbmQgQnkgTWWgBwE%3D
+      - generic "YouTube Video Player" [ref=e1231] [cursor=pointer]
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - generic:
+              - generic "Time elapsed 0:00": 2:57

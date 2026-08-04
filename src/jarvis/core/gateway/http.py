@@ -23,10 +23,16 @@
 from __future__ import annotations
 
 import time
+from pathlib import Path
 from dataclasses import dataclass
 from typing import Any
 
-from fastapi import Depends, FastAPI, WebSocket
+from fastapi import Depends, FastAPI, HTTPException, UploadFile, WebSocket
+from fastapi.responses import FileResponse
+
+# Generous but bounded. A dataset large enough to blow this is a
+# dataset that should be trimmed before an agent looks at it.
+MAX_UPLOAD_BYTES = 50_000_000
 
 from jarvis.common.log import get_logger
 from jarvis.common.settings import CoreSettings
@@ -36,9 +42,15 @@ from jarvis.core.db.repos.artifacts import ArtifactsRepo
 from jarvis.core.db.repos.events import EventsRepo
 from jarvis.core.db.repos.jobs import JobsRepo
 from jarvis.core.approvals.service import ApprovalService
+from jarvis.core.gateway.clients import ClientConnection, ClientRegistry
 from jarvis.core.gateway.workers import WorkerConnection
+from jarvis.core.db.repos.sessions import SessionsRepo
+from jarvis.core.sessionmgr import SessionManager
+from jarvis.llm.speech import SpeechBackend
+from jarvis.llm.transcription import Transcriber
 from jarvis.core.observability.traces import TracesRepo
 from jarvis.core.queue.registry import JobTypeRegistry
+from jarvis.core.db.repos.watchers import WatchersRepo
 from jarvis.core.queue.registry_workers import WorkerRegistry
 
 log = get_logger("core.gateway")
@@ -58,8 +70,15 @@ class GatewayDeps:
     jobs: "JobsRepo | None" = None
     events: "EventsRepo | None" = None
     artifacts: "ArtifactsRepo | None" = None
+    watchers: "WatchersRepo | None" = None
+    transcriber: "Transcriber | None" = None
+    speaker: "SpeechBackend | None" = None
     job_types: "JobTypeRegistry | None" = None
     approvals: "ApprovalService | None" = None
+    clients: "ClientRegistry | None" = None
+    session_mgr: "SessionManager | None" = None
+    sessions: "SessionsRepo | None" = None
+    artifacts: "ArtifactsRepo | None" = None
 
 
 async def build_status_snapshot(deps: GatewayDeps) -> dict[str, Any]:
@@ -76,6 +95,22 @@ async def build_status_snapshot(deps: GatewayDeps) -> dict[str, Any]:
         if deps.workers else []
     )
 
+    jobs: list[dict[str, Any]] = []
+    if deps.jobs is not None:
+        for job in await deps.jobs.live_jobs():
+            jobs.append({
+                "id": job.id, "type": job.type, "status": job.status.value,
+            })
+
+    watchers: list[dict[str, Any]] = []
+    if deps.watchers is not None:
+        for watcher in await deps.watchers.all():
+            watchers.append({
+                "name": watcher.name,
+                "hits": watcher.hit_count,
+                "enabled": watcher.enabled,
+            })
+
     sessions_row = await deps.db.query_one(
         "SELECT COUNT(*) AS n FROM sessions"
     )
@@ -90,6 +125,8 @@ async def build_status_snapshot(deps: GatewayDeps) -> dict[str, Any]:
         "turns": int(turns_row["n"]) if turns_row else 0,
         "llm_calls": int(calls_row["n"]) if calls_row else 0,
         "workers": workers,
+        "jobs": jobs,
+        "watchers": watchers,
     }
 
 
@@ -97,6 +134,25 @@ def create_app(deps: GatewayDeps) -> FastAPI:
     """Build the gateway app around ready-made dependencies."""
     auth = BearerAuth(deps.settings.gateway_token.get_secret_value())
     app = FastAPI(title="jarvis-core", docs_url=None, redoc_url=None)
+
+    @app.get("/app")
+    async def client_page() -> FileResponse:
+        """The web client.
+
+        Served by the Core rather than deployed separately: the client
+        is only ever as reachable as the Core is, which is the honest
+        arrangement. On localhost the browser grants microphone access
+        without HTTPS, so voice works here today; from a phone it will
+        need a certificate.
+
+        Unauthenticated - the PAGE is not a secret. It prompts for a
+        token and every request it makes carries one, so nothing behind
+        it opens without the secret.
+        """
+        return FileResponse(
+            Path(__file__).parent / "static" / "app.html",
+            media_type="text/html",
+        )
 
     @app.get("/health")
     async def health() -> dict[str, str]:
@@ -132,5 +188,75 @@ def create_app(deps: GatewayDeps) -> FastAPI:
             approvals=deps.approvals,
         )
         await connection.run()
+
+    @app.websocket("/ws/client")
+    async def client_socket(websocket: WebSocket) -> None:
+        if (
+            deps.clients is None or deps.session_mgr is None
+            or deps.sessions is None
+        ):
+            await websocket.close(code=1011)
+            return
+        connection = ClientConnection(
+            websocket=websocket,
+            expected_token=deps.settings.gateway_token.get_secret_value(),
+            session_mgr=deps.session_mgr,
+            sessions=deps.sessions,
+            registry=deps.clients,
+            owner_timezone=deps.settings.owner_timezone,
+            approvals=deps.approvals,
+            transcriber=deps.transcriber,
+            speaker=deps.speaker,
+        )
+        await connection.run()
+
+    @app.post("/upload", dependencies=[Depends(auth)])
+    async def upload(file: UploadFile) -> dict[str, Any]:
+        """Take a file and make it an artifact.
+
+        Over HTTP rather than the socket: a 10MB file base64-encoded
+        through JSON frames is a third larger and needs reassembly we
+        would have to write. A multipart POST is one line in the
+        browser and the right tool for bytes.
+
+        The artifact id comes back; the client mentions it in its next
+        message and the file becomes available to whichever subagent
+        needs it.
+        """
+        if deps.artifacts is None:
+            raise HTTPException(status_code=503, detail="artifacts unavailable")
+
+        content = await file.read()
+        if len(content) > MAX_UPLOAD_BYTES:
+            raise HTTPException(
+                status_code=413,
+                detail=f"file exceeds {MAX_UPLOAD_BYTES // 1_000_000}MB",
+            )
+
+        artifact = await deps.artifacts.write(
+            name=file.filename or "upload",
+            mime=file.content_type or "application/octet-stream",
+            content=content,
+            created_by="client.upload",
+        )
+        return {
+            "artifact_id": artifact.id,
+            "name": artifact.name,
+            "size": artifact.size,
+        }
+
+    @app.get("/artifact/{artifact_id}", dependencies=[Depends(auth)])
+    async def download(artifact_id: str) -> FileResponse:
+        """Serve an artifact back - charts, briefs, generated documents."""
+        if deps.artifacts is None:
+            raise HTTPException(status_code=503, detail="artifacts unavailable")
+        artifact = await deps.artifacts.get(artifact_id)
+        if artifact is None:
+            raise HTTPException(status_code=404, detail="no such artifact")
+        return FileResponse(
+            deps.artifacts.path_for(artifact),
+            media_type=artifact.mime,
+            filename=artifact.name,
+        )
 
     return app

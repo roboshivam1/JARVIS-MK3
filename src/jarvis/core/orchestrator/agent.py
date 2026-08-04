@@ -50,6 +50,7 @@ from jarvis.common.watchers import Watcher, WatcherKind
 from jarvis.core.db.repos.schedules import SchedulesRepo
 from jarvis.core.db.repos.watchers import WatchersRepo
 from jarvis.core.initiative.engine import next_cron_time
+from jarvis.core.db.repos.artifacts import ArtifactsRepo
 from jarvis.core.db.repos.jobs import JobsRepo
 from jarvis.core.memory.service import MemoryService
 from jarvis.core.orchestrator.prompts import assemble_system_prompt
@@ -199,6 +200,7 @@ class Orchestrator:
         registry: JobTypeRegistry,
         memory: MemoryService,
         guard: Guard | None = None,
+        artifacts: "ArtifactsRepo | None" = None,
         watchers: "WatchersRepo | None" = None,
         schedules: "SchedulesRepo | None" = None,
         tz: "ZoneInfo | None" = None,
@@ -210,6 +212,7 @@ class Orchestrator:
         self._registry = registry
         self._memory = memory
         self._guard = guard or create_guard()
+        self._artifacts = artifacts
         self._watchers = watchers
         self._schedules = schedules
         self._tz = tz or settings.tz

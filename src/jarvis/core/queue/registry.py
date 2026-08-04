@@ -68,6 +68,9 @@ class JobContext:
     # wherever approvals actually live - the database on the Core, a
     # protocol message from a worker.
     pending_approval: dict[str, Any] | None = None
+    # Files handed to this job, by name. The only way data reaches a
+    # sandbox: it cannot go looking for anything.
+    input_files: dict[str, bytes] = field(default_factory=dict)
 
 
 # A core-executable handler: validated payload in, output model back.

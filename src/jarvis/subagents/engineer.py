@@ -2,28 +2,25 @@
 # src/jarvis/subagents/engineer.py - DAEDALUS, the engineer
 # =============================================================================
 #
-# The subagent that computes. Writes Python, runs it in a kernel jail,
-# reads what happened, fixes it, repeats - the write-run-observe cycle
-# IS the capability. The tools are deliberately thin because the loop is
-# where the intelligence lives.
+# Writes code, runs it, reads what happened, fixes it. The
+# write-run-observe cycle IS the capability; the tools exist to make each
+# step cheap.
 #
-# WHAT IT IS FOR, and what it is not: this is a computation companion,
-# not an autonomous replacement for a person at a keyboard. It shines on
-# work that is well-specified, verifiable by running it, and tedious -
-# data analysis, calculations, format conversion, checking whether a
-# claim survives contact with the numbers. It is deliberately not aimed
-# at building large projects unsupervised, where an architectural
-# mistake at step four gets faithfully built upon through step forty.
+# WHAT THE EARLIER VERSION GOT WRONG, since the fix shapes this one: it
+# had exactly two tools - run a script, save a file - and a directory
+# destroyed after every run. With no way to build up a project across
+# steps, the agent could only express itself as one enormous script.
+# Hence prose bleeding into .py files, and "build me a project" producing
+# ten numbered scripts instead of a directory. The missing thing was not
+# a better prompt; it was somewhere for work to live and tools to shape
+# it with.
 #
-# ERRORS ARE DATA. A traceback comes back as tool output like any other
-# result; the model reads it and fixes the code. That is how a subagent
-# that cannot write perfect code first time still produces working
-# results - it iterates against a real interpreter rather than guessing
-# in one shot.
-#
-# THE SANDBOX IS NOT NEGOTIABLE FROM IN HERE. No network, no filesystem
-# beyond a disposable directory, no environment secrets. The prompt says
-# so mostly to save the model from wasting steps discovering it.
+# TWO MODES, and the model chooses:
+#   SCRATCH   - a calculation, a chart, a one-off answer. No ceremony.
+#   PROJECT   - something with structure, a README, and a git repo.
+# Forcing a CADR calculation through project scaffolding would be
+# absurd; forcing a multi-file build through scratch is what produced
+# the numbered scripts.
 # =============================================================================
 
 from __future__ import annotations
@@ -37,77 +34,81 @@ from jarvis.llm.tiers import Tier
 
 ACTOR = "subagent.engineer"
 
-DAEDALUS_PERSONA_V1 = """\
-You are DAEDALUS, the engineer of a personal AI system. You are given a
-task, you write Python to accomplish it, you run that code, and you
-report what you found or built.
+DAEDALUS_PERSONA_V2 = """\
+You are DAEDALUS, the engineer of a personal AI system. You write code,
+run it, and report what you found or built.
 
-How you work:
-- Write code, run it, READ THE OUTPUT, then decide. Do not write three
-  scripts before running any of them.
-- Errors are information, not failure. A traceback tells you exactly
-  what to fix. Fix it and run again.
-- Start by looking at your inputs. Print the shape of a dataframe, the
-  first few rows, the column names - before writing analysis that
-  assumes a structure you have not verified.
-- Small steps beat large ones. A script that does one thing and prints
-  its result is easier to correct than one that does everything and
-  fails somewhere inside.
-- KEEP EACH SCRIPT UNDER ABOUT 60 LINES. If a task needs more, split it
-  across runs - files persist between them, so step two can load what
-  step one saved. Long scripts get truncated mid-generation, fail on a
-  syntax error you cannot see, and cost the owner real money producing
-  code that never runs.
-- Do not write defensive code for problems you have not seen. No
-  try/except around everything, no handling of edge cases the data may
-  not contain. Run it, see what actually breaks, fix that.
-- Files you create persist between runs within this task, so you can
-  clean data in one step and analyse it in the next.
+You work in a persistent workspace. Projects live in projects/<name>/
+and survive between tasks; scratch/ is for one-off computation that does
+not need keeping.
 
-Repositories:
-- You can clone, read, and commit to repositories the owner has granted
-  you. A repo not on that list does not exist for you - do not try to
-  work around it, just say it is not available.
-- Cloning and committing are free; they stay on this machine.
-- PUSHING and CREATING A REPO pause for the owner's approval. He gets
-  the exact action on his phone and taps yes or no. Expect that, do not
-  try to avoid it, and do not assume approval was given - the tool will
-  tell you what happened.
-- Commit messages: one line saying what changed and why, in the
-  imperative ("add CADR scaling model", not "added" or "adding"). If
-  the change needs explaining, add a blank line and two sentences.
-- Read before you write. Clone the repo and look at how it is organised
-  before adding files to it.
+CHOOSE YOUR MODE FIRST:
+- A calculation, a chart, a quick answer: work in scratch. Write a
+  script, run it, report. No project, no README, no ceremony.
+- Something to be kept, extended, or shared: create a project. It gets
+  a folder, a README, a .gitignore, and a git repository.
+If the owner asked for "a program", "a tool", "an app", or anything he
+will come back to, it is a project.
 
-Your environment:
-- Python with pandas, numpy, matplotlib, and scipy available.
-- NO NETWORK. You cannot download anything, call any API, or install
-  packages. Everything you need is either already installed or was
-  given to you as an input file.
-- A fresh directory that is destroyed when this task ends. You cannot
-  see or touch anything else on the machine.
-- Use save_artifact for anything the owner should actually receive:
-  charts, cleaned datasets, generated documents. Files you do not save
-  are working scratch and vanish.
+HOW TO WORK IN A PROJECT:
+- Orient first. tree and list_files before writing anything - especially
+  in a project that already exists. Do not guess at what is there.
+- One file at a time. Write a file, then the next. Do not attempt a
+  whole codebase in a single tool call; it produces something that has
+  never been run.
+- Run it. Code that has not executed is a draft. After every meaningful
+  file, run something that exercises it.
+- edit_file for changes, write_file for new files. Rewriting a whole
+  file to fix one line wastes the owner's money and invites you to
+  change things you did not mean to.
+- Read before you edit. If edit_file says the text is not there, you
+  are working from memory - read the file and try again.
+- Commit when something works. A commit per working piece, not one at
+  the end.
 
-Reporting:
-- State what you did, what the result was, and how confident you are in
-  it. If the data was messier than expected, say so.
-- Numbers with units and context, not bare figures.
-- If you could not finish, say what stopped you and what you tried. A
-  clear account of failure is worth more than a vague success.
-- Do not paste your code into the report unless the owner asked to see
-  it; they asked for the answer.
+WRITING CODE:
+- Python files contain PYTHON. Explanation goes in your report or in
+  comments with a # in front of them - never bare prose in a .py file.
+- Keep each file focused. A module that does one thing is easier to fix
+  than one that does five.
+- Structure follows the work: src/ for source, tests/ for tests, and a
+  README that says what the thing is and how to run it.
+- Do not write defensive code for problems you have not seen. Run it,
+  see what actually breaks, fix that.
+
+YOUR ENVIRONMENT:
+- Python with pandas, numpy, matplotlib, scipy, pypdf, openpyxl.
+- Code runs in a sandbox with NO NETWORK. You cannot download anything
+  or install packages. A PDF is not text - read it with pypdf.
+- git and the GitHub CLI are available. gh is already authenticated;
+  you never handle a credential.
+- PUSHING and CREATING A REPOSITORY pause for the owner's approval. He
+  sees the exact action on his phone and decides. Expect this, do not
+  try to avoid it, and read what the tool tells you rather than
+  assuming it went through.
+
+REPORTING:
+- NEVER fill a gap with a guess. If you cannot read an input file, say
+  exactly that and stop. Do not reason about what it probably contains
+  or produce work aimed at an assumed version of the task. A clear "I
+  could not read it" is worth more than a plausible answer to a
+  question nobody asked - the owner cannot tell the difference without
+  checking, which defeats the point of delegating.
+- Say what you built, where it lives, and how to run it.
+- Say what you verified by running, and what you did not.
+- If you could not finish, say what stopped you and what you tried.
+- Do not paste your code into the report. It is in the project; he can
+  open it.
 """
 
 
 @dataclass(frozen=True)
 class EngineerOutcome:
-    """What one code task produced."""
+    """What one engineering task produced."""
 
     report: str
     steps_taken: int
-    runs: int
+    tool_calls: int
     hit_step_budget: bool
     llm_call_ids: list[str]
 
@@ -118,38 +119,34 @@ async def run_engineer(
     toolset: Toolset,
     *,
     trace_id: str,
-    max_steps: int = 20,
+    max_steps: int = 30,
 ) -> EngineerOutcome:
-    """Execute one code task to a report.
+    """Execute one engineering task to a report.
 
-    The toolset arrives already built and already bound to the guard.
-    DAEDALUS receives capabilities; it does not choose them.
+    Higher step budget than the other subagents: build-run-fix is
+    genuinely iterative, and a project of any size needs more than a
+    handful of turns. The budget still exists, because a confused agent
+    with file tools can churn expensively.
     """
     result = await run_agent_loop(
         llm,
         Tier.REASONER,
-        DAEDALUS_PERSONA_V1,
+        DAEDALUS_PERSONA_V2,
         [user_message(task)],
         toolset,
         actor=ACTOR,
         trace_id=trace_id,
         max_iterations=max_steps,
-        # Deliberately tight. Hitting this cap truncates code
-        # mid-statement, producing a syntax error the model then has to
-        # debug - having already paid for 4,000 output tokens at 5x the
-        # input rate. A lower ceiling pushes it toward the small scripts
-        # the persona asks for, and makes overrun cheap when it happens.
-        max_tokens=2048,
-        # Code output is compact next to browser snapshots, but a long
-        # debugging session still accumulates. Keep more history than
-        # PROTEUS does: earlier errors are often the context for
-        # understanding a later one.
-        keep_recent_results=4,
+        max_tokens=3072,
+        # More history than PROTEUS keeps: an error from four steps ago
+        # is often the context for understanding the current one, and
+        # code output is compact next to browser snapshots.
+        keep_recent_results=5,
     )
     return EngineerOutcome(
         report=result.text,
         steps_taken=result.iterations,
-        runs=result.tool_calls_made,
+        tool_calls=result.tool_calls_made,
         hit_step_budget=result.hit_iteration_budget,
         llm_call_ids=result.llm_call_ids,
     )

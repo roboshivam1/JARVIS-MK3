@@ -48,6 +48,11 @@ class WorkerSettings(CommonSettings):
     # that a human is also using.
     max_concurrency: int = 2
 
+    # Where DAEDALUS keeps its projects. Outside the data directory on
+    # purpose: this is somewhere the owner opens in an editor, and these
+    # are git repositories, so git is their backup.
+    workspace_dir: str = "~/Desktop/jarvismk3-sandbox"
+
     # GitHub token, for the git capability. Empty disables git entirely.
     # A fine-grained token scoped to the specific repos in git.json is
     # much better than a classic token with blanket access - the

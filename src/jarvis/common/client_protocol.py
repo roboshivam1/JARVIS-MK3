@@ -130,6 +130,27 @@ class CoreTranscript(BaseModel):
     text: str
 
 
+class CoreAudio(BaseModel):
+    """A chunk of synthesised speech, base64 WAV.
+
+    One per SENTENCE, not one per reply: the client queues and plays
+    them in order, so JARVIS starts speaking while he is still writing
+    the rest.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    seq: int
+    data_b64: str
+    mime: str = "audio/wav"
+
+
+class CoreAudioDone(BaseModel):
+    """No more audio for this reply."""
+
+    model_config = ConfigDict(extra="forbid")
+
+
 class CoreStatus(BaseModel):
     """A snapshot for the sidebar: workers, jobs, spend, approvals.
     Pushed on change rather than polled."""
@@ -179,6 +200,8 @@ CORE_READY = "core.ready"
 CORE_ASSISTANT_DELTA = "core.assistant_delta"
 CORE_ASSISTANT_DONE = "core.assistant_done"
 CORE_TRANSCRIPT = "core.transcript"
+CORE_AUDIO = "core.audio"
+CORE_AUDIO_DONE = "core.audio_done"
 CORE_STATUS = "core.status"
 CORE_NOTIFICATION = "core.notification"
 CORE_THINKING = "core.thinking"
@@ -195,6 +218,8 @@ register_kind(CORE_READY, CoreReady)
 register_kind(CORE_ASSISTANT_DELTA, CoreAssistantDelta)
 register_kind(CORE_ASSISTANT_DONE, CoreAssistantDone)
 register_kind(CORE_TRANSCRIPT, CoreTranscript)
+register_kind(CORE_AUDIO, CoreAudio)
+register_kind(CORE_AUDIO_DONE, CoreAudioDone)
 register_kind(CORE_STATUS, CoreStatus)
 register_kind(CORE_NOTIFICATION, CoreNotification)
 register_kind(CORE_THINKING, CoreThinking)

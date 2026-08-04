@@ -299,7 +299,24 @@ class Notifier:
         cycle retries it, and a transient network failure must not eat
         the message.
         """
+        # Every surface, not just the one that spawned the message.
+        # Sessions are shared across clients by owner decision, so
+        # "which surface does this belong to" no longer has a single
+        # answer - and a result delivered only where the owner is not
+        # looking is a result he does not get.
         deliverer = self._deliverers.get(note.client_kind)
+        others = [
+            d for kind, d in self._deliverers.items()
+            if kind != note.client_kind
+        ]
+        for extra in others:
+            try:
+                await extra.deliver(
+                    note.text, None, None, note.approval_id
+                )
+            except Exception:
+                pass        # best effort; the primary surface is what counts
+
         if deliverer is None:
             # Nothing can ever deliver this: settle it rather than
             # retrying forever.

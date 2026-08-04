@@ -240,6 +240,22 @@ class WorkerConnection:
             return   # another worker or the reclaim loop got there first
 
         self._offered.add(job.id)
+
+        # Load any artifacts the job needs. The worker cannot fetch
+        # these itself - no database - so they ride along with the offer.
+        input_files: dict[str, str] = {}
+        for artifact_id in job.payload.get("input_artifacts", []):
+            artifact = await self._artifacts.get(str(artifact_id))
+            if artifact is None:
+                continue
+            try:
+                content = self._artifacts.read_bytes(artifact)
+            except Exception:
+                log.warning("could not read input artifact", exc_info=True,
+                            extra={"artifact_id": artifact_id})
+                continue
+            input_files[artifact.name] = base64.b64encode(content).decode("ascii")
+
         spec = self._job_types.get(job.type)
         await self._send(CORE_JOB_OFFER, CoreJobOffer(
             job_id=job.id,
@@ -250,6 +266,7 @@ class WorkerConnection:
             timeout_s=spec.timeout_s if spec else 300,
             trace_id=job.trace_id,
             approval_granted=job.checkpoint is not None and job.approval is None,
+            input_files=input_files,
         ))
         await self._events.append(Event(
             kind=EventKind.JOB_LEASED, source=SOURCE, job_id=job.id,

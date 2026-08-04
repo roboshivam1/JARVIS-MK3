@@ -172,6 +172,13 @@ class CoreJobOffer(BaseModel):
     timeout_s: int = 300
     trace_id: str
     approval_granted: bool = False
+    # Input files, base64, keyed by filename.
+    #
+    # The CONTENTS travel, not the ids: a worker has no database access
+    # by design, so it cannot resolve an artifact id to bytes. Sending
+    # ids and hoping meant the sandbox silently received nothing and the
+    # agent, finding no file, invented an answer instead.
+    input_files: dict[str, str] = Field(default_factory=dict)
 
 
 class CoreJobCancel(BaseModel):

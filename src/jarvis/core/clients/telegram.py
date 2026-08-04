@@ -35,6 +35,7 @@ from zoneinfo import ZoneInfo
 
 from aiogram import Bot, Dispatcher, F
 from aiogram.client.default import DefaultBotProperties
+from aiogram.exceptions import TelegramUnauthorizedError
 from aiogram.types import (
     CallbackQuery,
     FSInputFile,
@@ -48,6 +49,7 @@ from jarvis.core.approvals.service import ApprovalService
 from jarvis.core.db.repos.approvals import ApprovalsRepo
 from jarvis.core.db.repos.sessions import SessionsRepo
 from jarvis.core.initiative.policy import NotificationPolicy
+from jarvis.llm.transcription import Transcriber
 from jarvis.core.initiative.policy import NotificationPolicy
 from jarvis.core.initiative.policy import NotificationPolicy
 from jarvis.core.sessionmgr import SessionManager
@@ -149,6 +151,7 @@ class TelegramBridge:
         approvals_repo: ApprovalsRepo | None = None,
         policy: "NotificationPolicy | None" = None,
         tz: "ZoneInfo | None" = None,
+        transcriber: "Transcriber | None" = None,
     ) -> None:
         if owner_id <= 0:
             raise ValueError(
@@ -162,6 +165,7 @@ class TelegramBridge:
         self._approval_service = approval_service
         self._approvals = approvals_repo
         self._policy = policy
+        self._transcriber = transcriber
         self._tz = tz or ZoneInfo("UTC")
         self._bot = Bot(token, default=DefaultBotProperties(parse_mode=None))
         self._dp = Dispatcher()
@@ -171,10 +175,37 @@ class TelegramBridge:
         )
 
     async def run(self) -> None:
-        """Long-poll until cancelled. Runs as one supervised Core task."""
+        """Long-poll until cancelled, reconnecting through network trouble.
+
+        A dropped wifi connection, a DNS hiccup, or Telegram having a bad
+        minute must NOT take down the daemon. The Core has duties -
+        memory, the job queue, the scheduler, the worker link, the web
+        client - that owe nothing to Telegram being reachable.
+
+        Same distinction the job queue already draws between transient
+        and permanent failure, applied to a resident: retry what
+        retrying can fix. A bad token still kills the bridge, because no
+        amount of waiting repairs that.
+        """
         log.info("telegram bridge polling", extra={"owner_id": self._owner_id})
+        backoff = 5.0
         try:
-            await self._dp.start_polling(self._bot, handle_signals=False)
+            while True:
+                try:
+                    await self._dp.start_polling(self._bot, handle_signals=False)
+                    return          # clean stop
+                except asyncio.CancelledError:
+                    raise
+                except TelegramUnauthorizedError:
+                    log.critical("telegram rejected the bot token")
+                    raise
+                except Exception as exc:
+                    log.warning("telegram polling failed - retrying", extra={
+                        "error": f"{type(exc).__name__}: {exc}"[:200],
+                        "retry_in_s": backoff,
+                    })
+                    await asyncio.sleep(backoff)
+                    backoff = min(backoff * 2, 300.0)
         finally:
             await self._bot.session.close()
 
@@ -250,9 +281,18 @@ class TelegramBridge:
             })
             return
 
+        # A voice note becomes an ordinary text turn: transcribe it, then
+        # hand the words on. Nothing downstream - memory, jobs,
+        # subagents - knows or cares that it was spoken.
+        if message.voice is not None:
+            await self._handle_voice(message)
+            return
+
         text = (message.text or "").strip()
         if not text:
-            await message.answer("Text only for now, sir.")
+            await message.answer(
+                "Text or a voice note, sir - I cannot read the rest yet."
+            )
             return
 
         if text.startswith("/"):
@@ -277,14 +317,78 @@ class TelegramBridge:
         assert result.reply is not None
         await reply.finalize(result.reply.content)
 
+    async def _handle_voice(self, message: Message) -> None:
+        """Transcribe a voice note and treat it as a message.
+
+        Telegram sends OGG/Opus, which Whisper accepts directly - no
+        conversion, no ffmpeg, nothing in the latency budget.
+
+        The transcript comes back WITH the reply. Without it, a
+        misheard question produces an answer to something the owner
+        never asked, and he has no way to tell which happened.
+        """
+        if self._transcriber is None or not self._transcriber.available:
+            await message.answer(
+                "I cannot transcribe yet, sir - no speech key configured."
+            )
+            return
+
+        assert message.voice is not None
+        if message.voice.duration > 300:
+            await message.answer(
+                "That is over five minutes, sir. Send it in pieces."
+            )
+            return
+
+        thinking = await message.answer("Listening...")
+
+        try:
+            file = await self._bot.get_file(message.voice.file_id)
+            if file.file_path is None:
+                raise RuntimeError("telegram returned no file path")
+            buffer = await self._bot.download_file(file.file_path)
+            audio = buffer.read() if buffer else b""
+        except Exception:
+            log.error("could not fetch voice note", exc_info=True)
+            await thinking.edit_text("I could not fetch that recording, sir.")
+            return
+
+        text = await self._transcriber.transcribe(audio, mime="audio/ogg")
+        if not text:
+            await thinking.edit_text("I did not catch that, sir.")
+            return
+
+        # Show what was heard before the answer, so a mishearing is
+        # obvious rather than confusing.
+        await thinking.edit_text(f"\u201c{text}\u201d")
+
+        reply = _StreamingReply(self._bot, message.chat.id)
+        try:
+            result = await self._mgr.handle_user_message(
+                CLIENT_KIND, text, on_text=reply.on_text
+            )
+        except Exception as exc:
+            log.error("voice turn failed", exc_info=True)
+            await reply.finalize(
+                f"Something broke while I was thinking, sir: "
+                f"{type(exc).__name__}."
+            )
+            return
+
+        if result.interrupted:
+            return
+        assert result.reply is not None
+        await reply.finalize(result.reply.content)
+
     async def _handle_command(self, message: Message, text: str) -> None:
         command = text.split()[0].lower()
 
         if command == "/start":
             await message.answer(
-                "Online, sir. Speak freely - or /status for vitals, "
-                "/approvals for anything awaiting your say-so, "
-                "/new for a fresh thread."
+                "Online, sir. Type or send a voice note - either works. "
+                "/status for vitals, /approvals for anything awaiting "
+                "your say-so, /quiet to silence me, /new for a fresh "
+                "thread."
             )
 
         elif command == "/new":
