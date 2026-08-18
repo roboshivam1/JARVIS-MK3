@@ -73,6 +73,9 @@ ALLOWED_TRANSITIONS: dict[JobStatus, frozenset[JobStatus]] = {
         JobStatus.CANCELLED,          # owner cancels
     }),
     JobStatus.AWAITING_APPROVAL: frozenset({
+        JobStatus.QUEUED,             # approved -> back to the queue,
+                                      # so the next attempt can run
+                                      # anywhere
         JobStatus.RUNNING,            # approved → resumes
         JobStatus.CANCELLED,          # rejected, or gate TTL expired
     }),

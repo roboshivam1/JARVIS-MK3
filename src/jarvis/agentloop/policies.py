@@ -40,6 +40,13 @@ DEFAULT_POLICIES: dict[str, ActorPolicy] = {
             "list_jobs", "get_job", "cancel_job",
             "run_subagent", "enqueue_job",
             "schedule", "list_schedules", "cancel_schedule",
+            # Watchers and schedules, added when the initiative engine
+            # arrived. Missing here meant every attempt to create a
+            # watcher was silently denied - and JARVIS reported it as a
+            # limitation rather than a bug, which is exactly how a hole
+            # in an allowlist hides.
+            "create_watcher", "list_watchers", "remove_watcher",
+            "create_schedule",
         ),
         description=(
             "The front mind. Talks, remembers, and delegates. No hands: "

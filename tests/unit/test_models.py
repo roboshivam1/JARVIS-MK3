@@ -167,7 +167,15 @@ class TestJobStateMachine:
                 JobStatus.SUCCEEDED, JobStatus.FAILED, JobStatus.QUEUED,
                 JobStatus.AWAITING_APPROVAL, JobStatus.CANCELLED,
             },
-            JobStatus.AWAITING_APPROVAL: {JobStatus.RUNNING, JobStatus.CANCELLED},
+            JobStatus.AWAITING_APPROVAL: {
+                # Approval returns the job to the QUEUE rather than
+                # resuming in place: the gate may be answered hours
+                # later, and the worker that raised it is likely gone.
+                # Doc-02's diagram predates workers existing.
+                JobStatus.QUEUED,
+                JobStatus.RUNNING,
+                JobStatus.CANCELLED,
+            },
             JobStatus.SUCCEEDED: set(),
             JobStatus.FAILED: set(),
             JobStatus.CANCELLED: set(),

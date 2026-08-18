@@ -302,10 +302,46 @@ body.dragging::after {
   }
   body.show-panel aside { display: block; }
   body.show-panel #transcript { display: none; }
-  #transcript { padding: 20px 18px; }
-  .masthead { font-size: 22px; }
+
+  #transcript { padding: 16px 16px 12px; }
+  .turn { margin-bottom: 22px; }
+  .body { font-size: 16px; }
+
+  header { padding: 10px 16px 8px; }
+  .masthead { font-size: 14px; letter-spacing: 0.28em; }
   .dateline { display: none; }
+
+  /* The composer gets its own full-width row, with controls beneath.
+     Squeezed onto one line the text field ends up a few characters
+     wide, which is unusable for anything longer than a sentence. */
+  footer {
+    padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+  }
+  .composer {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  textarea {
+    width: 100%;
+    font-size: 16px;   /* below 16px, iOS zooms the page on focus */
+    min-height: 44px;
+  }
+  .mobile-controls {
+    display: flex;
+    gap: 8px;
+  }
+  .mobile-controls button {
+    flex: 1;
+    padding: 12px 8px;   /* a thumb-sized target */
+  }
+  /* Talk is the primary action on a phone, so it gets the room. */
+  #talk { flex: 2; }
 }
+
+/* The controls row only exists on narrow screens; on a desktop the
+   buttons sit inline with the field. */
+.mobile-controls { display: contents; }
 </style>
 </head>
 <body>
@@ -349,9 +385,11 @@ body.dragging::after {
   <div class="attachments" id="attachments"></div>
   <div class="composer">
     <textarea id="input" rows="1" placeholder="Speak freely, sir."></textarea>
-    <button id="talk">Hold to Talk</button>
-    <button id="attach">Attach</button>
-    <button id="send" class="primary">Send</button>
+    <div class="mobile-controls">
+      <button id="talk">Hold to Talk</button>
+      <button id="attach">Attach</button>
+      <button id="send" class="primary">Send</button>
+    </div>
   </div>
   <input type="file" id="file-input" multiple hidden>
 </footer>
@@ -671,22 +709,34 @@ let audioUnlocked = false;
 // that works elsewhere does not survive newer Safari. Unlocking THIS
 // element once, on a real tap, and then only changing its source keeps
 // the permission.
+// KEPT PLAYING, never paused.
+//
+// iOS authorises an element during a user gesture, but treats a later
+// play() on a PAUSED element as a fresh request needing fresh
+// authorisation - and by the time the first clip arrives, the gesture
+// (holding the talk button) is long over. That is why the first
+// sentence or two went missing while later ones, arriving mid-
+// playback, came through fine.
+//
+// Feeding it silence between clips keeps it in a playing state, so
+// every clip is a source change rather than a new playback.
+const SILENCE = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEA'
+              + 'gD4AAAB9AAACABAAZGF0YQAAAAA=';
 const player = new Audio();
+player.loop = false;
 player.addEventListener('ended', () => playNext());
 player.addEventListener('error', () => playNext());
 
 function unlockAudio() {
   if (audioUnlocked) return;
-  // Start and immediately pause the real element during the gesture.
-  // That is what iOS remembers; a different element played later is
-  // not covered by it.
-  player.src = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAgD'
-             + '4AAAB9AAACABAAZGF0YQAAAAA=';
+  // Start the real element during the gesture and LEAVE IT PLAYING.
+  // Pausing it here surrendered the authorisation, which is why the
+  // first clips were blocked - see the comment on the element itself.
+  player.src = SILENCE;
   player.play().then(() => {
-    player.pause();
     audioUnlocked = true;
   }).catch(() => {
-    // The gesture was not enough - a later tap will try again.
+    // The gesture was not enough; a later tap tries again.
   });
 }
 
@@ -716,9 +766,14 @@ function playNext() {
   }
 
   if (!audioClips.has(nextSeq)) {
-    // The next clip in order has not arrived. Stop rather than play
-    // something later; this resumes when that clip lands.
+    // The next clip in order has not arrived yet. Play silence rather
+    // than stopping: a paused element loses its iOS authorisation, and
+    // the clip that lands a moment later would then be blocked.
     playing = false;
+    if (audioUnlocked && player.paused) {
+      player.src = SILENCE;
+      player.play().catch(() => {});
+    }
     return;
   }
 
@@ -748,7 +803,15 @@ function stopSpeaking() {
   audioClips.clear();
   nextSeq = 0;
   playing = false;
-  player.pause();
+  // Silence rather than pause, for the same reason: a paused element
+  // needs re-authorising and barge-in is followed immediately by more
+  // speech.
+  if (audioUnlocked) {
+    player.src = SILENCE;
+    player.play().catch(() => {});
+  } else {
+    player.pause();
+  }
 }
 
 // -- push to talk -----------------------------------------------------------
