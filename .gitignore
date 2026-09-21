@@ -9,3 +9,5 @@ secret.txt
 data/
 .playwright-mcp/git.json
 data/git-workspace/
+
+.playwright-mcp/
