@@ -1,0 +1,557 @@
+- generic [ref=f4e3]:
+  - banner [ref=f4e4]:
+    - generic [ref=f4e5]:
+      - generic [ref=f4e6]:
+        - link [ref=f4e7] [cursor=pointer]:
+          - /url: https://www.e-yantra.org/
+          - img "e-Yantra" [ref=f4e8]
+        - link [ref=f4e9] [cursor=pointer]:
+          - /url: https://www.iitb.ac.in/
+          - img "IIT Bombay" [ref=f4e10]
+      - navigation [ref=f4e11]:
+        - link "About" [ref=f4e12] [cursor=pointer]:
+          - /url: /#about
+        - button "Competition" [ref=f4e14]
+        - button "Resources" [ref=f4e18]
+      - generic [ref=f4e21]:
+        - link "Log in" [ref=f4e22] [cursor=pointer]:
+          - /url: /login
+        - link "Register →" [ref=f4e26] [cursor=pointer]:
+          - /url: /register
+          - text: Register
+          - generic [ref=f4e27]: →
+    - generic [ref=f4e30]:
+      - link "How it Works" [ref=f4e31] [cursor=pointer]:
+        - /url: /#how
+      - link "Themes" [ref=f4e33] [cursor=pointer]:
+        - /url: /#themes
+      - link "Timeline" [ref=f4e35] [cursor=pointer]:
+        - /url: /#timeline
+      - link "Fees" [ref=f4e37] [cursor=pointer]:
+        - /url: /#fees
+      - link "Prizes" [ref=f4e39] [cursor=pointer]:
+        - /url: /#prizes
+      - link "FAQ" [ref=f4e41] [cursor=pointer]:
+        - /url: /faq
+      - link "Technical Sessions" [ref=f4e43] [cursor=pointer]:
+        - /url: /technical-sessions
+  - generic [ref=f4e45]:
+    - heading "7 themes. One challenge each." [level=1] [ref=f4e46]
+    - paragraph [ref=f4e47]: Every theme is a gamified abstraction of a real engineering problem. Pick one, learn the stack behind it, and build a robot that solves it from simulation through the hardware finale.
+    - generic [ref=f4e48]:
+      - generic [ref=f4e49]:
+        - generic [ref=f4e50]: I'm in
+        - button "1st Year" [ref=f4e51]
+        - button "2nd Year" [ref=f4e52]
+        - button "3rd Year" [ref=f4e53]
+        - button "4th Year" [ref=f4e54]
+      - paragraph [ref=f4e55]: Every theme is taught from the basics up to the advanced tasks, so beginners can pick up any of them. The year tags are just recommendations to help you choose — you're free to work on any theme you like.
+    - list [ref=f4e57]:
+      - listitem [ref=f4e58]:
+        - generic [ref=f4e59]:
+          - img "Logic Quest" [ref=f4e61]
+          - generic [ref=f4e65]:
+            - heading "Logic Quest" [level=3] [ref=f4e66]
+            - paragraph [ref=f4e67]: An alien civilization has left behind a mysterious message scattered across four RFID blocks. RISC ROVER must follow the marked paths, determine where each block belongs, and place them in the correct sequence to reconstruct the complete message.
+            - generic [ref=f4e68]:
+              - generic [ref=f4e69]: 2nd Year
+              - generic [ref=f4e70]: 3rd Year
+              - generic [ref=f4e71]: 4th Year
+            - button "More" [ref=f4e72]
+      - listitem [ref=f4e75] [cursor=pointer]:
+        - generic [ref=f4e76]:
+          - img "Khoj-o-Drone" [ref=f4e78]
+          - generic [ref=f4e82]:
+            - heading "Khoj-o-Drone" [level=3] [ref=f4e83]
+            - paragraph [ref=f4e84]: A quadcopter looking for survivors in a disaster-stricken area.
+            - generic [ref=f4e85]:
+              - generic [ref=f4e86]: 3rd Year
+              - generic [ref=f4e87]: 4th Year
+            - button "More" [ref=f4e88]
+      - listitem [ref=f4e91] [cursor=pointer]:
+        - generic [ref=f4e92]:
+          - img "Strata Cobot" [ref=f4e94]
+          - generic [ref=f4e98]:
+            - heading "Strata Cobot" [level=3] [ref=f4e99]
+            - paragraph [ref=f4e100]: A mobile robot and a robotic arm working in sync on an extraterrestrial planet to transport and sort mined mineral ores.
+            - generic [ref=f4e101]:
+              - generic [ref=f4e102]: 2nd Year
+              - generic [ref=f4e103]: 3rd Year
+              - generic [ref=f4e104]: 4th Year
+            - button "More" [ref=f4e105]
+      - listitem:
+        - generic:
+          - generic:
+            - img "Hola The Explorer"
+          - generic:
+            - heading "Hola The Explorer" [level=3]
+            - paragraph: Three robots. One buried city. A vault that only opens for a team.
+            - generic:
+              - generic: 3rd Year
+              - generic: 4th Year
+            - button "More"
+      - listitem:
+        - generic:
+          - generic:
+            - img "Niti Vahan"
+          - generic:
+            - heading "Niti Vahan" [level=3]
+            - paragraph: This project develops an autonomous vehicle that uses camera-based lane detection and control to navigate a city arena while following traffic rules, enhancing safety and order on the road, with pick-up and drop-off of items as the core task. The first stage focuses on building and validating this capability in simulation/prototype form, covering lane keeping, intersection handling, and traffic rule compliance. The second stage moves to hardware building, realizing the same pick-up and drop-off task on a physical platform.
+            - generic:
+              - generic: 1st Year
+              - generic: 2nd Year
+              - generic: 3rd Year
+              - generic: 4th Year
+            - button "More"
+      - listitem [ref=f4e108] [cursor=pointer]:
+        - generic [ref=f4e109]:
+          - img "Echo Balancer" [ref=f4e111]
+          - generic [ref=f4e115]:
+            - heading "Echo Balancer" [level=3] [ref=f4e116]
+            - paragraph [ref=f4e117]: An autonomous two-wheel self-balancing bike that navigates through cave-like environments using the principles of the Furuta pendulum and ultrasonic sensors.
+            - generic [ref=f4e118]:
+              - generic [ref=f4e119]: 2nd Year
+              - generic [ref=f4e120]: 3rd Year
+              - generic [ref=f4e121]: 4th Year
+            - button "More" [ref=f4e122]
+      - listitem [ref=f4e125] [cursor=pointer]:
+        - generic [ref=f4e126]:
+          - img "PacBot" [ref=f4e128]
+          - generic [ref=f4e132]:
+            - heading "PacBot" [level=3] [ref=f4e133]
+            - paragraph [ref=f4e134]: A Pac-Man inspired bot, where it has to escape the maze without getting caught and getting maximum points.
+            - generic [ref=f4e135]:
+              - generic [ref=f4e136]: 1st Year
+              - generic [ref=f4e137]: 2nd Year
+              - generic [ref=f4e138]: 3rd Year
+              - generic [ref=f4e139]: 4th Year
+            - button "More" [ref=f4e140]
+    - generic [ref=f4e143]:
+      - button [ref=f4e144]
+      - button [ref=f4e147]
+    - paragraph [ref=f4e150]: Based on Stage 1 performance, selected teams will advance to Stage 2 and receive free hardware kits to work on.
+  - generic [ref=f4e153]:
+    - button [ref=f4e154]
+    - button [ref=f4e155]
+    - button [ref=f4e156]
+    - button [ref=f4e157]
+    - button [ref=f4e158]
+    - button [ref=f4e159]
+    - button [ref=f4e160]
+  - generic [ref=f4e161]:
+    - generic [ref=f4e162]:
+      - generic: "01"
+      - generic [ref=f4e163]:
+        - generic [ref=f4e164]:
+          - generic [ref=f4e165]: Theme 1 · LQ
+          - heading "Logic Quest" [level=2] [ref=f4e166]
+          - paragraph [ref=f4e167]: An alien civilization has left behind a mysterious message scattered across four RFID blocks. RISC ROVER must follow the marked paths, determine where each block belongs, and place them in the correct sequence to reconstruct the complete message.
+          - generic [ref=f4e168]:
+            - img "Logic Quest" [ref=f4e169]
+            - button "View larger" [ref=f4e173]
+          - generic [ref=f4e176]:
+            - generic [ref=f4e177]: 2nd Year
+            - generic [ref=f4e178]: 3rd Year
+            - generic [ref=f4e179]: 4th Year
+            - generic [ref=f4e180]: Simulator + Hardware
+          - generic [ref=f4e181]:
+            - generic [ref=f4e182]: RFID Decryption
+            - generic [ref=f4e183]: CPU Design
+            - generic [ref=f4e184]: Path Planning
+        - generic [ref=f4e185]:
+          - generic [ref=f4e186]:
+            - button "Briefing" [ref=f4e187]
+            - button "Your Mission" [ref=f4e190]
+            - button "The Build" [ref=f4e193]
+            - button "Loadout" [ref=f4e196]
+            - button "Prep Check" [ref=f4e199]
+          - generic [ref=f4e203]:
+            - paragraph [ref=f4e204]: What your robot has to pull off inside the arena — broken into objectives you'll tackle in order.
+            - generic [ref=f4e205]:
+              - paragraph [ref=f4e206]: "As RISC Rover, your mission is to:"
+              - generic [ref=f4e207]: 5 objectives
+            - list [ref=f4e208]:
+              - listitem [ref=f4e209]:
+                - generic [ref=f4e210]: "01"
+                - text: Explore the arena by following the marked path.
+              - listitem [ref=f4e211]:
+                - generic [ref=f4e212]: "02"
+                - text: Scan and decrypt the RFID data on each block.
+              - listitem [ref=f4e213]:
+                - generic [ref=f4e214]: "03"
+                - text: Determine the correct destination for the block.
+              - listitem [ref=f4e215]:
+                - generic [ref=f4e216]: "04"
+                - text: Pick up the block and transport it to its designated location.
+              - listitem [ref=f4e217]:
+                - generic [ref=f4e218]: "05"
+                - text: Repeat the process until all four blocks are placed correctly, revealing the complete alien message.
+    - generic [ref=f4e219]:
+      - generic: "02"
+      - generic [ref=f4e220]:
+        - generic [ref=f4e221]:
+          - generic [ref=f4e222]: Theme 2 · KD
+          - heading "Khoj-o-Drone" [level=2] [ref=f4e223]
+          - paragraph [ref=f4e224]: A quadcopter looking for survivors in a disaster-stricken area.
+          - generic [ref=f4e225]:
+            - img "Khoj-o-Drone" [ref=f4e226]
+            - button "View larger" [ref=f4e230]
+          - generic [ref=f4e233]:
+            - generic [ref=f4e234]: 3rd Year
+            - generic [ref=f4e235]: 4th Year
+            - generic [ref=f4e236]: Simulator + Hardware
+          - generic [ref=f4e237]:
+            - generic [ref=f4e238]: Drone Flight Control
+            - generic [ref=f4e239]: Path Planning
+        - generic [ref=f4e240]:
+          - generic [ref=f4e241]:
+            - button "Briefing" [ref=f4e242]
+            - button "Your Mission" [ref=f4e245]
+            - button "The Build" [ref=f4e248]
+            - button "Loadout" [ref=f4e251]
+            - button "Prep Check" [ref=f4e254]
+          - generic [ref=f4e258]:
+            - paragraph [ref=f4e259]: What your robot has to pull off inside the arena — broken into objectives you'll tackle in order.
+            - generic [ref=f4e260]:
+              - generic [ref=f4e261]: Objectives
+              - generic [ref=f4e262]: 7 objectives
+            - list [ref=f4e263]:
+              - listitem [ref=f4e264]:
+                - generic [ref=f4e265]: "01"
+                - text: Autonomously explore the disaster zone
+              - listitem [ref=f4e266]:
+                - generic [ref=f4e267]: "02"
+                - text: Safely navigate through hazardous and cluttered environments
+              - listitem [ref=f4e268]:
+                - generic [ref=f4e269]: "03"
+                - text: Detect trapped survivors.
+              - listitem [ref=f4e270]:
+                - generic [ref=f4e271]: "04"
+                - text: Accurately estimate and record the location of every detected survivor.
+              - listitem [ref=f4e272]:
+                - generic [ref=f4e273]: "05"
+                - text: Maintain stable flight throughout the mission.
+              - listitem [ref=f4e274]:
+                - generic [ref=f4e275]: "06"
+                - text: Transmit survivor coordinates to the ground station.
+              - listitem [ref=f4e276]:
+                - generic [ref=f4e277]: "07"
+                - text: Prioritize critical survivors while ensuring all survivors are located within the mission time.
+    - generic [ref=f4e278]:
+      - generic: "03"
+      - generic [ref=f4e279]:
+        - generic [ref=f4e280]:
+          - generic [ref=f4e281]: Theme 3 · SC
+          - heading "Strata Cobot" [level=2] [ref=f4e282]
+          - paragraph [ref=f4e283]: A mobile robot and a robotic arm working in sync on an extraterrestrial planet to transport and sort mined mineral ores.
+          - generic [ref=f4e284]:
+            - img "Strata Cobot" [ref=f4e285]
+            - button "View larger" [ref=f4e289]
+          - generic [ref=f4e292]:
+            - generic [ref=f4e293]: 2nd Year
+            - generic [ref=f4e294]: 3rd Year
+            - generic [ref=f4e295]: 4th Year
+            - generic [ref=f4e296]: Simulator + Hardware
+          - generic [ref=f4e297]:
+            - generic [ref=f4e298]: SLAM
+            - generic [ref=f4e299]: Robotic Arm Control
+            - generic [ref=f4e300]: Autonomous Exploration
+        - generic [ref=f4e301]:
+          - generic [ref=f4e302]:
+            - button "Briefing" [ref=f4e303]
+            - button "Your Mission" [ref=f4e306]
+            - button "The Build" [ref=f4e309]
+            - button "Loadout" [ref=f4e312]
+            - button "Prep Check" [ref=f4e315]
+          - generic [ref=f4e319]:
+            - paragraph [ref=f4e320]: What your robot has to pull off inside the arena — broken into objectives you'll tackle in order.
+            - generic [ref=f4e321]:
+              - generic [ref=f4e322]: Objectives
+              - generic [ref=f4e323]: 5 objectives
+            - list [ref=f4e324]:
+              - listitem [ref=f4e325]:
+                - generic [ref=f4e326]: "01"
+                - text: Build the control and decision logic that lets both robots operate and coordinate autonomously, without a human in the loop.
+              - listitem [ref=f4e327]:
+                - generic [ref=f4e328]: "02"
+                - text: "For the mobile robot, develop a full navigation stack: global and local path planning for efficient, collision-free routes; real-time obstacle avoidance to respond to hazards across the terrain; and trajectory control to track those paths reliably between regions."
+              - listitem [ref=f4e329]:
+                - generic [ref=f4e330]: "03"
+                - text: "For the robotic arm, tackle perception and manipulation: image processing to detect and classify the ores, pose estimation to locate them in the workspace, motion planning to compute collision-free trajectories to each target, and grasp planning to pick each ore and place it in the correct container."
+              - listitem [ref=f4e331]:
+                - generic [ref=f4e332]: "04"
+                - text: Coordinate the two robots so they act as a single system rather than two separate ones, since neither can complete the mission alone.
+              - listitem [ref=f4e333]:
+                - generic [ref=f4e334]: "05"
+                - text: Achieve the synchronized handoff that keeps the full pipeline moving resources from the field to their designated containers.
+    - generic [ref=f4e335]:
+      - generic: "04"
+      - generic [ref=f4e336]:
+        - generic [ref=f4e337]:
+          - generic [ref=f4e338]: Theme 4 · HE
+          - heading "Hola The Explorer" [level=2] [ref=f4e339]
+          - paragraph [ref=f4e340]: Three robots. One buried city. A vault that only opens for a team.
+          - generic [ref=f4e341]:
+            - img "Hola The Explorer" [ref=f4e342]
+            - button "View larger" [ref=f4e346]
+          - generic [ref=f4e349]:
+            - generic [ref=f4e350]: 3rd Year
+            - generic [ref=f4e351]: 4th Year
+            - generic [ref=f4e352]: Simulator + Hardware
+          - generic [ref=f4e353]:
+            - generic [ref=f4e354]: Multi-Robot Coordination
+            - generic [ref=f4e355]: Multi-Agent Path Planning
+            - generic [ref=f4e356]: Collision Avoidance
+            - generic [ref=f4e357]: Task Allocation
+            - generic [ref=f4e358]: System Integration
+            - generic [ref=f4e359]: Robot Fabrication
+        - generic [ref=f4e360]:
+          - generic [ref=f4e361]:
+            - button "Briefing" [ref=f4e362]
+            - button "Your Mission" [ref=f4e365]
+            - button "The Build" [ref=f4e368]
+            - button "Loadout" [ref=f4e371]
+            - button "Prep Check" [ref=f4e374]
+          - generic [ref=f4e378]:
+            - paragraph [ref=f4e379]: What your robot has to pull off inside the arena — broken into objectives you'll tackle in order.
+            - generic [ref=f4e380]:
+              - generic [ref=f4e381]: Objectives
+              - generic [ref=f4e382]: 4 objectives
+            - list [ref=f4e383]:
+              - listitem [ref=f4e384]:
+                - generic [ref=f4e385]: "01"
+                - text: Three robots must independently explore an arena and avoid obstacles.
+              - listitem [ref=f4e386]:
+                - generic [ref=f4e387]: "02"
+                - text: Each robot discovers hidden checkpoints scattered across the environment and collects clue fragments along the way.
+              - listitem [ref=f4e388]:
+                - generic [ref=f4e389]: "03"
+                - text: The robots share their collected clue fragments with the main server to decode the treasure's location.
+              - listitem [ref=f4e390]:
+                - generic [ref=f4e391]: "04"
+                - text: They then coordinate their motion to transport weighted objects, with teamwork scaling to each object's weight.
+    - generic [ref=f4e392]:
+      - generic: "05"
+      - generic [ref=f4e393]:
+        - generic [ref=f4e394]:
+          - generic [ref=f4e395]: Theme 5 · NV
+          - heading "Niti Vahan" [level=2] [ref=f4e396]
+          - paragraph [ref=f4e397]: This project develops an autonomous vehicle that uses camera-based lane detection and control to navigate a city arena while following traffic rules, enhancing safety and order on the road, with pick-up and drop-off of items as the core task. The first stage focuses on building and validating this capability in simulation/prototype form, covering lane keeping, intersection handling, and traffic rule compliance. The second stage moves to hardware building, realizing the same pick-up and drop-off task on a physical platform.
+          - generic [ref=f4e398]:
+            - img "Niti Vahan" [ref=f4e399]
+            - button "View larger" [ref=f4e403]
+          - generic [ref=f4e406]:
+            - generic [ref=f4e407]: 1st Year
+            - generic [ref=f4e408]: 2nd Year
+            - generic [ref=f4e409]: 3rd Year
+            - generic [ref=f4e410]: 4th Year
+            - generic [ref=f4e411]: Simulator + Hardware
+          - generic [ref=f4e412]:
+            - generic [ref=f4e413]: Computer Vision
+            - generic [ref=f4e414]: Traffic Signal Logic
+            - generic [ref=f4e415]: Path Optimization
+        - generic [ref=f4e416]:
+          - generic [ref=f4e417]:
+            - button "Briefing" [ref=f4e418]
+            - button "Your Mission" [ref=f4e421]
+            - button "The Build" [ref=f4e424]
+            - button "Loadout" [ref=f4e427]
+            - button "Prep Check" [ref=f4e430]
+          - generic [ref=f4e434]:
+            - paragraph [ref=f4e435]: What your robot has to pull off inside the arena — broken into objectives you'll tackle in order.
+            - generic [ref=f4e436]:
+              - generic [ref=f4e437]: Objectives
+              - generic [ref=f4e438]: 5 objectives
+            - list [ref=f4e439]:
+              - listitem [ref=f4e440]:
+                - generic [ref=f4e441]: "01"
+                - text: Encode the traffic rulebook as a set of mathematical constraints that a predictive control system can plan against.
+              - listitem [ref=f4e442]:
+                - generic [ref=f4e443]: "02"
+                - text: Generate a disciplined path that stops at junctions, signals turns, and completes milestones with minimal rule violations.
+              - listitem [ref=f4e444]:
+                - generic [ref=f4e445]: "03"
+                - text: Maintain dynamic stability while respecting the tire's physical limits when navigating between locations.
+              - listitem [ref=f4e446]:
+                - generic [ref=f4e447]: "04"
+                - text: Execute precise parking within a designated zone to complete the route.
+              - listitem [ref=f4e448]:
+                - generic [ref=f4e449]: "05"
+                - text: Prove that smart control logic can produce safer, more orderly movement through the city.
+    - generic [ref=f4e450]:
+      - generic: "06"
+      - generic [ref=f4e451]:
+        - generic [ref=f4e452]:
+          - generic [ref=f4e453]: Theme 6 · EB
+          - heading "Echo Balancer" [level=2] [ref=f4e454]
+          - paragraph [ref=f4e455]: An autonomous two-wheel self-balancing bike that navigates through cave-like environments using the principles of the Furuta pendulum and ultrasonic sensors.
+          - generic [ref=f4e456]:
+            - img "Echo Balancer" [ref=f4e457]
+            - button "View larger" [ref=f4e461]
+          - generic [ref=f4e464]:
+            - generic [ref=f4e465]: 2nd Year
+            - generic [ref=f4e466]: 3rd Year
+            - generic [ref=f4e467]: 4th Year
+            - generic [ref=f4e468]: Simulator + Hardware
+          - generic [ref=f4e469]:
+            - generic [ref=f4e470]: Balance Control
+            - generic [ref=f4e471]: Ultrasonic Sensing
+            - generic [ref=f4e472]: PID Tuning
+        - generic [ref=f4e473]:
+          - generic [ref=f4e474]:
+            - button "Briefing" [ref=f4e475]
+            - button "Your Mission" [ref=f4e478]
+            - button "The Build" [ref=f4e481]
+            - button "Loadout" [ref=f4e484]
+            - button "Prep Check" [ref=f4e487]
+          - generic [ref=f4e491]:
+            - paragraph [ref=f4e492]: What your robot has to pull off inside the arena — broken into objectives you'll tackle in order.
+            - generic [ref=f4e493]:
+              - generic [ref=f4e494]: Objectives
+              - generic [ref=f4e495]: 3 objectives
+            - list [ref=f4e496]:
+              - listitem [ref=f4e497]:
+                - generic [ref=f4e498]: "01"
+                - text: Maintain a stable balance on two wheels without the robot touching the ground.
+              - listitem [ref=f4e499]:
+                - generic [ref=f4e500]: "02"
+                - text: Successfully navigate the cave-like environment using a robust wall-following algorithm while avoiding all collisions.
+              - listitem [ref=f4e501]:
+                - generic [ref=f4e502]: "03"
+                - text: Detect the polarity of the magnets placed along the path to verify that the robot is navigating in the correct direction.
+    - generic [ref=f4e503]:
+      - generic: "07"
+      - generic [ref=f4e504]:
+        - generic [ref=f4e505]:
+          - generic [ref=f4e506]: Theme 7 · PB
+          - heading "PacBot" [level=2] [ref=f4e507]
+          - paragraph [ref=f4e508]: A Pac-Man inspired bot, where it has to escape the maze without getting caught and getting maximum points.
+          - generic [ref=f4e509]:
+            - img "PacBot" [ref=f4e510]
+            - button "View larger" [ref=f4e514]
+            - button "Play video" [ref=f4e517]
+          - generic [ref=f4e520]:
+            - generic [ref=f4e521]: 1st Year
+            - generic [ref=f4e522]: 2nd Year
+            - generic [ref=f4e523]: 3rd Year
+            - generic [ref=f4e524]: 4th Year
+            - generic [ref=f4e525]: Simulator + Hardware
+          - generic [ref=f4e526]:
+            - generic [ref=f4e527]: Maze Solving
+            - generic [ref=f4e528]: Pathfinding Algorithms
+            - generic [ref=f4e529]: Grid Navigation
+        - generic [ref=f4e530]:
+          - generic [ref=f4e531]:
+            - button "Briefing" [ref=f4e532]
+            - button "Your Mission" [ref=f4e535]
+            - button "The Build" [ref=f4e538]
+            - button "Loadout" [ref=f4e541]
+            - button "Prep Check" [ref=f4e544]
+          - generic [ref=f4e548]:
+            - paragraph [ref=f4e549]: What your robot has to pull off inside the arena — broken into objectives you'll tackle in order.
+            - generic [ref=f4e550]:
+              - generic [ref=f4e551]: Objectives
+              - generic [ref=f4e552]: 5 objectives
+            - list [ref=f4e553]:
+              - listitem [ref=f4e554]:
+                - generic [ref=f4e555]: "01"
+                - text: Finding a path that collects maximum points while avoiding all Ghosts.
+              - listitem [ref=f4e556]:
+                - generic [ref=f4e557]: "02"
+                - text: Deciding how aggressively to collect points before heading to the exit.
+              - listitem [ref=f4e558]:
+                - generic [ref=f4e559]: "03"
+                - text: Reaching the exit in time before all escape routes are cut off.
+              - listitem [ref=f4e560]:
+                - generic [ref=f4e561]: "04"
+                - text: Rerouting in real time as Ghost positions change every second.
+              - listitem [ref=f4e562]:
+                - generic [ref=f4e563]: "05"
+                - text: Balancing between chasing points and surviving long enough to escape.
+  - generic [ref=f4e567]:
+    - generic [ref=f4e568]:
+      - heading "Picked your theme?" [level=2] [ref=f4e569]
+      - paragraph [ref=f4e570]: Form your team of 2–4 and register — you'll choose any two themes to work on in Stage 1 before committing to one for the hardware stage.
+    - generic [ref=f4e571]:
+      - link "Register your team" [ref=f4e572] [cursor=pointer]:
+        - /url: /register
+      - link "Past Themes" [ref=f4e575] [cursor=pointer]:
+        - /url: https://portal.e-yantra.org/past-themes
+  - contentinfo [ref=f4e576]:
+    - generic [ref=f4e577]:
+      - generic [ref=f4e578]:
+        - generic [ref=f4e579]:
+          - link [ref=f4e580] [cursor=pointer]:
+            - /url: https://e-yantra.org
+            - img "e-Yantra" [ref=f4e581]
+          - generic [ref=f4e582]:
+            - link "YouTube" [ref=f4e583] [cursor=pointer]:
+              - /url: https://www.youtube.com/e-yantra
+            - link "Instagram" [ref=f4e586] [cursor=pointer]:
+              - /url: https://www.instagram.com/eyantra/
+            - link "X (Twitter)" [ref=f4e589] [cursor=pointer]:
+              - /url: https://twitter.com/eyantra_iitb
+            - link "LinkedIn" [ref=f4e592] [cursor=pointer]:
+              - /url: https://www.linkedin.com/company/e-yantraiitb/
+            - link "Facebook" [ref=f4e595] [cursor=pointer]:
+              - /url: https://www.facebook.com/eyantra
+        - generic [ref=f4e598]:
+          - generic [ref=f4e599]:
+            - heading "Competition" [level=4] [ref=f4e600]
+            - link "About" [ref=f4e601] [cursor=pointer]:
+              - /url: /#about
+            - link "How it works" [ref=f4e602] [cursor=pointer]:
+              - /url: /#how
+            - link "Themes" [ref=f4e603] [cursor=pointer]:
+              - /url: /#themes
+            - link "Timeline" [ref=f4e604] [cursor=pointer]:
+              - /url: /#timeline
+            - link "Prizes" [ref=f4e605] [cursor=pointer]:
+              - /url: /#prizes
+            - link "Fees" [ref=f4e606] [cursor=pointer]:
+              - /url: /#fees
+          - generic [ref=f4e607]:
+            - heading "Resources" [level=4] [ref=f4e608]
+            - link "Competition Rules" [ref=f4e609] [cursor=pointer]:
+              - /url: /rules
+            - link "FAQ" [ref=f4e610] [cursor=pointer]:
+              - /url: /faq
+            - link "Past editions" [ref=f4e611] [cursor=pointer]:
+              - /url: /past-themes
+            - link "Discussion forum ↗" [ref=f4e612] [cursor=pointer]:
+              - /url: https://discuss.e-yantra.org
+              - text: Discussion forum
+              - generic [ref=f4e613]: ↗
+          - generic [ref=f4e614]:
+            - heading "Connect" [level=4] [ref=f4e615]
+            - link "YouTube ↗" [ref=f4e616] [cursor=pointer]:
+              - /url: https://www.youtube.com/e-yantra
+              - text: YouTube
+              - generic [ref=f4e617]: ↗
+            - link "Facebook ↗" [ref=f4e618] [cursor=pointer]:
+              - /url: https://www.facebook.com/eyantra
+              - text: Facebook
+              - generic [ref=f4e619]: ↗
+            - link "Instagram ↗" [ref=f4e620] [cursor=pointer]:
+              - /url: https://www.instagram.com/eyantra/
+              - text: Instagram
+              - generic [ref=f4e621]: ↗
+            - link "X (Twitter) ↗" [ref=f4e622] [cursor=pointer]:
+              - /url: https://twitter.com/eyantra_iitb
+              - text: X (Twitter)
+              - generic [ref=f4e623]: ↗
+            - link "LinkedIn ↗" [ref=f4e624] [cursor=pointer]:
+              - /url: https://www.linkedin.com/company/e-yantraiitb/
+              - text: LinkedIn
+              - generic [ref=f4e625]: ↗
+            - link "Contact us ↗" [ref=f4e626] [cursor=pointer]:
+              - /url: https://www.e-yantra.org/contact
+              - text: Contact us
+              - generic [ref=f4e627]: ↗
+            - link "e-yantra.org ↗" [ref=f4e628] [cursor=pointer]:
+              - /url: https://www.e-yantra.org/
+              - text: e-yantra.org
+              - generic [ref=f4e629]: ↗
+      - generic [ref=f4e630]:
+        - generic [ref=f4e631]: © 2026 e-Yantra, IIT Bombay
+        - generic [ref=f4e632]: Funded by the Ministry of Education, Govt. of India

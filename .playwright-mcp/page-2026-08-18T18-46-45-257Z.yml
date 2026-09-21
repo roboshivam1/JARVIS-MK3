@@ -1,0 +1,63 @@
+- generic [active] [ref=f4e1]:
+  - text: R O B O F E S T
+  - banner [ref=f4e2]:
+    - generic [ref=f4e3]: menu-area main-menu
+    - generic [ref=f4e6]:
+      - generic [ref=f4e8]:
+        - img "emblem" [ref=f4e9]
+        - generic [ref=f4e10]:
+          - heading "ROBOFEST-Gujarat 6.0" [level=4] [ref=f4e11]
+          - paragraph [ref=f4e12]: India’s Biggest Robotics Competition
+          - paragraph [ref=f4e13]: Government of Gujarat
+      - generic [ref=f4e15] [cursor=pointer]
+  - generic [ref=f4e20]:
+    - generic [ref=f4e26]:
+      - generic:
+        - img "Image" [ref=f4e27]
+        - img "Image" [ref=f4e28]
+      - generic [ref=f4e29]:
+        - generic [ref=f4e30]:
+          - heading "Robot Making Competition (ROBOFEST- 6.0)" [level=2] [ref=f4e31]
+          - paragraph [ref=f4e32]: ROBOFEST Gujarat 6.0 is proposed to be a competition of autonomous robots with missions that aligns with the present day requirements of security, deep sea explorations, athletic precisions, autonomous driving and other humanitarian and educational purposes.
+          - paragraph [ref=f4e33]: "Note : Each team shall comprise of 4 members and 1 mentor. One mentor can guide a maximum of 2 teams with max. 1 team for Robofest at either Junior/ Senior Level and 1 team of Hackathon. No student can participate in 2 different teams in the complete competition."
+          - paragraph [ref=f4e34]: "Note : Mentors are advised not to submit more than one application at the same competition level. Submission of multiple applications by the same mentor at the same level may result in the disqualification of all teams registered under his/her mentorship."
+          - paragraph
+        - list [ref=f4e40]:
+          - listitem [ref=f4e41] [cursor=pointer]:
+            - generic [ref=f4e42]: Junior Level
+          - listitem [ref=f4e43] [cursor=pointer]:
+            - generic [ref=f4e44]: Senior Level
+          - listitem [ref=f4e45] [cursor=pointer]:
+            - generic [ref=f4e46]: Hackathon
+    - generic [ref=f4e47]:
+      - link [ref=f4e54] [cursor=pointer]:
+        - /url: "#ytmodal"
+      - heading "Robofest 6.0 Announcement" [level=2] [ref=f4e58]
+      - link "Watch More Video" [ref=f4e59] [cursor=pointer]:
+        - /url: /VideoGallery
+    - heading "Gujcost Socials" [level=2] [ref=f4e63]
+    - heading "Important Date" [level=2] [ref=f4e70]
+    - generic [ref=f4e75]:
+      - heading "Photo Gallery" [level=2] [ref=f4e76]
+      - link "View All" [ref=f4e77] [cursor=pointer]:
+        - /url: /PhotoGallery
+    - generic [ref=f4e80]:
+      - heading "Video Gallery" [level=2] [ref=f4e81]
+      - link "View All" [ref=f4e82] [cursor=pointer]:
+        - /url: /VideoGallery
+  - contentinfo [ref=f4e83]:
+    - generic [ref=f4e86]:
+      - button "" [ref=f4e87] [cursor=pointer]
+      - generic [ref=f4e90]:
+        - paragraph [ref=f4e92]:
+          - text: Copyright ©
+          - link "2024 Gujarat Council on Science & Technology." [ref=f4e93] [cursor=pointer]:
+            - /url: index.html
+          - text: All Rights Reserved.
+        - list [ref=f4e94]:
+          - listitem:
+            - link:
+              - /url: "#"
+          - listitem:
+            - link:
+              - /url: "#"

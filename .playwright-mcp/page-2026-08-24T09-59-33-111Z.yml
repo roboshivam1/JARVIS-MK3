@@ -1,0 +1,401 @@
+- generic [ref=f3e3]:
+  - banner [ref=f3e4]:
+    - generic [ref=f3e5]:
+      - generic [ref=f3e6]:
+        - link [ref=f3e7] [cursor=pointer]:
+          - /url: https://www.e-yantra.org/
+          - img "e-Yantra" [ref=f3e8]
+        - link [ref=f3e9] [cursor=pointer]:
+          - /url: https://www.iitb.ac.in/
+          - img "IIT Bombay" [ref=f3e10]
+      - navigation [ref=f3e11]:
+        - link "About" [ref=f3e12] [cursor=pointer]:
+          - /url: /#about
+        - button "Competition" [ref=f3e14]
+        - button "Resources" [ref=f3e18]
+      - generic [ref=f3e21]:
+        - link "Log in" [ref=f3e22] [cursor=pointer]:
+          - /url: /login
+        - link "Register →" [ref=f3e26] [cursor=pointer]:
+          - /url: /register
+          - text: Register
+          - generic [ref=f3e27]: →
+    - generic [ref=f3e30]:
+      - link "How it Works" [ref=f3e31] [cursor=pointer]:
+        - /url: /#how
+      - link "Themes" [ref=f3e33] [cursor=pointer]:
+        - /url: /#themes
+      - link "Timeline" [ref=f3e35] [cursor=pointer]:
+        - /url: /#timeline
+      - link "Fees" [ref=f3e37] [cursor=pointer]:
+        - /url: /#fees
+      - link "Prizes" [ref=f3e39] [cursor=pointer]:
+        - /url: /#prizes
+      - link "FAQ" [ref=f3e41] [cursor=pointer]:
+        - /url: /faq
+      - link "Technical Sessions" [ref=f3e43] [cursor=pointer]:
+        - /url: /technical-sessions
+  - generic [ref=f3e46]:
+    - generic [ref=f3e47]:
+      - button "All" [ref=f3e48]
+      - button "Registration 10" [ref=f3e51]:
+        - text: Registration
+        - generic [ref=f3e54]: "10"
+      - button "Participation 10" [ref=f3e55]:
+        - text: Participation
+        - generic [ref=f3e58]: "10"
+      - button "Fees & Discounts 9" [ref=f3e59]:
+        - text: Fees & Discounts
+        - generic [ref=f3e62]: "9"
+      - button "Schedule & Resources 12" [ref=f3e63]:
+        - text: Schedule & Resources
+        - generic [ref=f3e66]: "12"
+      - button "Certificates 3" [ref=f3e67]:
+        - text: Certificates
+        - generic [ref=f3e70]: "3"
+    - generic [ref=f3e71]:
+      - article [ref=f3e72]:
+        - generic [ref=f3e73]:
+          - heading "How do I register for the competition?" [level=3] [ref=f3e75]
+          - paragraph [ref=f3e78]:
+            - text: Click the
+            - strong [ref=f3e79]: Register Your Team!
+            - text: button on
+            - link "portal.e-yantra.org" [ref=f3e80] [cursor=pointer]:
+              - /url: https://portal.e-yantra.org/
+            - text: and follow the on-screen instructions. Registration is straightforward and takes only a few minutes.
+      - article [ref=f3e81]:
+        - generic [ref=f3e82]:
+          - heading "What if I entered the wrong email ID during registration?" [level=3] [ref=f3e84]
+          - paragraph [ref=f3e87]:
+            - text: A verified team member can correct any member's email, name, or contact number via the
+            - strong [ref=f3e88]: Correct E-mail
+            - text: button in the Team Profile tab. The affected member receives a new verification link. This action is only possible if the member has not yet verified their email.
+      - article [ref=f3e89]:
+        - generic [ref=f3e90]:
+          - heading "Is the competition open only to Indian nationals?" [level=3] [ref=f3e92]
+          - paragraph [ref=f3e95]: No — eYRC is an international robotics competition. Colleges from across the world are welcome to register and participate.
+      - article [ref=f3e96]:
+        - generic [ref=f3e97]:
+          - heading "What is this competition about?" [level=3] [ref=f3e99]
+          - paragraph [ref=f3e102]: eYRC is about solving useful, real-world problems using technology — through simulation, embedded systems, and robotics — using a project-based learning approach. No prior robotics experience is needed.
+      - article [ref=f3e103]:
+        - generic [ref=f3e104]:
+          - heading "Will eYRC 2026–27 be the same as earlier editions?" [level=3] [ref=f3e106]
+          - paragraph [ref=f3e109]: "The competition intensity remains the same, with a few changes: all teams that register and pay are inducted directly into Stage 1 without a preliminary selection test, and eYRC is now international. Stay tuned for more details."
+      - article [ref=f3e110]:
+        - generic [ref=f3e111]:
+          - heading "I am in the final semester of BE / BTech / BSc / ME / MTech — am I eligible?" [level=3] [ref=f3e113]
+          - paragraph [ref=f3e116]:
+            - text: Please email
+            - link "helpdesk@e-yantra.org" [ref=f3e117] [cursor=pointer]:
+              - /url: mailto:helpdesk@e-yantra.org
+            - text: with your full name and institute details, and we will confirm your eligibility.
+      - article [ref=f3e118]:
+        - generic [ref=f3e119]:
+          - heading "I don't have my current college ID card — what should I upload?" [level=3] [ref=f3e121]
+          - paragraph [ref=f3e124]: You may substitute a previous year's college ID, a college library card, or the current-year fee receipt. Any other document not listed here is not permitted.
+      - article [ref=f3e125]:
+        - generic [ref=f3e126]:
+          - heading "How do I check if my college has an eLSI lab?" [level=3] [ref=f3e128]
+          - paragraph [ref=f3e131]:
+            - text: Visit
+            - link "e-yantra.org/elsi" [ref=f3e132] [cursor=pointer]:
+              - /url: https://www.e-yantra.org/elsi
+            - text: or check the
+            - strong [ref=f3e133]: eLSI Colleges
+            - text: section on the registration tab of the portal.
+      - article [ref=f3e134]:
+        - generic [ref=f3e135]:
+          - heading "Can a student participate in more than one team?" [level=3] [ref=f3e137]
+          - paragraph [ref=f3e140]: No. Each student may register with only one team using a single email ID. Duplicate registrations across multiple teams are not permitted and may result in disqualification.
+      - article [ref=f3e141]:
+        - generic [ref=f3e142]:
+          - heading "Can teams from the same college compete against each other?" [level=3] [ref=f3e144]
+          - paragraph [ref=f3e147]: Yes, multiple teams from the same college can participate. However, teams must work completely independently — sharing code, solutions, or submissions with any other team (even from the same college) constitutes plagiarism and will lead to disqualification of all involved teams.
+      - article [ref=f3e148]:
+        - generic [ref=f3e149]:
+          - heading "Is there a participation fee?" [level=3] [ref=f3e151]
+          - paragraph [ref=f3e154]:
+            - text: Yes, there is a nominal team registration fee. Details are in the
+            - strong [ref=f3e155]: Register
+            - text: tab on
+            - link "portal.e-yantra.org" [ref=f3e156] [cursor=pointer]:
+              - /url: https://portal.e-yantra.org/
+            - text: . After registration and payment, your team is directly inducted into Stage 1, with access to curated resources, expert guidance, and continuous feedback.
+      - article [ref=f3e157]:
+        - generic [ref=f3e158]:
+          - heading "Is registration alone enough to start participating?" [level=3] [ref=f3e160]
+          - paragraph [ref=f3e163]: After completing registration and payment, teams are automatically inducted into Stage 1. All updates and further instructions are posted on the portal and emailed to the Team Leader.
+      - article [ref=f3e164]:
+        - generic [ref=f3e165]:
+          - heading "Is the competition open to diploma and science students?" [level=3] [ref=f3e167]
+          - paragraph [ref=f3e170]: Yes. The competition welcomes students from Engineering, Science, Polytechnic, ME/MTech, BCA, and MCA programmes.
+      - article [ref=f3e171]:
+        - generic [ref=f3e172]:
+          - heading "Do we have to build a physical robot?" [level=3] [ref=f3e174]
+          - paragraph [ref=f3e177]: It depends on your assigned theme. Some themes are simulation-only, while others involve real hardware. Software and hardware requirements vary per theme and are communicated at the start of the competition.
+      - article [ref=f3e178]:
+        - generic [ref=f3e179]:
+          - heading "Must all team members be from the same college?" [level=3] [ref=f3e181]
+          - paragraph [ref=f3e184]: Yes. Members can be from different departments and academic years, but every member of a team must be enrolled in the same college.
+      - article [ref=f3e185]:
+        - generic [ref=f3e186]:
+          - heading "I am in the 6th semester of a Diploma programme — am I eligible?" [level=3] [ref=f3e188]
+          - paragraph [ref=f3e191]:
+            - text: Please email
+            - link "helpdesk@e-yantra.org" [ref=f3e192] [cursor=pointer]:
+              - /url: mailto:helpdesk@e-yantra.org
+            - text: with your full name and institute details. This query applies specifically to Diploma 6th-semester students.
+      - article [ref=f3e193]:
+        - generic [ref=f3e194]:
+          - heading "Can we choose our own theme?" [level=3] [ref=f3e196]
+          - paragraph [ref=f3e199]: After registration, teams are presented with a list of available themes and may express preferences based on their interests and skills. e-Yantra makes the final allocation considering team preferences and availability.
+      - article [ref=f3e200]:
+        - generic [ref=f3e201]:
+          - heading "Will registered teams receive a robotic kit?" [level=3] [ref=f3e203]
+          - paragraph [ref=f3e206]: Robotic kits (where applicable) are provided only to teams selected for Stage 2. Teams eliminated after Stage 1 can still continue using their own hardware, provided it exactly matches the components specified by e-Yantra.
+      - article [ref=f3e207]:
+        - generic [ref=f3e208]:
+          - heading "Is support or approval from my college required to participate?" [level=3] [ref=f3e210]
+          - paragraph [ref=f3e213]: All work must be done solely by the team without external assistance. That said, college encouragement is important — it keeps teams motivated and inspires peers. Working in the college environment is strongly recommended.
+      - article [ref=f3e214]:
+        - generic [ref=f3e215]:
+          - heading "What if our team size drops below 2 during the competition?" [level=3] [ref=f3e217]
+          - paragraph [ref=f3e220]:
+            - text: Teams must maintain a minimum of 2 members throughout the competition. If a team falls below this, please contact
+            - link "helpdesk@e-yantra.org" [ref=f3e221] [cursor=pointer]:
+              - /url: mailto:helpdesk@e-yantra.org
+            - text: immediately for guidance. Note that team members cannot be replaced or added after registration.
+      - article [ref=f3e222]:
+        - generic [ref=f3e223]:
+          - heading "Is there an Early Bird Discount?" [level=3] [ref=f3e225]
+          - paragraph [ref=f3e228]:
+            - text: Yes. Teams that register between
+            - strong [ref=f3e229]: August 1st and August 10th, 2026
+            - text: receive an additional
+            - strong [ref=f3e230]: 20% discount
+            - text: on the registration fee. Register early to avail this offer.
+      - article [ref=f3e231]:
+        - generic [ref=f3e232]:
+          - heading "Is it mandatory to have a 4-member team before registering?" [level=3] [ref=f3e234]
+          - paragraph [ref=f3e237]: No. Teams can have 2 to 4 members. A 4-member team with a mix of disciplines is recommended, but 2- and 3-member teams are equally welcome. The registration fee is the same regardless of team size.
+      - article [ref=f3e238]:
+        - generic [ref=f3e239]:
+          - heading "What does the registration fee cover?" [level=3] [ref=f3e241]
+          - paragraph [ref=f3e244]: The minimal team fee covers all learning resources, curated content, expert mentorship, and guidance provided throughout the 5–6 months of the competition.
+      - article [ref=f3e245]:
+        - generic [ref=f3e246]:
+          - heading "What should I do if my payment fails?" [level=3] [ref=f3e248]
+          - paragraph [ref=f3e251]:
+            - text: Wait 2–3 hours for a failure confirmation before retrying.
+            - strong [ref=f3e252]: Do not attempt another transaction immediately
+            - text: after a failure, as duplicate charges may occur.
+      - article [ref=f3e253]:
+        - generic [ref=f3e254]:
+          - heading "My payment was successful but it is not showing on the portal." [level=3] [ref=f3e256]
+          - paragraph [ref=f3e259]:
+            - text: Email
+            - link "helpdesk@e-yantra.org" [ref=f3e260] [cursor=pointer]:
+              - /url: mailto:helpdesk@e-yantra.org
+            - text: with your name, Team ID, and a screenshot of the payment confirmation. Do not make a second payment before hearing back.
+      - article [ref=f3e261]:
+        - generic [ref=f3e262]:
+          - heading "How do I confirm my payment was successful?" [level=3] [ref=f3e264]
+          - paragraph [ref=f3e267]:
+            - text: After a successful payment, the portal displays
+            - strong [ref=f3e268]: "\"Payment has been recorded\""
+            - text: along with your payment details. The
+            - strong [ref=f3e269]: Make Payment
+            - text: button also disappears after completion.
+      - article [ref=f3e270]:
+        - generic [ref=f3e271]:
+          - heading "How will I know my registration is confirmed?" [level=3] [ref=f3e273]
+          - paragraph [ref=f3e276]:
+            - text: After payment, the Payment tab shows
+            - strong [ref=f3e277]: "\"Payment has been recorded!\""
+            - text: . A confirmation email is also sent to the Team Leader. Both are required — keep them for your records.
+      - article [ref=f3e278]:
+        - generic [ref=f3e279]:
+          - heading "How is eYRC different from other robotics competitions?" [level=3] [ref=f3e281]
+          - generic [ref=f3e283]:
+            - paragraph [ref=f3e284]:
+              - text: eYRC uses a
+              - strong [ref=f3e285]: Project-Based Learning (PBL)
+              - text: "approach rather than a traditional exam-style format. Participants gain:"
+            - list [ref=f3e286]:
+              - listitem [ref=f3e287]: Practical knowledge in simulation, embedded systems, and robotics
+              - listitem [ref=f3e288]: Real-world problem-solving skills through gamified themes
+              - listitem [ref=f3e289]: Hands-on experience with curated resources and expert mentorship
+      - article [ref=f3e290]:
+        - generic [ref=f3e291]:
+          - heading "Is there a discount for all-girl teams?" [level=3] [ref=f3e293]
+          - paragraph [ref=f3e296]:
+            - text: Yes. All-girl teams receive an additional discount on the registration fee. Details are available in the
+            - strong [ref=f3e297]: Register
+            - text: tab on the portal. This is in addition to the Early Bird Discount if registration is made between August 1–10, 2026.
+      - article [ref=f3e298]:
+        - generic [ref=f3e299]:
+          - heading "How long is the registration window open?" [level=3] [ref=f3e301]
+          - paragraph [ref=f3e304]:
+            - text: Registrations are open until
+            - strong [ref=f3e305]: August 25th, 2026
+            - text: . Register early — the 20% Early Bird Discount is available only until August 10th, 2026.
+      - article [ref=f3e306]:
+        - generic [ref=f3e307]:
+          - heading "What if I don't receive the verification email after registering?" [level=3] [ref=f3e309]
+          - generic [ref=f3e311]:
+            - paragraph [ref=f3e312]: "If the verification email does not arrive:"
+            - list [ref=f3e313]:
+              - listitem [ref=f3e314]: Check that the email address entered during registration was correct
+              - listitem [ref=f3e315]: Check your Spam or Junk folder
+            - paragraph [ref=f3e316]:
+              - text: If the issue persists, contact
+              - link "helpdesk@e-yantra.org" [ref=f3e317] [cursor=pointer]:
+                - /url: mailto:helpdesk@e-yantra.org
+              - text: .
+      - article [ref=f3e318]:
+        - generic [ref=f3e319]:
+          - heading "Where can I find the competition schedule?" [level=3] [ref=f3e321]
+          - paragraph [ref=f3e324]: The Schedule tab on the portal is updated continuously after you register and log in. Significant milestones are also communicated via email to the Team Leader.
+      - article [ref=f3e325]:
+        - generic [ref=f3e326]:
+          - heading "What does Stage 1 involve?" [level=3] [ref=f3e328]
+          - paragraph [ref=f3e331]: Stage 1 covers the first 3 tasks of your theme and runs like a self-paced MOOC using open-source software. Resources include curated videos, documentation, and hands-on tasks. Doubt resolution happens on live discussion forums. Top-performing teams advance to Stage 2.
+      - article [ref=f3e332]:
+        - generic [ref=f3e333]:
+          - heading "When does the competition begin? What if it clashes with my academics?" [level=3] [ref=f3e335]
+          - paragraph [ref=f3e338]: The competition is designed with academic schedules in mind. As a team effort, the workload is shared. Each task comes with ample completion time — provided you don't leave it to the last day. Track real-time schedule updates on the portal after registration.
+      - article [ref=f3e339]:
+        - generic [ref=f3e340]:
+          - heading "How many hours per day do I need to invest?" [level=3] [ref=f3e342]
+          - paragraph [ref=f3e345]: There are no daily submissions. Tasks are released with a 1–3 week completion window. Time commitment varies by task difficulty and team readiness. Plan to balance the competition alongside your academic workload from the start.
+      - article [ref=f3e346]:
+        - generic [ref=f3e347]:
+          - heading "Will resources and sessions be recorded?" [level=3] [ref=f3e349]
+          - paragraph [ref=f3e352]: There are no live online lectures. Resources consist of curated videos, documentation, and hands-on tasks. Doubts are resolved via live discussion forums where mentors and peers respond to queries asynchronously.
+      - article [ref=f3e353]:
+        - generic [ref=f3e354]:
+          - heading "Will there be mentorship and guidance from e-Yantra?" [level=3] [ref=f3e356]
+          - paragraph [ref=f3e359]: Yes. A dedicated discussion forum runs throughout the competition where teams post queries and receive responses from e-Yantra mentors and peers. e-Yantra thrives on student–mentor interaction.
+      - article [ref=f3e360]:
+        - generic [ref=f3e361]:
+          - heading "I have no robotics background — can I still participate?" [level=3] [ref=f3e363]
+          - paragraph [ref=f3e366]: Absolutely. The most important prerequisite is the desire to learn. Basic programming knowledge gives a head start, but e-Yantra provides all required instructions, resources, and mentorship from scratch. No prior robotics experience is needed.
+      - article [ref=f3e367]:
+        - generic [ref=f3e368]:
+          - heading "Do I need a powerful laptop or PC?" [level=3] [ref=f3e370]
+          - paragraph [ref=f3e373]: Yes. All team members should have a PC with good system configuration to ensure software runs without issues. Since the competition is fully online, stable hardware matters. Specific requirements are communicated at the start of Stage 1.
+      - article [ref=f3e374]:
+        - generic [ref=f3e375]:
+          - heading "Will my team be eligible for an internship at e-Yantra?" [level=3] [ref=f3e377]
+          - paragraph [ref=f3e380]: To qualify for an Internship Interview round, your team must be among the top performers in the competition. Exact criteria are communicated at the Grand Finale stage.
+      - article [ref=f3e381]:
+        - generic [ref=f3e382]:
+          - heading "Is registration open to all colleges?" [level=3] [ref=f3e384]
+          - paragraph [ref=f3e387]: Yes. The competition is open to all engineering, polytechnic, and science colleges — both nationally and internationally.
+      - article [ref=f3e388]:
+        - generic [ref=f3e389]:
+          - heading "Will I get an e-Yantra / IIT Bombay certificate just for registering?" [level=3] [ref=f3e391]
+          - generic [ref=f3e393]:
+            - paragraph [ref=f3e394]:
+              - text: Certificates at e-Yantra are awarded based on
+              - strong [ref=f3e395]: genuine effort and demonstrated learning
+              - text: "— not mere participation. Multiple certificate levels are offered:"
+            - list [ref=f3e396]:
+              - listitem [ref=f3e397]: Completing Stage 1 satisfactorily earns the first-level certificate
+              - listitem [ref=f3e398]: Progressing further with quality submissions earns higher-level certificates
+              - listitem [ref=f3e399]: Incomplete or zero-effort submissions are not eligible for any certificate
+            - paragraph [ref=f3e400]: Certificate criteria and levels are subject to change at e-Yantra's discretion.
+      - article [ref=f3e401]:
+        - generic [ref=f3e402]:
+          - heading "When and how are certificates issued?" [level=3] [ref=f3e404]
+          - paragraph [ref=f3e407]: Certificates are issued digitally after each stage, once performance is evaluated. They are sent to the registered email ID of each eligible team member. Timelines are communicated via the portal and email after stage results are declared.
+      - article [ref=f3e408]:
+        - generic [ref=f3e409]:
+          - heading "Is there a certificate for Stage 2 and the Grand Finale?" [level=3] [ref=f3e411]
+          - paragraph [ref=f3e414]: Yes. Each stage of the competition offers a corresponding level of certification. Teams that qualify for Stage 2 and the Grand Finale receive higher-tier certificates recognising their performance. Prize winners and top finishers also receive awards and merit letters.
+    - generic [ref=f3e415]:
+      - generic [ref=f3e419]:
+        - paragraph [ref=f3e420]: Still have questions?
+        - paragraph [ref=f3e421]: Our helpdesk team is happy to help with anything not covered here.
+      - link "helpdesk@e-yantra.org" [ref=f3e422] [cursor=pointer]:
+        - /url: mailto:helpdesk@e-yantra.org
+  - contentinfo [ref=f3e425]:
+    - generic [ref=f3e426]:
+      - generic [ref=f3e427]:
+        - generic [ref=f3e428]:
+          - link [ref=f3e429] [cursor=pointer]:
+            - /url: https://e-yantra.org
+            - img "e-Yantra" [ref=f3e430]
+          - generic [ref=f3e431]:
+            - link "YouTube" [ref=f3e432] [cursor=pointer]:
+              - /url: https://www.youtube.com/e-yantra
+            - link "Instagram" [ref=f3e435] [cursor=pointer]:
+              - /url: https://www.instagram.com/eyantra/
+            - link "X (Twitter)" [ref=f3e438] [cursor=pointer]:
+              - /url: https://twitter.com/eyantra_iitb
+            - link "LinkedIn" [ref=f3e441] [cursor=pointer]:
+              - /url: https://www.linkedin.com/company/e-yantraiitb/
+            - link "Facebook" [ref=f3e444] [cursor=pointer]:
+              - /url: https://www.facebook.com/eyantra
+        - generic [ref=f3e447]:
+          - generic [ref=f3e448]:
+            - heading "Competition" [level=4] [ref=f3e449]
+            - link "About" [ref=f3e450] [cursor=pointer]:
+              - /url: /#about
+            - link "How it works" [ref=f3e451] [cursor=pointer]:
+              - /url: /#how
+            - link "Themes" [ref=f3e452] [cursor=pointer]:
+              - /url: /#themes
+            - link "Timeline" [ref=f3e453] [cursor=pointer]:
+              - /url: /#timeline
+            - link "Prizes" [ref=f3e454] [cursor=pointer]:
+              - /url: /#prizes
+            - link "Fees" [ref=f3e455] [cursor=pointer]:
+              - /url: /#fees
+          - generic [ref=f3e456]:
+            - heading "Resources" [level=4] [ref=f3e457]
+            - link "Competition Rules" [ref=f3e458] [cursor=pointer]:
+              - /url: /rules
+            - link "FAQ" [ref=f3e459] [cursor=pointer]:
+              - /url: /faq
+            - link "Past editions" [ref=f3e460] [cursor=pointer]:
+              - /url: /past-themes
+            - link "Discussion forum ↗" [ref=f3e461] [cursor=pointer]:
+              - /url: https://discuss.e-yantra.org
+              - text: Discussion forum
+              - generic [ref=f3e462]: ↗
+          - generic [ref=f3e463]:
+            - heading "Connect" [level=4] [ref=f3e464]
+            - link "YouTube ↗" [ref=f3e465] [cursor=pointer]:
+              - /url: https://www.youtube.com/e-yantra
+              - text: YouTube
+              - generic [ref=f3e466]: ↗
+            - link "Facebook ↗" [ref=f3e467] [cursor=pointer]:
+              - /url: https://www.facebook.com/eyantra
+              - text: Facebook
+              - generic [ref=f3e468]: ↗
+            - link "Instagram ↗" [ref=f3e469] [cursor=pointer]:
+              - /url: https://www.instagram.com/eyantra/
+              - text: Instagram
+              - generic [ref=f3e470]: ↗
+            - link "X (Twitter) ↗" [ref=f3e471] [cursor=pointer]:
+              - /url: https://twitter.com/eyantra_iitb
+              - text: X (Twitter)
+              - generic [ref=f3e472]: ↗
+            - link "LinkedIn ↗" [ref=f3e473] [cursor=pointer]:
+              - /url: https://www.linkedin.com/company/e-yantraiitb/
+              - text: LinkedIn
+              - generic [ref=f3e474]: ↗
+            - link "Contact us ↗" [ref=f3e475] [cursor=pointer]:
+              - /url: https://www.e-yantra.org/contact
+              - text: Contact us
+              - generic [ref=f3e476]: ↗
+            - link "e-yantra.org ↗" [ref=f3e477] [cursor=pointer]:
+              - /url: https://www.e-yantra.org/
+              - text: e-yantra.org
+              - generic [ref=f3e478]: ↗
+      - generic [ref=f3e479]:
+        - generic [ref=f3e480]: © 2026 e-Yantra, IIT Bombay
+        - generic [ref=f3e481]: Funded by the Ministry of Education, Govt. of India

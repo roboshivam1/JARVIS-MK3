@@ -1,0 +1,74 @@
+- generic [active] [ref=f1e1]:
+  - banner [ref=f1e3]:
+    - generic [ref=f1e6]:
+      - link [ref=f1e8] [cursor=pointer]:
+        - /url: https://e-yantra.org
+        - img "e-Yantra" [ref=f1e9]
+      - navigation [ref=f1e12]:
+        - list [ref=f1e13]:
+          - listitem [ref=f1e14]:
+            - button [ref=f1e15] [cursor=pointer]
+          - listitem [ref=f1e19]:
+            - link "Home" [ref=f1e20] [cursor=pointer]:
+              - /url: https://e-yantra.org
+          - listitem [ref=f1e21]:
+            - link "Team" [ref=f1e22] [cursor=pointer]:
+              - /url: https://e-yantra.org/team
+          - listitem [ref=f1e23]:
+            - link "Publications" [ref=f1e24] [cursor=pointer]:
+              - /url: https://e-yantra.org/publications
+          - listitem [ref=f1e25]:
+            - button [ref=f1e26] [cursor=pointer]
+          - listitem [ref=f1e32]:
+            - link "Products" [ref=f1e33] [cursor=pointer]:
+              - /url: https://e-yantra.org/products
+          - listitem [ref=f1e34]:
+            - link "Gallery" [ref=f1e35] [cursor=pointer]:
+              - /url: https://e-yantra.org/gallery
+          - listitem [ref=f1e36]:
+            - link "Contact Us" [ref=f1e37] [cursor=pointer]:
+              - /url: https://e-yantra.org/contact
+  - main [ref=f1e38]:
+    - generic [ref=f1e40]:
+      - heading "🚀 e-Yantra Robotics Competition 2026-27 is Live!" [level=1] [ref=f1e41]
+      - paragraph [ref=f1e42]: Get ready to build, code, and compete in India's biggest project-based learning robotics competition by IIT Bombay. Open to all engineering students nationwide.
+      - link "Register Now" [ref=f1e43] [cursor=pointer]:
+        - /url: https://portal.e-yantra.org
+  - contentinfo:
+    - generic:
+      - link:
+        - /url: "#"
+      - list:
+        - listitem:
+          - link "About":
+            - /url: https://e-yantra.org#about
+        - listitem:
+          - link "Initiatives":
+            - /url: https://e-yantra.org#initiatives
+        - listitem:
+          - link "Contact":
+            - /url: https://e-yantra.org/contact
+        - listitem:
+          - link "Events":
+            - /url: https://e-yantra.org/events
+        - listitem:
+          - link "Team":
+            - /url: https://e-yantra.org/team
+      - generic:
+        - link "facebook-new":
+          - /url: https://www.facebook.com/eyantra
+          - img "facebook-new"
+        - link "twitter-squared":
+          - /url: https://x.com/eyantra_iitb
+          - img "twitter-squared"
+        - link "youtube-play--v1":
+          - /url: https://www.youtube.com/user/eyantra
+          - img "youtube-play--v1"
+        - link "instagram-new--v1":
+          - /url: https://www.instagram.com/eyantra/
+          - img "instagram-new--v1"
+        - link "linkedin":
+          - /url: https://www.linkedin.com/company/e-yantraiitb/
+          - img "linkedin"
+    - generic:
+      - paragraph: All rights reserved. © e-Yantra.
