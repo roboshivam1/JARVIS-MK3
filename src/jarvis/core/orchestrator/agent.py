@@ -54,6 +54,7 @@ from jarvis.core.db.repos.artifacts import ArtifactsRepo
 from jarvis.core.db.repos.jobs import JobsRepo
 from jarvis.core.memory.service import MemoryService
 from jarvis.core.orchestrator.prompts import assemble_system_prompt
+from jarvis.core.people.service import ExtractionFailed, PeopleService
 from jarvis.core.queue.dispatcher import cancel_job as queue_cancel_job
 from jarvis.core.queue.registry import JobTypeRegistry
 from jarvis.llm.layer import LLMLayer, TextCallback
@@ -188,6 +189,34 @@ class _ScheduleArgs(BaseModel):
     payload: dict[str, Any] = Field(default_factory=dict)
 
 
+class _PeopleLookupArgs(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    name: str = Field(
+        min_length=1,
+        description="A name, nickname, or alias, as the owner said it.",
+    )
+
+
+class _PeopleUpcomingArgs(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    days: int = Field(default=30, ge=1, le=366,
+                      description="How many days ahead to look for dates.")
+
+
+class _PeopleDebriefArgs(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    text: str = Field(
+        min_length=10,
+        description=(
+            "What the owner said about the person or people, in his "
+            "own words and in full. Do not summarise it."
+        ),
+    )
+
+
 class Orchestrator:
     """JARVIS's front mind: persona + tools + tier, applied per turn."""
 
@@ -204,6 +233,7 @@ class Orchestrator:
         watchers: "WatchersRepo | None" = None,
         schedules: "SchedulesRepo | None" = None,
         tz: "ZoneInfo | None" = None,
+        people: "PeopleService | None" = None,
     ) -> None:
         self._llm = llm
         self._settings = settings
@@ -216,6 +246,7 @@ class Orchestrator:
         self._watchers = watchers
         self._schedules = schedules
         self._tz = tz or settings.tz
+        self._people = people
 
     # -- per-turn toolset -----------------------------------------------------
 
@@ -370,7 +401,9 @@ class Orchestrator:
             description=(
                 "Remember one durable fact about the owner's world. Use "
                 "when he shares something worth keeping, or asks you to "
-                "remember. Not for passing chatter or one-off logistics."
+                "remember. Not for passing chatter or one-off logistics. "
+                "Facts about other people go to people_debrief instead, "
+                "when that tool is available."
             ),
             args_model=_MemoryStoreArgs,
             handler=memory_store,
@@ -531,6 +564,65 @@ class Orchestrator:
                 description="Everything on a recurring schedule.",
                 args_model=_NoArgs,
                 handler=list_schedules,
+            ))
+
+        # -- people -----------------------------------------------------------
+        #
+        # The people database. Lookup and upcoming read it; debrief only
+        # ever STAGES proposals - nothing about a person is written until
+        # the owner approves it on the review page.
+        if self._people is not None:
+            people = self._people
+
+            async def people_lookup(args: _PeopleLookupArgs) -> str:
+                return await people.lookup(args.name)
+
+            tools.register(InlineTool(
+                name="people_lookup",
+                description=(
+                    "Everything known about someone in the owner's life, by "
+                    "name or nickname. People he mentions are already in front "
+                    "of you each turn, minus sensitive details; use this when "
+                    "he asks about someone directly or you need more. The "
+                    "result includes sensitive facts - use them with discretion."
+                ),
+                args_model=_PeopleLookupArgs,
+                handler=people_lookup,
+            ))
+
+            async def people_upcoming(args: _PeopleUpcomingArgs) -> str:
+                return await people.upcoming(args.days)
+
+            tools.register(InlineTool(
+                name="people_upcoming",
+                description=(
+                    "Open commitments in both directions - what the owner owes "
+                    "people and what they owe him - and birthdays or other "
+                    "dates coming up."
+                ),
+                args_model=_PeopleUpcomingArgs,
+                handler=people_upcoming,
+            ))
+
+            async def people_debrief(args: _PeopleDebriefArgs) -> str:
+                try:
+                    outcome = await people.debrief(
+                        args.text, trace_id=trace_id, source="conversation")
+                except ExtractionFailed as exc:
+                    return f"The debrief could not be processed: {exc}"
+                return outcome.summary() + " The owner reviews them at /app/people."
+
+            tools.register(InlineTool(
+                name="people_debrief",
+                description=(
+                    "Record what the owner tells you about people: someone he "
+                    "met, news about a friend, something someone promised. "
+                    "Pass his words in full. This only stages proposals for "
+                    "his review - tell him they are waiting. Use this, not "
+                    "memory_store, for facts about other people."
+                ),
+                args_model=_PeopleDebriefArgs,
+                handler=people_debrief,
             ))
 
         return tools

@@ -51,6 +51,9 @@ from jarvis.llm.transcription import Transcriber
 from jarvis.core.observability.traces import TracesRepo
 from jarvis.core.queue.registry import JobTypeRegistry
 from jarvis.core.db.repos.watchers import WatchersRepo
+from jarvis.core.db.repos.people import PeopleRepo
+from jarvis.core.gateway.people_routes import people_router
+from jarvis.core.people.service import PeopleService
 from jarvis.core.queue.registry_workers import WorkerRegistry
 
 log = get_logger("core.gateway")
@@ -79,6 +82,10 @@ class GatewayDeps:
     session_mgr: "SessionManager | None" = None
     sessions: "SessionsRepo | None" = None
     artifacts: "ArtifactsRepo | None" = None
+    # The people database. Optional like the rest: absent means the
+    # review page's API simply is not mounted.
+    people_repo: "PeopleRepo | None" = None
+    people: "PeopleService | None" = None
 
 
 async def build_status_snapshot(deps: GatewayDeps) -> dict[str, Any]:
@@ -151,6 +158,15 @@ def create_app(deps: GatewayDeps) -> FastAPI:
         """
         return FileResponse(
             Path(__file__).parent / "static" / "app.html",
+            media_type="text/html",
+        )
+
+    @app.get("/app/people")
+    async def people_page() -> FileResponse:
+        """The people review page. Unauthenticated for the same reason
+        /app is: the page is not a secret, every request it makes is."""
+        return FileResponse(
+            Path(__file__).parent / "static" / "people.html",
             media_type="text/html",
         )
 
@@ -258,5 +274,8 @@ def create_app(deps: GatewayDeps) -> FastAPI:
             media_type=artifact.mime,
             filename=artifact.name,
         )
+
+    if deps.people_repo is not None and deps.people is not None:
+        app.include_router(people_router(deps.people_repo, deps.people, auth))
 
     return app

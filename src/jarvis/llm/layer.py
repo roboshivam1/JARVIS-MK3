@@ -178,6 +178,7 @@ class LLMLayer:
         provider_tools: list[dict[str, Any]] | None = None,
         max_tokens: int = 2048,
         on_text: TextCallback | None = None,
+        tool_choice: dict[str, Any] | None = None,
     ) -> LLMResponse:
         """One model call: resolve tier, call provider, price it, trace it,
         return the normalised response. actor and trace_id are mandatory -
@@ -201,6 +202,7 @@ class LLMLayer:
                 provider_tools=provider_tools,
                 max_tokens=max_tokens,
                 on_text=on_text,
+                tool_choice=tool_choice,
             )
         except ProviderError as exc:
             latency_ms = int((time.monotonic() - started) * 1000)

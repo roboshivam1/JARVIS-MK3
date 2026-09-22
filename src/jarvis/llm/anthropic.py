@@ -102,6 +102,7 @@ class AnthropicAdapter:
         max_tokens: int = 2048,
         on_text: TextCallback | None = None,
         cache_system: bool = True,
+        tool_choice: dict[str, Any] | None = None,
     ) -> ProviderResult:
         """One model call, streamed. Retries transient failures, then
         raises ProviderError."""
@@ -144,6 +145,10 @@ class AnthropicAdapter:
         all_tools = list(tools or []) + list(provider_tools or [])
         if all_tools:
             kwargs["tools"] = all_tools
+        # Forcing a specific tool turns the model into a form-filler:
+        # the answer arrives as that tool's arguments, never as prose.
+        if tool_choice is not None:
+            kwargs["tool_choice"] = tool_choice
             
         last_error: Exception | None = None
         for attempt in range(1, _MAX_ATTEMPTS + 1):

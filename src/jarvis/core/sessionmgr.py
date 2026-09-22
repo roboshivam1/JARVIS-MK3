@@ -40,6 +40,7 @@ from jarvis.core.db.repos.artifacts import ArtifactsRepo
 from jarvis.core.memory.profile import ProfileStore
 from jarvis.core.memory.service import MemoryService
 from jarvis.core.orchestrator.agent import Orchestrator
+from jarvis.core.people.service import PeopleService
 from jarvis.llm.layer import TextCallback
 
 log = get_logger("core.sessionmgr")
@@ -80,6 +81,7 @@ class SessionManager:
         memory: MemoryService | None = None,
         profile: ProfileStore | None = None,
         artifacts: "ArtifactsRepo | None" = None,
+        people: "PeopleService | None" = None,
     ) -> None:
         self._sessions = sessions
         self._events = events
@@ -89,6 +91,7 @@ class SessionManager:
         self._memory = memory
         self._profile = profile
         self._artifacts = artifacts
+        self._people = people
         # session id -> the task currently generating its reply
         self._inflight: dict[str, asyncio.Task[LoopResult]] = {}
 
@@ -155,6 +158,15 @@ class SessionManager:
                 log.debug("memory retrieved for turn", extra={
                     "session_id": session.id, "hits": len(hits),
                 })
+
+        # People this message mentions: who they are, minus anything
+        # sensitive - that only comes out when the owner asks by name.
+        if self._people is not None:
+            people_block = await self._people.mention_context(text)
+            if people_block:
+                retrieved_memory = "\n\n".join(
+                    part for part in (retrieved_memory,
+                                      "People mentioned:\n" + people_block) if part)
 
         # 4. Think, inside a tracked and cancellable task.
         gen_task = asyncio.create_task(

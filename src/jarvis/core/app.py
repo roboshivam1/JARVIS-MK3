@@ -65,6 +65,8 @@ from jarvis.core.memory.profile import ProfileStore
 from jarvis.core.memory.service import MemoryService
 from jarvis.core.observability.traces import TracesRepo, make_db_trace_sink
 from jarvis.core.orchestrator.agent import Orchestrator
+from jarvis.core.db.repos.people import PeopleRepo
+from jarvis.core.people.service import PeopleService
 from jarvis.core.queue.coreworker import CoreWorker
 from jarvis.core.queue.dispatcher import ReclaimLoop
 from jarvis.core.queue.registry import JobTypeRegistry
@@ -97,6 +99,8 @@ class CoreApp:
         self.notifier: Notifier | None = None
         self.memory: MemoryService | None = None
         self.profile: ProfileStore | None = None
+        self.people_repo: PeopleRepo | None = None
+        self.people: PeopleService | None = None
         self.schedules: SchedulesRepo | None = None
         self.watchers: WatchersRepo | None = None
         self.initiative: InitiativeEngine | None = None
@@ -161,6 +165,8 @@ class CoreApp:
             FactsRepo(self.db), create_embedder(self.settings)
         )
         self.profile = ProfileStore(self.db)
+        self.people_repo = PeopleRepo(self.db)
+        self.people = PeopleService(self.people_repo, self.llm, self.settings.tz)
 
         # -- initiative and approvals -----------------------------------------
         self.approval_service = ApprovalService(
@@ -203,6 +209,7 @@ class CoreApp:
         register_maintenance_jobs(
             self.registry, self.llm, self.memory, FactsRepo(self.db),
             self.sessions, self.profile, self.events,
+            people=self.people,
         )
 
         # -- conversation -----------------------------------------------------
@@ -212,11 +219,13 @@ class CoreApp:
             artifacts=self.artifacts,
             watchers=self.watchers, schedules=self.schedules,
             tz=self.settings.tz,
+            people=self.people,
         )
         self.session_mgr = SessionManager(
             self.sessions, self.events, orchestrator,
             memory=self.memory, profile=self.profile,
             artifacts=self.artifacts,
+            people=self.people,
         )
 
         # -- gateway ----------------------------------------------------------
@@ -237,6 +246,8 @@ class CoreApp:
             watchers=self.watchers,
             transcriber=self.transcriber,
             speaker=self.speaker,
+            people_repo=self.people_repo,
+            people=self.people,
         )
 
         # -- clients ----------------------------------------------------------

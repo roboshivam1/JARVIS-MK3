@@ -41,6 +41,7 @@ from typing import Any
 from pydantic import BaseModel, ConfigDict, Field
 
 from jarvis.common.events import Event, EventKind
+from jarvis.common.facts import FactCategory
 from jarvis.common.ids import utc_now
 from jarvis.common.log import get_logger
 from jarvis.common.sessions import Turn
@@ -51,7 +52,8 @@ from jarvis.core.memory.profile import ProfileStore
 from jarvis.core.memory.service import MemoryService
 from jarvis.core.queue.registry import JobContext, JobTypeRegistry, JobTypeSpec
 from jarvis.llm.layer import LLMLayer
-from jarvis.subagents.archivist import extract_facts, write_profile
+from jarvis.core.people.service import PeopleService
+from jarvis.subagents.archivist import ExtractedFact, extract_facts, write_profile
 
 log = get_logger("jobs.maintenance")
 
@@ -92,6 +94,41 @@ class SleepCycleOut(BaseModel):
     embeddings_backfilled: int
 
 
+async def _file_candidates(
+    candidates: list[ExtractedFact],
+    memory: MemoryService,
+    people: PeopleService | None,
+    source_event_ids: list[str],
+    trace_id: str,
+) -> None:
+    """Facts about other people go to the people database's review
+    queue, not the vault - otherwise what JARVIS knows about someone
+    ends up split across two stores. Everything else is stored as
+    before. If the people route fails, those facts fall back to the
+    vault: a night's memories are never dropped."""
+    about_people = [c for c in candidates if c.category is FactCategory.PERSON]
+    to_vault = [c for c in candidates if c.category is not FactCategory.PERSON]
+    if people is not None and about_people:
+        try:
+            await people.debrief(
+                "\n".join(f"- {c.text}" for c in about_people),
+                trace_id=trace_id, source="archivist")
+        except Exception:
+            log.warning("people staging failed; keeping person facts in the vault",
+                        exc_info=True)
+            to_vault += about_people
+    else:
+        to_vault += about_people
+    for candidate in to_vault:
+        # store() handles near-duplicate supersession.
+        await memory.store(
+            text=candidate.text,
+            category=candidate.category,
+            importance=candidate.importance,
+            source_event_ids=source_event_ids,
+        )
+
+
 def register_maintenance_jobs(
     registry: JobTypeRegistry,
     llm: LLMLayer,
@@ -100,6 +137,7 @@ def register_maintenance_jobs(
     sessions: SessionsRepo,
     profile: ProfileStore,
     events: EventsRepo,
+    people: PeopleService | None = None,
 ) -> None:
     """Register maintenance job types. Called once at boot."""
     # Fail at BOOT if a dependency has not been constructed yet, rather
@@ -147,14 +185,10 @@ def register_maintenance_jobs(
                 candidates = await extract_facts(
                     llm, conversation, known, trace_id=ctx.trace_id
                 )
-                for candidate in candidates:
-                    # store() handles near-duplicate supersession.
-                    await memory.store(
-                        text=candidate.text,
-                        category=candidate.category,
-                        importance=candidate.importance,
-                        source_event_ids=[t.id for t in turns[-5:]],
-                    )
+                await _file_candidates(
+                    candidates, memory, people,
+                    [t.id for t in turns[-5:]], ctx.trace_id,
+                )
                 counts["facts_extracted"] = len(candidates)
                 state["last_turn_id"] = turns[-1].id
             await save("extract")

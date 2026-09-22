@@ -11,3 +11,5 @@ data/
 data/git-workspace/
 
 .playwright-mcp/
+.mypy_cache/
+.pytest_cache/

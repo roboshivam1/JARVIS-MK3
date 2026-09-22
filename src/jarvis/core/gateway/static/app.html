@@ -71,6 +71,16 @@ header {
   color: var(--muted);
 }
 
+header a.nav {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-decoration: none;
+}
+header a.nav:hover { color: var(--accent); }
+
 .connection {
   margin-left: auto;
   font-family: var(--mono);
@@ -356,6 +366,7 @@ body.dragging::after {
 <header>
   <span class="masthead">JARVIS</span>
   <span class="dateline" id="dateline"></span>
+  <a class="nav" href="/app/people">People</a>
   <span class="connection" id="connection">connecting</span>
 </header>
 

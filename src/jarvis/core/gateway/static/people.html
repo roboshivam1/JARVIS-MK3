@@ -1,0 +1,643 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>JARVIS · People</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+/* ==========================================================================
+   People review - the same Gazette as /app, set as a single column.
+
+   Tokens are copied from app.html on purpose: this page must read as
+   another section of the same paper, not a different product.
+   Everything the model proposed is shown as the owner's own words would
+   be (quoted, left-ruled) and every proposal as a line he can sign off.
+   ========================================================================== */
+
+:root {
+  --ink: #ece5d8;
+  --paper: #17171a;
+  --paper-raised: #1e1e22;
+  --rule: #3a3a40;
+  --muted: #8a8a92;
+  --accent: #d4685f;
+  --accent-dim: #8f4842;
+
+  --serif: 'Source Serif 4', Georgia, serif;
+  --mono: 'JetBrains Mono', ui-monospace, monospace;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: 16px;
+  line-height: 1.65;
+  min-height: 100dvh;
+}
+
+:focus-visible { outline: 1px solid var(--accent); outline-offset: 2px; }
+
+/* -- masthead ------------------------------------------------------------- */
+
+header {
+  border-bottom: 1px solid var(--rule);
+  padding: 14px 24px 12px;
+  display: flex;
+  align-items: baseline;
+  gap: 24px;
+}
+.masthead {
+  font-family: var(--mono);
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: 0.34em;
+  line-height: 1;
+  color: var(--ink);
+  text-decoration: none;
+}
+.section-name, header a.nav {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-decoration: none;
+}
+.section-name { color: var(--accent); }
+header a.nav { margin-left: auto; }
+header a.nav:hover { color: var(--accent); }
+
+/* -- column ---------------------------------------------------------------- */
+
+main { padding: 28px 40px 80px; }
+.column { max-width: 72ch; }
+section + section { margin-top: 44px; }
+
+h2 {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent);
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--rule);
+  margin-bottom: 14px;
+}
+.hint { color: var(--muted); font-size: 15px; margin-bottom: 12px; }
+
+/* -- inputs & buttons (as in app.html) -------------------------------------- */
+
+textarea, input[type=text], select {
+  width: 100%;
+  background: var(--paper-raised);
+  border: 1px solid var(--rule);
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: 16px;
+  line-height: 1.5;
+  padding: 8px 12px;
+  outline: none;
+}
+textarea { resize: vertical; }
+textarea:focus, input:focus, select:focus { border-color: var(--accent-dim); }
+select { font-family: var(--mono); font-size: 13px; }
+
+button {
+  background: transparent;
+  border: 1px solid var(--rule);
+  color: var(--ink);
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 10px 16px;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+button:hover { border-color: var(--accent); color: var(--accent); }
+button.primary { border-color: var(--accent-dim); color: var(--accent); }
+button:disabled { opacity: 0.45; cursor: default; }
+button.small { padding: 5px 10px; font-size: 10px; }
+
+.row-end { display: flex; gap: 10px; align-items: center; margin-top: 10px; }
+.status { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+.status.error, .error { color: var(--accent); }
+
+/* -- a debrief ------------------------------------------------------------- */
+
+.debrief { border-top: 1px solid var(--rule); padding-top: 18px; margin-top: 26px; }
+.debrief:first-of-type { border-top: none; margin-top: 0; padding-top: 0; }
+
+.byline {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+/* What the owner actually said - set like his words in /app. */
+.said {
+  border-left: 2px solid var(--accent-dim);
+  padding-left: 14px;
+  color: #d8d2c6;
+  white-space: pre-wrap;
+}
+.said.clamped {
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.more {
+  border: none;
+  padding: 4px 0 0 16px;
+  color: var(--muted);
+}
+
+/* -- people within a debrief, and their proposals ---------------------------- */
+
+.person { margin-top: 20px; }
+.person-name { font-size: 19px; font-weight: 600; }
+.person-note { font-family: var(--mono); font-size: 11px; color: var(--muted); margin-left: 8px; }
+
+.proposal {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 4px 16px;
+  padding: 10px 0;
+  border-bottom: 1px dotted var(--rule);
+}
+.proposal.head { border-bottom: none; padding-bottom: 2px; }
+.kind { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.flag { font-family: var(--mono); font-size: 11px; color: var(--accent); margin-left: 8px; }
+.detail { color: var(--muted); font-size: 15px; }
+.actions { display: flex; gap: 8px; align-items: flex-start; }
+.proposal .error { grid-column: 1 / -1; font-family: var(--mono); font-size: 12px; }
+
+/* The edit form replaces a proposal's text in place. */
+.edit { display: grid; grid-template-columns: 9em 1fr; gap: 8px 12px; align-items: center; }
+.edit label { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.edit .check { display: flex; gap: 8px; align-items: center; }
+
+.debrief-actions { margin-top: 14px; }
+.empty { color: var(--muted); }
+
+.working::after {
+  content: '';
+  animation: dots 1.4s steps(4, end) infinite;
+}
+@keyframes dots { 0% { content: ''; } 25% { content: '.'; } 50% { content: '..'; } 75% { content: '...'; } }
+@media (prefers-reduced-motion: reduce) { .working::after { animation: none; content: '...'; } }
+
+/* -- token prompt (as in app.html) ------------------------------------------ */
+
+#gate {
+  position: fixed;
+  inset: 0;
+  background: var(--paper);
+  display: none;
+  place-items: center;
+  z-index: 200;
+}
+#gate.open { display: grid; }
+#gate .inner { text-align: center; max-width: 340px; width: 100%; padding: 0 20px; }
+#gate input { margin-top: 18px; font-family: var(--mono); font-size: 13px; }
+
+/* -- phone ------------------------------------------------------------------ */
+
+@media (max-width: 760px) {
+  header { padding: 10px 16px 8px; }
+  .masthead { font-size: 14px; letter-spacing: 0.28em; }
+  main { padding: 18px 16px calc(60px + env(safe-area-inset-bottom)); }
+  .proposal { grid-template-columns: 1fr; }
+  .actions button { flex: 1; padding: 10px 8px; }
+  .edit { grid-template-columns: 1fr; gap: 4px; }
+  .edit label { margin-top: 6px; }
+  textarea, input[type=text], select { font-size: 16px; }   /* no iOS zoom */
+}
+</style>
+</head>
+<body>
+
+<div id="gate">
+  <div class="inner">
+    <div class="masthead">JARVIS</div>
+    <input id="token-input" type="password" placeholder="access token" autocomplete="off">
+  </div>
+</div>
+
+<header>
+  <a class="masthead" href="/app">JARVIS</a>
+  <span class="section-name">People</span>
+  <a class="nav" href="/app">Conversation</a>
+</header>
+
+<main>
+  <div class="column">
+    <section>
+      <h2>New debrief</h2>
+      <p class="hint">Tell JARVIS about someone you met or spoke to. Nothing is saved
+        until you approve it below.</p>
+      <textarea id="debrief-text" rows="5"
+        placeholder="Had coffee with Aarav today. He switched to CSE, and still owes me the motor controller schematics..."></textarea>
+      <div class="row-end">
+        <button id="debrief-send" class="primary">Extract</button>
+        <span id="debrief-status" class="status" role="status"></span>
+      </div>
+    </section>
+
+    <section>
+      <h2>Waiting for review</h2>
+      <div id="debriefs" aria-live="polite"><p class="empty working">Loading</p></div>
+    </section>
+  </div>
+</main>
+
+<script>
+'use strict';
+
+const $ = (id) => document.getElementById(id);
+const state = {
+  token: localStorage.getItem('jarvis_token') || '',
+  people: [],            // the directory, for names and the "about" dropdown
+  debriefs: [],
+  editing: null,         // proposal id currently being edited
+  errors: {},            // proposal id -> last error message
+};
+
+// -- helpers ----------------------------------------------------------------
+
+// Everything shown here came from a model or a person: escape it all.
+const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => (
+  { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+const CATEGORY_NAMES = {
+  biographical: 'Background', work_study: 'Work and study', preferences: 'Preference',
+  skills: 'Skill', family: 'Family', life_event: 'Life event', opinion: 'Opinion',
+  trait: 'Trait', friction: 'Handle with care', other: 'Other',
+};
+const CLOSENESS = { 1: 'Close', 2: 'Regular', 3: 'Acquaintance' };
+const SOURCES = {
+  web: 'typed', conversation: 'said to JARVIS', archivist: 'noticed overnight',
+};
+
+async function api(path, body) {
+  const options = { headers: { Authorization: `Bearer ${state.token}` } };
+  if (body !== undefined) {
+    options.method = 'POST';
+    options.headers['Content-Type'] = 'application/json';
+    options.body = JSON.stringify(body);
+  }
+  const response = await fetch(path, options);
+  if (response.status === 401) {
+    localStorage.removeItem('jarvis_token');
+    state.token = '';
+    openGate();
+    throw new Error('The access token was rejected.');
+  }
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const detail = Array.isArray(data.detail)
+      ? data.detail.map((d) => d.msg).join('; ')
+      : data.detail;
+    throw new Error(detail || `Request failed with status ${response.status}.`);
+  }
+  return data;
+}
+
+function openGate() {
+  $('gate').classList.add('open');
+  $('token-input').focus();
+}
+
+$('token-input').addEventListener('keydown', (event) => {
+  if (event.key !== 'Enter') return;
+  const token = event.target.value.trim();
+  if (!token) return;
+  state.token = token;
+  localStorage.setItem('jarvis_token', token);
+  $('gate').classList.remove('open');
+  load();
+});
+
+// -- who a proposal is about ---------------------------------------------
+
+function personName(ref, debrief) {
+  const [kind, value] = ref.split(':');
+  if (kind === 'new') return debrief.new_people[value]?.name || `New person ${value}`;
+  return state.people.find((p) => p.id === value)?.name || 'Unknown person';
+}
+
+// Group a debrief's proposals by person: each new person's own proposal
+// heads their group, so approving or rejecting them sits at the top.
+function groupByPerson(debrief) {
+  const groups = new Map();
+  const group = (ref) => {
+    if (!groups.has(ref)) groups.set(ref, { ref, head: null, items: [] });
+    return groups.get(ref);
+  };
+  for (const p of debrief.proposals) {
+    if (p.kind === 'new_person') group(`new:${p.payload.tag}`).head = p;
+  }
+  for (const p of debrief.proposals) {
+    if (p.kind !== 'new_person') group(p.payload.person_ref).items.push(p);
+  }
+  return [...groups.values()];
+}
+
+// -- reading a proposal ------------------------------------------------------
+
+function describe(p) {
+  const d = p.payload;
+  switch (p.kind) {
+    case 'new_person': {
+      const bits = [d.relationship, CLOSENESS[d.closeness], d.how_met && `met ${d.how_met}`]
+        .filter(Boolean).join(', ');
+      return { kind: 'New person', text: d.summary || d.name, detail: bits };
+    }
+    case 'alias':
+      return { kind: 'Also called', text: d.alias };
+    case 'fact':
+      return {
+        kind: CATEGORY_NAMES[d.category] || d.category,
+        text: d.text,
+        flag: d.sensitivity === 'sensitive' ? 'sensitive' : '',
+        detail: d.supersedes_fact_id ? 'Replaces an earlier fact about them.' : '',
+      };
+    case 'commitment':
+      return {
+        kind: d.direction === 'i_owe' ? 'You owe them' : 'They owe you',
+        text: d.what,
+        detail: d.due_date ? `Due ${d.due_date}` : '',
+      };
+    case 'key_date':
+      return {
+        kind: 'Date',
+        text: `${d.label}: ${d.date}`,
+        detail: d.recurring ? 'Every year' : 'One time',
+      };
+    default:
+      return { kind: p.kind, text: JSON.stringify(d) };
+  }
+}
+
+// -- editing a proposal -----------------------------------------------------
+
+const ABOUT = { key: 'person_ref', label: 'About', person: true };
+const FIELDS = {
+  new_person: [
+    { key: 'name', label: 'Name' },
+    { key: 'relationship', label: 'Relationship' },
+    { key: 'closeness', label: 'Closeness', options: Object.entries(CLOSENESS), number: true },
+    { key: 'how_met', label: 'How you met' },
+    { key: 'summary', label: 'Who they are', long: true },
+  ],
+  alias: [ABOUT, { key: 'alias', label: 'Also called' }],
+  fact: [
+    ABOUT,
+    { key: 'category', label: 'Kind', options: Object.entries(CATEGORY_NAMES) },
+    { key: 'text', label: 'Fact', long: true },
+    { key: 'sensitivity', label: 'Sensitivity',
+      options: [['normal', 'Normal'], ['sensitive', 'Sensitive']] },
+  ],
+  commitment: [
+    ABOUT,
+    { key: 'direction', label: 'Who owes',
+      options: [['i_owe', 'You owe them'], ['they_owe', 'They owe you']] },
+    { key: 'what', label: 'What', long: true },
+    { key: 'due_date', label: 'Due (YYYY-MM-DD)' },
+  ],
+  key_date: [
+    ABOUT,
+    { key: 'label', label: 'Occasion' },
+    { key: 'date', label: 'Date (MM-DD, or YYYY-MM-DD once)' },
+    { key: 'recurring', label: 'Every year', check: true },
+  ],
+};
+// Optional fields: an emptied box means "none", not an empty string.
+const NULLABLE = new Set(['relationship', 'how_met', 'summary', 'due_date']);
+
+function personOptions(debrief, current) {
+  const options = state.people.map((p) => [`existing:${p.id}`, p.name]);
+  for (const [tag, person] of Object.entries(debrief.new_people)) {
+    options.push([`new:${tag}`, `${person.name} (new)`]);
+  }
+  return options.map(([value, label]) =>
+    `<option value="${esc(value)}"${value === current ? ' selected' : ''}>${esc(label)}</option>`
+  ).join('');
+}
+
+function editForm(p, debrief) {
+  const rows = FIELDS[p.kind].map((f) => {
+    const id = `f-${p.id}-${f.key}`;
+    const value = p.payload[f.key];
+    let input;
+    if (f.person) {
+      input = `<select id="${id}">${personOptions(debrief, value)}</select>`;
+    } else if (f.options) {
+      input = `<select id="${id}">${f.options.map(([v, label]) =>
+        `<option value="${esc(v)}"${String(v) === String(value) ? ' selected' : ''}>${esc(label)}</option>`
+      ).join('')}</select>`;
+    } else if (f.check) {
+      input = `<span class="check"><input type="checkbox" id="${id}"${value ? ' checked' : ''}></span>`;
+    } else if (f.long) {
+      input = `<textarea id="${id}" rows="2">${esc(value)}</textarea>`;
+    } else {
+      input = `<input type="text" id="${id}" value="${esc(value)}">`;
+    }
+    return `<label for="${id}">${esc(f.label)}</label>${input}`;
+  }).join('');
+  return `<div class="edit">${rows}</div>`;
+}
+
+function readForm(p) {
+  const payload = { ...p.payload };
+  for (const f of FIELDS[p.kind]) {
+    const el = $(`f-${p.id}-${f.key}`);
+    let value = f.check ? el.checked : el.value.trim();
+    if (f.number) value = Number(value);
+    if (NULLABLE.has(f.key) && value === '') value = null;
+    payload[f.key] = value;
+  }
+  return payload;
+}
+
+// -- rendering ---------------------------------------------------------------
+
+function proposalRow(p, debrief, isHead) {
+  const error = state.errors[p.id]
+    ? `<div class="error" role="alert">${esc(state.errors[p.id])}</div>` : '';
+  if (state.editing === p.id) {
+    return `<div class="proposal" data-id="${p.id}">
+      ${editForm(p, debrief)}
+      <div class="actions">
+        <button class="small primary" data-act="save">Save and approve</button>
+        <button class="small" data-act="cancel">Cancel</button>
+      </div>${error}</div>`;
+  }
+  const d = describe(p);
+  const flag = d.flag ? `<span class="flag">${esc(d.flag)}</span>` : '';
+  const detail = d.detail ? `<div class="detail">${esc(d.detail)}</div>` : '';
+  return `<div class="proposal${isHead ? ' head' : ''}" data-id="${p.id}">
+    <div><div class="kind">${esc(d.kind)}${flag}</div><div>${esc(d.text)}</div>${detail}</div>
+    <div class="actions">
+      <button class="small primary" data-act="approve">Approve</button>
+      <button class="small" data-act="edit">Edit</button>
+      <button class="small" data-act="reject">Reject</button>
+    </div>${error}</div>`;
+}
+
+function render() {
+  const root = $('debriefs');
+  if (!state.debriefs.length) {
+    root.innerHTML = '<p class="empty">Nothing waiting for review. Debriefs you give '
+      + 'JARVIS, or type above, will appear here.</p>';
+    return;
+  }
+  root.innerHTML = state.debriefs.map((debrief) => {
+    const when = new Date(debrief.created_ts).toLocaleString(undefined,
+      { dateStyle: 'medium', timeStyle: 'short' });
+    const long = debrief.raw_text.length > 320;
+    const people = groupByPerson(debrief).map((g) => {
+      const tag = g.ref.startsWith('new:') ? g.ref.slice(4) : null;
+      const note = tag
+        ? (debrief.new_people[tag]?.approved ? 'added' : 'new')
+        : '';
+      return `<div class="person">
+        <div class="person-name">${esc(personName(g.ref, debrief))}${
+          note ? `<span class="person-note">${note}</span>` : ''}</div>
+        ${g.head ? proposalRow(g.head, debrief, true) : ''}
+        ${g.items.map((p) => proposalRow(p, debrief, false)).join('')}
+      </div>`;
+    }).join('');
+    return `<article class="debrief" data-debrief="${debrief.id}">
+      <div class="byline">${esc(when)}, ${esc(SOURCES[debrief.source] || debrief.source)}</div>
+      <div class="said${long ? ' clamped' : ''}">${esc(debrief.raw_text)}</div>
+      ${long ? '<button class="more" data-act="more">Show all</button>' : ''}
+      ${people}
+      <div class="debrief-actions">
+        <button data-act="approve-all">Approve all ${debrief.proposals.length}</button>
+      </div>
+    </article>`;
+  }).join('');
+}
+
+async function load() {
+  try {
+    const data = await api('/people/pending');
+    state.people = data.people;
+    state.debriefs = data.debriefs;
+    render();
+  } catch (error) {
+    $('debriefs').innerHTML = `<p class="error">${esc(error.message)}</p>`;
+  }
+}
+
+// -- actions -----------------------------------------------------------------
+
+async function decide(id, path, body) {
+  delete state.errors[id];
+  try {
+    await api(path, body);
+    state.editing = null;
+  } catch (error) {
+    state.errors[id] = error.message;
+  }
+  await load();
+}
+
+function findProposal(id) {
+  for (const debrief of state.debriefs) {
+    const p = debrief.proposals.find((x) => x.id === id);
+    if (p) return { p, debrief };
+  }
+  return {};
+}
+
+$('debriefs').addEventListener('click', async (event) => {
+  const button = event.target.closest('button[data-act]');
+  if (!button) return;
+  const act = button.dataset.act;
+
+  if (act === 'more') {
+    button.previousElementSibling.classList.remove('clamped');
+    button.remove();
+    return;
+  }
+
+  if (act === 'approve-all') {
+    const debriefId = button.closest('[data-debrief]').dataset.debrief;
+    const debrief = state.debriefs.find((d) => d.id === debriefId);
+    button.disabled = true;
+    // New people first: approving their facts would create them anyway,
+    // but in order, every step is one the owner would recognise.
+    const ordered = [...debrief.proposals].sort((a, b) =>
+      (a.kind === 'new_person' ? 0 : 1) - (b.kind === 'new_person' ? 0 : 1));
+    for (const p of ordered) {
+      try {
+        await api(`/people/proposals/${p.id}/approve`, {});
+      } catch (error) {
+        state.errors[p.id] = error.message;
+        break;
+      }
+    }
+    await load();
+    return;
+  }
+
+  const id = button.closest('[data-id]').dataset.id;
+  const { p } = findProposal(id);
+  if (!p) return;
+
+  if (act === 'edit') { state.editing = id; delete state.errors[id]; render(); return; }
+  if (act === 'cancel') { state.editing = null; render(); return; }
+
+  button.disabled = true;
+  if (act === 'approve') await decide(id, `/people/proposals/${id}/approve`, {});
+  if (act === 'reject') await decide(id, `/people/proposals/${id}/reject`, {});
+  if (act === 'save') await decide(id, `/people/proposals/${id}/approve`, { payload: readForm(p) });
+});
+
+async function sendDebrief() {
+  const text = $('debrief-text').value.trim();
+  const status = $('debrief-status');
+  if (text.length < 10) {
+    status.className = 'status error';
+    status.textContent = 'Write at least a sentence about who you met.';
+    return;
+  }
+  $('debrief-send').disabled = true;
+  status.className = 'status working';
+  status.textContent = 'Extracting';
+  try {
+    const outcome = await api('/people/debrief', { text });
+    status.className = 'status';
+    status.textContent = outcome.summary;
+    $('debrief-text').value = '';
+    await load();
+  } catch (error) {
+    status.className = 'status error';
+    status.textContent = error.message;
+  } finally {
+    $('debrief-send').disabled = false;
+  }
+}
+
+$('debrief-send').addEventListener('click', sendDebrief);
+$('debrief-text').addEventListener('keydown', (event) => {
+  if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) sendDebrief();
+});
+
+if (state.token) load(); else openGate();
+</script>
+</body>
+</html>

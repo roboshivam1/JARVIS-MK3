@@ -47,6 +47,9 @@ DEFAULT_POLICIES: dict[str, ActorPolicy] = {
             # in an allowlist hides.
             "create_watcher", "list_watchers", "remove_watcher",
             "create_schedule",
+            # The people database. Lookup and upcoming only read;
+            # debrief only stages proposals for the owner's review.
+            "people_lookup", "people_upcoming", "people_debrief",
         ),
         description=(
             "The front mind. Talks, remembers, and delegates. No hands: "
