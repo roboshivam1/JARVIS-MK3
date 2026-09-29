@@ -114,12 +114,13 @@ class PeopleService:
     async def _context(self, raw_text: str) -> tuple[dict[str, str], dict[str, str], str]:
         """The prompt's reference material, plus handle -> id maps."""
         people_map: dict[str, str] = {}
-        lines = ["ROSTER (handle | name | aliases | relationship | summary):"]
+        lines = ["ROSTER (handle | name | aliases | relationship | groups | summary):"]
         for i, p in enumerate(await self._repo.roster(limit=_ROSTER_LIMIT), start=1):
             people_map[f"R{i}"] = p["id"]
             lines.append(
                 f"R{i} | {p['name']} | {', '.join(p['aliases']) or '-'} | "
-                f"{p['relationship'] or '-'} | {p['summary'] or '-'}")
+                f"{p['relationship'] or '-'} | {', '.join(p['groups']) or '-'} | "
+                f"{p['summary'] or '-'}")
         if not people_map:
             lines.append("(empty - everyone is new)")
 
@@ -241,6 +242,9 @@ class PeopleService:
         lines = [head]
         if p["summary"]:
             lines.append(p["summary"])
+        groups = await self._repo.groups_of(person_id)
+        if groups:
+            lines.append("Groups: " + ", ".join(g["name"] for g in groups))
         for f in p["facts"]:
             mark = " [sensitive]" if f["sensitivity"] == "sensitive" else ""
             lines.append(f"- {f['text']}{mark}")
@@ -268,6 +272,17 @@ class PeopleService:
         if not ids:
             ids = await self._repo.mentioned_in(name)
         if not ids:
+            # Not a person - the owner may mean a whole group
+            # ("the colony lot", "the Robofest team").
+            group = await self._repo.group_by_name(name)
+            if group is not None:
+                members = await self._repo.members_of(group["id"])
+                if not members:
+                    return f"{group['name']} has no one in it yet."
+                listed = "\n".join(
+                    f"- {m['name']}" + (f": {m['summary']}" if m["summary"] else "")
+                    for m in members)
+                return f"{group['name']} ({group['kind']}):\n{listed}"
             return f"No one called {name!r} is in the people database."
         blocks = [await self.describe(pid, include_sensitive=True) for pid in ids[:5]]
         intro = "" if len(ids) == 1 else f"{len(ids)} people match {name!r}:\n\n"

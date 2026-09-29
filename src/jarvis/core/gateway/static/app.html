@@ -386,6 +386,10 @@ body.dragging::after {
       <div id="watchers"><div class="empty">nothing watched</div></div>
     </div>
     <div class="panel">
+      <h2><a class="nav" href="/app/people">People</a></h2>
+      <div id="people-panel"><div class="empty">-</div></div>
+    </div>
+    <div class="panel">
       <h2>Ledger</h2>
       <div id="ledger"><div class="empty">-</div></div>
     </div>
@@ -436,6 +440,7 @@ $('token-input').addEventListener('keydown', (event) => {
   state.token = token;
   localStorage.setItem('jarvis_token', token);
   $('gate').style.display = 'none';
+  refreshPeople();
   connect();
 });
 
@@ -594,6 +599,62 @@ function scrollDown() {
 }
 
 // -- the sidebar ------------------------------------------------------------
+
+// The people database, in four lines: what is waiting for review, what
+// is owed in either direction, and the next date coming up. The panel
+// heading links to the full page.
+async function refreshPeople() {
+  let data;
+  try {
+    const response = await fetch('/people/summary', {
+      headers: { Authorization: `Bearer ${state.token}` },
+    });
+    if (!response.ok) return;
+    data = await response.json();
+  } catch (_) { return; }
+
+  const items = [];
+  if (data.pending_proposals) {
+    items.push([`${data.pending_proposals} waiting`,
+                `${data.pending_debriefs} debrief${data.pending_debriefs === 1 ? '' : 's'}`]);
+  }
+  const owed = (data.commitments || []).filter(c => c.direction === 'they_owe').length;
+  const owing = (data.commitments || []).length - owed;
+  if (owed) items.push(['owed to you', String(owed)]);
+  if (owing) items.push(['you owe', String(owing)]);
+
+  const next = nextDate(data.dates || []);
+  if (next) items.push([next.label, next.when]);
+  if (!items.length) items.push([`${data.people} known`, `${data.groups} groups`]);
+  rows('people-panel', items, '-');
+}
+
+// Recurring dates are stored as MM-DD, so the next one is this year's
+// or next year's. Worked out here because the browser knows what day
+// it is where the owner is standing.
+function nextDate(dates) {
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  let best = null;
+  for (const d of dates) {
+    let when;
+    if (d.recurring) {
+      const [month, day] = d.date.split('-').map(Number);
+      when = new Date(today.getFullYear(), month - 1, day);
+      if (when < today) when = new Date(today.getFullYear() + 1, month - 1, day);
+    } else {
+      when = new Date(`${d.date}T00:00:00`);
+      if (when < today) continue;
+    }
+    if ((when - today) / 86400000 > 60) continue;
+    if (!best || when < best.date) {
+      const who = `${d.name}, ${d.label}`.replace(/[&<>"]/g,
+        (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+      best = { date: when, label: who,
+               when: when.toLocaleDateString(undefined, { day: 'numeric', month: 'short' }) };
+    }
+  }
+  return best;
+}
 
 async function refreshStatus() {
   try {
@@ -964,6 +1025,8 @@ if (state.token) {
 }
 
 setInterval(refreshStatus, 15000);
+refreshPeople();
+setInterval(refreshPeople, 60000);
 </script>
 </body>
 </html>

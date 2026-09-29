@@ -191,3 +191,66 @@ RESULT_FIELDS: dict[ProposalKind, str] = {
     ProposalKind.COMMITMENT: "commitments",
     ProposalKind.KEY_DATE: "key_dates",
 }
+
+
+# =============================================================================
+# The owner's own edits
+#
+# Everything above describes what the extraction model PROPOSES. What
+# follows is what the owner does directly on the People page - correcting
+# a name, retiring a stale fact, sorting someone into a group. These skip
+# the review queue by design: review exists to gate the model, not him.
+# =============================================================================
+
+
+class GroupKind(StrEnum):
+    FAMILY = "family"
+    SCHOOL = "school"
+    COLLEGE = "college"
+    LOCALITY = "locality"      # the colony, the neighbourhood
+    PROJECT = "project"        # a team built around something being made
+    WORK = "work"
+    OTHER = "other"
+
+
+class GroupIn(BaseModel):
+    """A group as the owner creates or renames it."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    name: str = Field(min_length=2, max_length=60)
+    kind: GroupKind = GroupKind.OTHER
+    description: str | None = Field(None, max_length=200)
+
+
+class PersonUpdate(BaseModel):
+    """A correction to a person. Every field optional: only what is sent
+    changes, so the page can save one field at a time."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    name: str | None = Field(None, min_length=1)
+    relationship: str | None = None
+    closeness: int | None = Field(None, ge=1, le=3)
+    how_met: str | None = None
+    summary: str | None = None
+    status: PersonStatus | None = None
+
+    def changes(self) -> dict[str, object]:
+        """Only the fields actually sent, ready for a SET clause."""
+        return {
+            key: (value.value if isinstance(value, StrEnum) else value)
+            for key, value in self.model_dump(exclude_unset=True).items()
+        }
+
+
+class OwnerFact(BaseModel):
+    """A fact the owner writes himself, or his correction of one the
+    model proposed. Editing supersedes rather than overwrites, so the
+    older version stays readable in the person's history."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    category: PersonFactCategory = PersonFactCategory.OTHER
+    text: str = Field(min_length=3)
+    sensitivity: Sensitivity = Sensitivity.NORMAL

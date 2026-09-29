@@ -44,8 +44,11 @@ worker = [
     "pypdf>=5.0",              # so the sandbox can read PDFs
     "openpyxl>=3.1",           # and spreadsheets
 ]
-# Voice deps arrive in phase 6 (wake word, VAD, TTS)
-voice = []
+# Voice: local TTS, so speech costs nothing and leaves no network trace.
+voice = [
+    "kokoro-onnx>=0.4",        # the voice itself, running here
+    "soundfile>=0.12",         # samples -> WAV for the browser
+]
 dev = [
     "pytest>=8.0",
     "pytest-asyncio>=0.23",

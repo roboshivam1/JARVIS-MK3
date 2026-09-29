@@ -212,13 +212,99 @@ button.small { padding: 5px 10px; font-size: 10px; }
 #gate .inner { text-align: center; max-width: 340px; width: 100%; padding: 0 20px; }
 #gate input { margin-top: 18px; font-family: var(--mono); font-size: 13px; }
 
+/* -- tabs, and the People half of the page --------------------------------- */
+
+.tabs { display: flex; gap: 16px; margin-left: auto; }
+.tab {
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.tab:hover { color: var(--ink); }
+.tab.on { color: var(--accent); }
+.badge {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--paper);
+  background: var(--accent);
+  padding: 0 5px;
+  margin-left: 6px;
+}
+
+.panes { display: grid; grid-template-columns: 250px 1fr; gap: 32px; align-items: start; }
+.column.wide { max-width: 100%; }
+
+.dir-group {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent-dim);
+  margin: 18px 0 4px;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+.dir-group button { border: none; padding: 0; font-size: 10px; color: var(--muted); }
+.dir-person { padding: 3px 0; cursor: pointer; }
+.dir-person:hover { color: var(--accent); }
+.dir-person.on { color: var(--accent); }
+.dir-person .aka { color: var(--muted); font-size: 13px; }
+
+.chip {
+  display: inline-block;
+  border: 1px solid var(--rule);
+  padding: 2px 8px;
+  margin: 0 6px 6px 0;
+  font-family: var(--mono);
+  font-size: 11px;
+}
+.chip button { border: none; padding: 0 0 0 8px; color: var(--muted); font-size: 11px; }
+.chip button:hover { color: var(--accent); }
+
+.profile h3 { font-size: 24px; font-weight: 600; }
+.sub { color: var(--muted); font-size: 14px; margin-bottom: 10px; }
+.block { margin-top: 24px; }
+.block h4 {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: 4px;
+  margin-bottom: 8px;
+}
+.fact {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2px 14px;
+  padding: 7px 0;
+  border-bottom: 1px dotted var(--rule);
+}
+.fact .actions { visibility: hidden; }
+.fact:hover .actions { visibility: visible; }
+.provenance { font-family: var(--mono); font-size: 10px; color: var(--muted); cursor: pointer; }
+.provenance:hover { color: var(--accent); }
+.gone { color: var(--muted); text-decoration: line-through; }
+.danger { border-color: var(--accent-dim); color: var(--accent); }
+.inline { display: flex; gap: 8px; align-items: center; margin-top: 10px; }
+.inline select, .inline input { width: auto; flex: 1; }
+
 /* -- phone ------------------------------------------------------------------ */
 
 @media (max-width: 760px) {
   header { padding: 10px 16px 8px; }
   .masthead { font-size: 14px; letter-spacing: 0.28em; }
   main { padding: 18px 16px calc(60px + env(safe-area-inset-bottom)); }
-  .proposal { grid-template-columns: 1fr; }
+  .proposal, .fact { grid-template-columns: 1fr; }
+  .panes { grid-template-columns: 1fr; gap: 20px; }
+  .fact .actions { visibility: visible; }
   .actions button { flex: 1; padding: 10px 8px; }
   .edit { grid-template-columns: 1fr; gap: 4px; }
   .edit label { margin-top: 6px; }
@@ -238,11 +324,15 @@ button.small { padding: 5px 10px; font-size: 10px; }
 <header>
   <a class="masthead" href="/app">JARVIS</a>
   <span class="section-name">People</span>
+  <div class="tabs">
+    <button class="tab on" data-view="review">Review<span class="badge" id="badge" hidden></span></button>
+    <button class="tab" data-view="people">Directory</button>
+  </div>
   <a class="nav" href="/app">Conversation</a>
 </header>
 
 <main>
-  <div class="column">
+  <div class="column" id="review-view">
     <section>
       <h2>New debrief</h2>
       <p class="hint">Tell JARVIS about someone you met or spoke to. Nothing is saved
@@ -260,6 +350,24 @@ button.small { padding: 5px 10px; font-size: 10px; }
       <div id="debriefs" aria-live="polite"><p class="empty working">Loading</p></div>
     </section>
   </div>
+
+  <div class="column wide" id="people-view" hidden>
+    <div class="panes">
+      <div class="dir">
+        <input type="text" id="dir-search" placeholder="search people">
+        <div id="directory"><p class="empty working">Loading</p></div>
+        <div class="inline">
+          <input type="text" id="new-group" placeholder="new group">
+          <select id="new-group-kind"></select>
+          <button class="small" id="add-group">Add</button>
+        </div>
+        <p class="status error" id="dir-status" role="alert"></p>
+      </div>
+      <div class="profile" id="profile">
+        <p class="empty">Pick someone on the left.</p>
+      </div>
+    </div>
+  </div>
 </main>
 
 <script>
@@ -270,9 +378,14 @@ const state = {
   token: localStorage.getItem('jarvis_token') || '',
   people: [],            // the directory, for names and the "about" dropdown
   debriefs: [],
-  editing: null,         // proposal id currently being edited
+  editing: null,         // proposal, person, or fact currently being edited
   errors: {},            // proposal id -> last error message
+  dir: null,             // the directory: everyone and every group
+  person: null,          // whoever is open on the right
+  history: false,        // showing their superseded facts
+  showing: null,         // debrief whose words are expanded
 };
+const view = { current: 'review' };
 
 // -- helpers ----------------------------------------------------------------
 
@@ -290,10 +403,11 @@ const SOURCES = {
   web: 'typed', conversation: 'said to JARVIS', archivist: 'noticed overnight',
 };
 
-async function api(path, body) {
+async function api(path, body, method) {
   const options = { headers: { Authorization: `Bearer ${state.token}` } };
+  if (method) options.method = method;
   if (body !== undefined) {
-    options.method = 'POST';
+    options.method = method || 'POST';
     options.headers['Content-Type'] = 'application/json';
     options.body = JSON.stringify(body);
   }
@@ -536,6 +650,9 @@ async function load() {
     const data = await api('/people/pending');
     state.people = data.people;
     state.debriefs = data.debriefs;
+    const waiting = state.debriefs.reduce((n, d) => n + d.proposals.length, 0);
+    $('badge').textContent = String(waiting);
+    $('badge').hidden = waiting === 0;
     render();
   } catch (error) {
     $('debriefs').innerHTML = `<p class="error">${esc(error.message)}</p>`;
@@ -637,7 +754,9 @@ $('debrief-text').addEventListener('keydown', (event) => {
   if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) sendDebrief();
 });
 
+if (location.hash === '#people') switchView('people');
 if (state.token) load(); else openGate();
 </script>
+<script src="/app/people-directory.js"></script>
 </body>
 </html>

@@ -52,6 +52,7 @@ from jarvis.core.observability.traces import TracesRepo
 from jarvis.core.queue.registry import JobTypeRegistry
 from jarvis.core.db.repos.watchers import WatchersRepo
 from jarvis.core.db.repos.people import PeopleRepo
+from jarvis.core.gateway.people_directory_routes import people_directory_router
 from jarvis.core.gateway.people_routes import people_router
 from jarvis.core.people.service import PeopleService
 from jarvis.core.queue.registry_workers import WorkerRegistry
@@ -170,6 +171,15 @@ def create_app(deps: GatewayDeps) -> FastAPI:
             media_type="text/html",
         )
 
+    @app.get("/app/people-directory.js")
+    async def people_directory_js() -> FileResponse:
+        """The Directory half of the people page, split out of the HTML
+        to keep that file a manageable size."""
+        return FileResponse(
+            Path(__file__).parent / "static" / "people_directory.js",
+            media_type="application/javascript",
+        )
+
     @app.get("/health")
     async def health() -> dict[str, str]:
         # Deliberately unauthenticated and nearly information-free:
@@ -277,5 +287,6 @@ def create_app(deps: GatewayDeps) -> FastAPI:
 
     if deps.people_repo is not None and deps.people is not None:
         app.include_router(people_router(deps.people_repo, deps.people, auth))
+        app.include_router(people_directory_router(deps.people_repo, auth))
 
     return app

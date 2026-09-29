@@ -40,8 +40,11 @@ from jarvis.common.people import (
     CommitmentProposal,
     ExtractionResult,
     FactProposal,
+    GroupIn,
     KeyDateProposal,
     NewPersonProposal,
+    OwnerFact,
+    PersonUpdate,
     ProposalKind,
     ProposalStatus,
 )
@@ -115,7 +118,8 @@ class PeopleRepo:
         sensitive = "" if include_sensitive else "AND sensitivity = 'normal'"
         person["aliases"] = await self.aliases_of(person_id)
         person["facts"] = await self._rows(
-            f"SELECT id, category, text, sensitivity, created_ts FROM person_facts "
+            f"SELECT id, category, text, sensitivity, created_ts, debrief_id "
+            f"FROM person_facts "
             f"WHERE person_id = ? AND status = 'active' {sensitive} "
             f"ORDER BY category, created_ts", (person_id,))
         person["commitments"] = await self._rows(
@@ -135,6 +139,7 @@ class PeopleRepo:
             (limit,))
         for p in people:
             p["aliases"] = await self.aliases_of(p["id"])
+            p["groups"] = [g["name"] for g in await self.groups_of(p["id"])]
         return people
 
     async def pending_debriefs(self) -> list[dict[str, Any]]:
@@ -332,3 +337,213 @@ class PeopleRepo:
         if rows[0]["status"] != ProposalStatus.PENDING:
             raise ReviewError(f"That proposal is already {rows[0]['status']}.")
         return rows[0]
+    # -- groups ---------------------------------------------------------------
+
+    async def groups(self) -> list[dict[str, Any]]:
+        """Every group, with its members' ids."""
+        groups = await self._rows(
+            "SELECT id, name, kind, description FROM people_groups ORDER BY kind, name")
+        for g in groups:
+            rows = await self._rows(
+                "SELECT person_id FROM person_group_members WHERE group_id = ?", (g["id"],))
+            g["members"] = [r["person_id"] for r in rows]
+        return groups
+
+    async def groups_of(self, person_id: str) -> list[dict[str, Any]]:
+        return await self._rows(
+            "SELECT g.id, g.name, g.kind FROM people_groups g "
+            "JOIN person_group_members m ON m.group_id = g.id "
+            "WHERE m.person_id = ? ORDER BY g.name", (person_id,))
+
+    async def create_group(self, data: GroupIn) -> str:
+        existing = await self._rows(
+            "SELECT id FROM people_groups WHERE name = ?", (data.name,))
+        if existing:
+            raise ReviewError(f"A group called {data.name!r} already exists.")
+        group_id = new_ulid()
+        await self._db.execute(
+            "INSERT INTO people_groups (id, name, kind, description, created_ts) "
+            "VALUES (?, ?, ?, ?, ?)",
+            (group_id, data.name, data.kind.value, data.description, utc_now().isoformat()))
+        return group_id
+
+    async def update_group(self, group_id: str, data: GroupIn) -> None:
+        await self._db.execute(
+            "UPDATE people_groups SET name = ?, kind = ?, description = ? WHERE id = ?",
+            (data.name, data.kind.value, data.description, group_id))
+
+    async def delete_group(self, group_id: str) -> None:
+        """Removes the group. The people in it are untouched."""
+        await self._db.execute("DELETE FROM people_groups WHERE id = ?", (group_id,))
+
+    async def set_membership(self, group_id: str, person_id: str, member: bool) -> None:
+        if member:
+            await self._db.execute(
+                "INSERT OR IGNORE INTO person_group_members "
+                "(group_id, person_id, created_ts) VALUES (?, ?, ?)",
+                (group_id, person_id, utc_now().isoformat()))
+        else:
+            await self._db.execute(
+                "DELETE FROM person_group_members WHERE group_id = ? AND person_id = ?",
+                (group_id, person_id))
+
+    async def group_by_name(self, name: str) -> dict[str, Any] | None:
+        rows = await self._rows(
+            "SELECT id, name, kind FROM people_groups WHERE name = ?", (name,))
+        return rows[0] if rows else None
+
+    async def members_of(self, group_id: str) -> list[dict[str, Any]]:
+        return await self._rows(
+            "SELECT p.id, p.name, p.summary FROM people p "
+            "JOIN person_group_members m ON m.person_id = p.id "
+            "WHERE m.group_id = ? ORDER BY p.name", (group_id,))
+
+    # -- the directory and one person in full ---------------------------------
+
+    async def directory(self) -> dict[str, Any]:
+        """Everyone and every group: the People section's whole payload."""
+        people = await self._rows(
+            "SELECT id, name, relationship, summary, status, closeness, last_mentioned_ts "
+            "FROM people ORDER BY name")
+        for p in people:
+            p["aliases"] = await self.aliases_of(p["id"])
+            p["groups"] = [g["id"] for g in await self.groups_of(p["id"])]
+        return {"people": people, "groups": await self.groups()}
+
+    async def person_detail(self, person_id: str) -> dict[str, Any] | None:
+        """A profile plus everything the page needs to show WHY: the
+        facts that were superseded, and the debriefs they came from."""
+        person = await self.profile(person_id, include_sensitive=True)
+        if person is None:
+            return None
+        person["groups"] = await self.groups_of(person_id)
+        person["history"] = await self._rows(
+            "SELECT id, category, text, sensitivity, created_ts, superseded_by, debrief_id "
+            "FROM person_facts WHERE person_id = ? AND status = 'superseded' "
+            "ORDER BY created_ts DESC", (person_id,))
+        person["settled"] = await self._rows(
+            "SELECT direction, what, status, resolved_ts FROM person_commitments "
+            "WHERE person_id = ? AND status != 'open' ORDER BY resolved_ts DESC LIMIT 20",
+            (person_id,))
+        # The debriefs behind the facts, so a fact can always be traced
+        # back to the words that produced it.
+        ids = {f["debrief_id"] for f in person["facts"] + person["history"] if f.get("debrief_id")}
+        person["debriefs"] = {}
+        for debrief_id in ids:
+            rows = await self._rows(
+                "SELECT id, raw_text, source, created_ts FROM people_debriefs WHERE id = ?",
+                (debrief_id,))
+            if rows:
+                person["debriefs"][debrief_id] = rows[0]
+        return person
+
+    # -- the owner's own edits ------------------------------------------------
+    #
+    # These skip the review queue on purpose: review gates the extraction
+    # model, not the owner. Facts are still never overwritten - editing
+    # one supersedes it, so the person's history stays readable.
+
+    async def update_person(self, person_id: str, data: PersonUpdate) -> None:
+        changes = data.changes()
+        if not changes:
+            return
+        columns = ", ".join(f"{name} = ?" for name in changes)
+        await self._db.execute(
+            f"UPDATE people SET {columns}, updated_ts = ? WHERE id = ?",
+            (*changes.values(), utc_now().isoformat(), person_id))
+
+    async def set_alias(self, person_id: str, alias: str, present: bool) -> None:
+        if present:
+            await self._db.execute(
+                "INSERT OR IGNORE INTO person_aliases (person_id, alias) VALUES (?, ?)",
+                (person_id, alias))
+        else:
+            await self._db.execute(
+                "DELETE FROM person_aliases WHERE person_id = ? AND alias = ?",
+                (person_id, alias))
+
+    async def add_fact(self, person_id: str, data: OwnerFact) -> str:
+        fact_id = new_ulid()
+        await self._db.execute(
+            "INSERT INTO person_facts (id, person_id, category, text, sensitivity, "
+            "status, created_ts) VALUES (?, ?, ?, ?, ?, 'active', ?)",
+            (fact_id, person_id, data.category.value, data.text,
+             data.sensitivity.value, utc_now().isoformat()))
+        return fact_id
+
+    async def edit_fact(self, fact_id: str, data: OwnerFact) -> str:
+        """Replaces a fact with a corrected version. The old text stays in
+        the person's history, marked as superseded by the new one."""
+        rows = await self._rows(
+            "SELECT person_id, status FROM person_facts WHERE id = ?", (fact_id,))
+        if not rows or rows[0]["status"] != "active":
+            raise ReviewError("That fact is not an active fact.")
+        new_id = new_ulid()
+        now = utc_now().isoformat()
+        async with self._db.transaction() as tx:
+            await tx.execute(
+                "INSERT INTO person_facts (id, person_id, category, text, sensitivity, "
+                "status, created_ts) VALUES (?, ?, ?, ?, ?, 'active', ?)",
+                (new_id, rows[0]["person_id"], data.category.value, data.text,
+                 data.sensitivity.value, now))
+            await tx.execute(
+                "UPDATE person_facts SET status = 'superseded', superseded_by = ? WHERE id = ?",
+                (new_id, fact_id))
+        return new_id
+
+    async def retire_fact(self, fact_id: str) -> None:
+        """No longer true, and nothing replaces it. Superseded by nothing,
+        which is how the history shows a fact that simply stopped holding."""
+        await self._db.execute(
+            "UPDATE person_facts SET status = 'superseded', superseded_by = NULL "
+            "WHERE id = ? AND status = 'active'", (fact_id,))
+
+    async def resolve_commitment(self, commitment_id: str, status: str) -> None:
+        if status not in ("done", "dropped"):
+            raise ReviewError("A commitment can only be marked done or dropped.")
+        await self._db.execute(
+            "UPDATE person_commitments SET status = ?, resolved_ts = ? WHERE id = ?",
+            (status, utc_now().isoformat(), commitment_id))
+
+    async def delete_date(self, date_id: str) -> None:
+        await self._db.execute("DELETE FROM person_dates WHERE id = ?", (date_id,))
+
+    async def delete_person(self, person_id: str) -> None:
+        """Everything about them goes: facts, commitments, dates, aliases,
+        memberships, all by cascade."""
+        await self._db.execute("DELETE FROM people WHERE id = ?", (person_id,))
+
+    async def merge_people(self, keep_id: str, merge_id: str) -> None:
+        """Two rows for one person - the usual cause is the model creating
+        someone it could not tell was already known. Everything moves to
+        the kept row, the old name survives as an alias, and pending
+        proposals still pointing at the absorbed row are re-pointed."""
+        if keep_id == merge_id:
+            raise ReviewError("Those are the same person.")
+        rows = await self._rows(
+            "SELECT id, name FROM people WHERE id IN (?, ?)", (keep_id, merge_id))
+        if len(rows) != 2:
+            raise ReviewError("One of those people no longer exists.")
+        absorbed = next(r for r in rows if r["id"] == merge_id)
+        now = utc_now().isoformat()
+        async with self._db.transaction() as tx:
+            for table in ("person_facts", "person_commitments", "person_dates"):
+                await tx.execute(
+                    f"UPDATE {table} SET person_id = ? WHERE person_id = ?", (keep_id, merge_id))
+            await tx.execute(
+                "INSERT OR IGNORE INTO person_aliases (person_id, alias) "
+                "SELECT ?, alias FROM person_aliases WHERE person_id = ?", (keep_id, merge_id))
+            await tx.execute(
+                "INSERT OR IGNORE INTO person_aliases (person_id, alias) VALUES (?, ?)",
+                (keep_id, absorbed["name"]))
+            await tx.execute(
+                "INSERT OR IGNORE INTO person_group_members (group_id, person_id, created_ts) "
+                "SELECT group_id, ?, ? FROM person_group_members WHERE person_id = ?",
+                (keep_id, now, merge_id))
+            await tx.execute(
+                "UPDATE people_proposals SET payload = replace(payload, ?, ?) "
+                "WHERE status = 'pending'",
+                (f"existing:{merge_id}", f"existing:{keep_id}"))
+            await tx.execute("DELETE FROM people WHERE id = ?", (merge_id,))
+            await tx.execute(
+                "UPDATE people SET updated_ts = ? WHERE id = ?", (now, keep_id))
