@@ -50,6 +50,10 @@ DEFAULT_POLICIES: dict[str, ActorPolicy] = {
             # The people database. Lookup and upcoming only read;
             # debrief only stages proposals for the owner's review.
             "people_lookup", "people_upcoming", "people_debrief",
+            # His own reel channel. Requesting one only queues a draft;
+            # the owner reviews it before anything renders, and posting
+            # is always his.
+            "reels_recent", "reel_details", "reel_request", "reel_mark_posted",
         ),
         description=(
             "The front mind. Talks, remembers, and delegates. No hands: "

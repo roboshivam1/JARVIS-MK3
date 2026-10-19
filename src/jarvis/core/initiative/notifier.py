@@ -40,6 +40,7 @@ from jarvis.common.events import Event, EventKind
 from jarvis.common.ids import utc_now
 from jarvis.common.jobs import Job, JobStatus
 from jarvis.common.log import get_logger
+from jarvis.common.reels import REEL_REVIEW_TOOL
 from jarvis.common.notifications import Notification
 from jarvis.common.sessions import Turn, TurnRole
 from jarvis.core.db.repos.approvals import ApprovalsRepo
@@ -195,6 +196,10 @@ class Notifier:
         for approval_id in pending:
             request = await self._approvals.get(approval_id)
             if request is None or not request.is_open:
+                continue
+            if request.tool == REEL_REVIEW_TOOL:
+                # The reel service sends these itself, with the stills,
+                # the voice and its own buttons.
                 continue
 
             job = await self._jobs.get(request.job_id)

@@ -73,6 +73,24 @@ def build_registry(settings: WorkerSettings) -> JobTypeRegistry:
         timeout_s=120,
         handler=echo,
     ))
+
+    # Reels need no model key on this side - Claude Code brings its own
+    # login - so they register independently of the subagent jobs.
+    if settings.reels_kit_dir.strip():
+        from pathlib import Path
+
+        from jarvis.worker.reels import ReelConfig, register_reel_jobs
+
+        register_reel_jobs(
+            registry,
+            ReelConfig(
+                kit_dir=Path(settings.reels_kit_dir).expanduser(),
+                claude_bin=settings.claude_bin,
+                draft_timeout_s=settings.reels_draft_timeout_s,
+                render_timeout_s=settings.reels_render_timeout_s,
+            ),
+            settings.capabilities,
+        )
     return registry
 
 

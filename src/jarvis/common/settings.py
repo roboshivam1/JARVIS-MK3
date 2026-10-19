@@ -145,6 +145,13 @@ class CoreSettings(CommonSettings):
     # Hosted provider: only needed when embedder_provider is "voyage".
     voyage_api_key: SecretStr | None = None
 
+    # -- Reels ---------------------------------------------------------------
+
+    # Optional copy of the reel show bible on THIS machine. The brief
+    # writer reads it when present; the full bible is used on the Mac
+    # either way, where Claude Code writes the actual episode.
+    reels_bible_path: str = ""
+
     # -- Gateway -------------------------------------------------------------
 
     gateway_host: str = "127.0.0.1"

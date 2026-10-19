@@ -21,7 +21,12 @@
 # the keyboard is REMOVED: a live approve button on a settled question
 # invites a second tap that silently does nothing.
 #
-# Commands: /start, /new, /status, /approvals
+# Commands: /start, /new, /status, /approvals, /quiet, /reel, /skip
+#
+# REELS: drafts arrive as the contact sheet, the voice track and the
+# script, with Approve / Notes / Cancel. The buttons name the EPISODE,
+# not the approval gate, so they keep working if the gate is re-raised.
+# Notes are whatever the owner sends next, typed or spoken.
 # =============================================================================
 
 from __future__ import annotations
@@ -45,6 +50,7 @@ from aiogram.types import (
 )
 
 from jarvis.common.log import get_logger
+from jarvis.common.reels import EPISODE_TYPE_LABELS, REEL_REVIEW_TOOL, ReviewAction
 from jarvis.core.approvals.service import ApprovalService
 from jarvis.core.db.repos.approvals import ApprovalsRepo
 from jarvis.core.db.repos.sessions import SessionsRepo
@@ -52,6 +58,7 @@ from jarvis.core.initiative.policy import NotificationPolicy
 from jarvis.llm.transcription import Transcriber
 from jarvis.core.initiative.policy import NotificationPolicy
 from jarvis.core.initiative.policy import NotificationPolicy
+from jarvis.core.reels.service import BriefRejected, PropCard, ReelBusy, ReelService
 from jarvis.core.sessionmgr import SessionManager
 
 log = get_logger("core.telegram")
@@ -74,6 +81,30 @@ def _approval_keyboard(approval_id: str) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=[[
         InlineKeyboardButton(text="Approve", callback_data=f"approve:{approval_id}"),
         InlineKeyboardButton(text="Reject", callback_data=f"reject:{approval_id}"),
+    ]])
+
+
+def _reel_keyboard(episode_id: str, approvable: bool = True) -> InlineKeyboardMarkup:
+    """Approve / Notes / Cancel for one reel draft - without Approve when
+    the draft is incomplete and there is nothing to render. 'reel:approve:'
+    plus a ULID is 39 bytes, inside Telegram's 64."""
+    buttons = [
+        InlineKeyboardButton(text="Notes", callback_data=f"reel:notes:{episode_id}"),
+        InlineKeyboardButton(text="Cancel", callback_data=f"reel:cancel:{episode_id}"),
+    ]
+    if approvable:
+        buttons.insert(0, InlineKeyboardButton(
+            text="Approve", callback_data=f"reel:approve:{episode_id}"))
+    return InlineKeyboardMarkup(inline_keyboard=[buttons])
+
+
+def _prop_keyboard(episode_id: str, prop_id: str) -> InlineKeyboardMarkup:
+    """Approve prop / Notes / Cancel on one new prop's card. 'rp:a:' plus
+    a ULID and a prop id of up to 31 characters is 63 bytes, inside 64."""
+    return InlineKeyboardMarkup(inline_keyboard=[[
+        InlineKeyboardButton(text="Approve prop", callback_data=f"rp:a:{episode_id}:{prop_id}"),
+        InlineKeyboardButton(text="Notes", callback_data=f"rp:n:{episode_id}:{prop_id}"),
+        InlineKeyboardButton(text="Cancel", callback_data=f"reel:cancel:{episode_id}"),
     ]])
 
 
@@ -152,6 +183,7 @@ class TelegramBridge:
         policy: "NotificationPolicy | None" = None,
         tz: "ZoneInfo | None" = None,
         transcriber: "Transcriber | None" = None,
+        reels: "ReelService | None" = None,
     ) -> None:
         if owner_id <= 0:
             raise ValueError(
@@ -166,12 +198,23 @@ class TelegramBridge:
         self._approvals = approvals_repo
         self._policy = policy
         self._transcriber = transcriber
+        self._reels = reels
+        # Set by a Notes tap: (episode id, chat id, message id, prop id -
+        # empty for the draft itself). The next thing the owner sends
+        # becomes the notes for that draft or prop.
+        self._awaiting_notes: tuple[str, int, int, str] | None = None
         self._tz = tz or ZoneInfo("UTC")
         self._bot = Bot(token, default=DefaultBotProperties(parse_mode=None))
         self._dp = Dispatcher()
         self._dp.message.register(self._on_message)
         self._dp.callback_query.register(
             self._on_callback, F.data.startswith(("approve:", "reject:"))
+        )
+        self._dp.callback_query.register(
+            self._on_reel_callback, F.data.startswith("reel:")
+        )
+        self._dp.callback_query.register(
+            self._on_prop_callback, F.data.startswith("rp:")
         )
 
     async def run(self) -> None:
@@ -230,6 +273,71 @@ class TelegramBridge:
                 FSInputFile(file_path, filename=file_name or file_path.name),
             )
 
+    # -- outbound: reels (the reel service's delivery surface) ----------------
+
+    async def send_reel_review(
+        self,
+        episode_id: str,
+        text: str,
+        sheet: Path | None,
+        voice: Path | None,
+        voice_name: str | None,
+        approvable: bool = True,
+        props: list[PropCard] | None = None,
+    ) -> None:
+        """A draft for review: any new props first, each on its own card,
+        then what it looks like, what it sounds like, then the script with
+        the buttons, so the buttons arrive last."""
+        for card in props or []:
+            caption = f"New prop: {card.id}\n{card.description}"[:1024]
+            keyboard = _prop_keyboard(episode_id, card.id)
+            if card.preview is not None and card.preview.exists():
+                try:
+                    await self._bot.send_photo(
+                        self._owner_id, FSInputFile(card.preview),
+                        caption=caption, reply_markup=keyboard,
+                    )
+                    continue
+                except Exception:
+                    log.warning("prop preview would not send as a photo", exc_info=True)
+            await self._bot.send_message(
+                self._owner_id, caption + "\n(no preview came through)",
+                reply_markup=keyboard,
+            )
+        if sheet is not None and sheet.exists():
+            try:
+                await self._bot.send_photo(
+                    self._owner_id, FSInputFile(sheet), caption="Contact sheet"
+                )
+            except Exception:
+                # Too large or too tall for a photo: a document always works.
+                await self._bot.send_document(
+                    self._owner_id, FSInputFile(sheet, filename=sheet.name)
+                )
+        if voice is not None and voice.exists():
+            name = voice_name or voice.name
+            if name.endswith(".m4a"):
+                await self._bot.send_audio(
+                    self._owner_id, FSInputFile(voice, filename=name), title="Voice"
+                )
+            else:
+                await self._bot.send_document(
+                    self._owner_id, FSInputFile(voice, filename=name)
+                )
+        await self._bot.send_message(
+            self._owner_id, text[:_TG_LIMIT],
+            reply_markup=_reel_keyboard(episode_id, approvable),
+        )
+
+    async def send_reel_video(self, video: Path, caption: str) -> None:
+        await self._bot.send_video(
+            self._owner_id, FSInputFile(video, filename=video.name),
+            caption=caption[:1024], supports_streaming=True,
+        )
+
+    async def send_reel_text(self, text: str) -> None:
+        await self._bot.send_message(self._owner_id, text[:_TG_LIMIT])
+
     # -- inbound: taps --------------------------------------------------------
 
     async def _on_callback(self, callback: CallbackQuery) -> None:
@@ -271,6 +379,194 @@ class TelegramBridge:
             except Exception:
                 log.warning("could not update approval message", exc_info=True)
 
+    async def _on_reel_callback(self, callback: CallbackQuery) -> None:
+        """Approve / Notes / Cancel on a reel draft."""
+        if callback.from_user.id != self._owner_id:
+            await callback.answer("Not for you.", show_alert=True)
+            return
+        if self._reels is None or not callback.data:
+            await callback.answer("Reels are not available.", show_alert=True)
+            return
+
+        _, action, episode_id = callback.data.split(":", 2)
+        message = callback.message if isinstance(callback.message, Message) else None
+
+        if action == "notes":
+            if message is None:
+                await callback.answer("Use /reel notes <ref> <notes>.", show_alert=True)
+                return
+            self._awaiting_notes = (episode_id, message.chat.id, message.message_id, "")
+            await callback.answer()
+            await self._bot.send_message(
+                self._owner_id,
+                "Your notes, sir - type them or send a voice note. "
+                "/skip to keep chatting instead.",
+            )
+            return
+
+        try:
+            reply, moved = await self._reels.answer(episode_id, ReviewAction(action))
+        except ValueError:
+            await callback.answer("Unknown action.", show_alert=True)
+            return
+        await callback.answer(reply[:200], show_alert=not moved)
+        if message is not None and moved:
+            await self._close_reel_message(message.chat.id, message.message_id,
+                                           message.text or "", reply)
+
+    async def _on_prop_callback(self, callback: CallbackQuery) -> None:
+        """Approve prop / Notes on a new prop's card. The card keeps its
+        buttons: if the Mac could not approve it, Sir can tap again."""
+        if callback.from_user.id != self._owner_id:
+            await callback.answer("Not for you.", show_alert=True)
+            return
+        if self._reels is None or not callback.data:
+            await callback.answer("Reels are not available.", show_alert=True)
+            return
+        parts = callback.data.split(":")
+        if len(parts) != 4 or parts[1] not in ("a", "n"):
+            await callback.answer("Unknown action.", show_alert=True)
+            return
+        _, verb, episode_id, prop_id = parts
+        message = callback.message if isinstance(callback.message, Message) else None
+
+        if verb == "n":
+            if message is None:
+                await callback.answer("This card is too old to take notes.", show_alert=True)
+                return
+            self._awaiting_notes = (episode_id, message.chat.id, message.message_id, prop_id)
+            await callback.answer()
+            await self._bot.send_message(
+                self._owner_id,
+                f"What should change about the {prop_id}, sir? Type it or send a "
+                f"voice note. /skip to keep chatting instead.",
+            )
+            return
+
+        reply, moved = await self._reels.answer(
+            episode_id, ReviewAction.PROP_APPROVE, prop_id=prop_id)
+        await callback.answer(reply[:200], show_alert=not moved)
+
+    async def _take_reel_notes(self, message: Message, text: str) -> None:
+        """The owner's next message after a Notes tap, on a draft or a prop."""
+        assert self._awaiting_notes is not None and self._reels is not None
+        episode_id, chat_id, message_id, prop_id = self._awaiting_notes
+        self._awaiting_notes = None
+        if prop_id:
+            reply, moved = await self._reels.answer(
+                episode_id, ReviewAction.PROP_NOTES, text, prop_id=prop_id)
+        else:
+            reply, moved = await self._reels.answer(episode_id, ReviewAction.NOTES, text)
+        await message.answer(reply)
+        if moved:
+            await self._close_reel_message(chat_id, message_id, None, reply)
+
+    async def _close_reel_message(
+        self, chat_id: int, message_id: int, original: str | None, verdict: str
+    ) -> None:
+        """Strip the buttons off a settled draft, like any settled gate."""
+        try:
+            if original is None:
+                await self._bot.edit_message_reply_markup(
+                    chat_id=chat_id, message_id=message_id, reply_markup=None
+                )
+            else:
+                await self._bot.edit_message_text(
+                    original[:_TG_LIMIT - 120] + f"\n\n--- {verdict[:100]} ---",
+                    chat_id=chat_id, message_id=message_id, reply_markup=None,
+                )
+        except Exception:
+            log.warning("could not update reel message", exc_info=True)
+
+    async def _reel_command(self, message: Message, text: str) -> None:
+        if self._reels is None:
+            await message.answer("Reels are not configured on this Core, sir.")
+            return
+        args = text.partition(" ")[2].strip()
+        sub, _, rest = args.partition(" ")
+        sub = sub.lower()
+        rest = rest.strip()
+
+        if not args:
+            await message.answer(
+                "/reel <idea> - brief one and start drafting\n"
+                "/reel pitch - three ideas; /reel pick 2 to make one\n"
+                "/reel status - the episode log\n"
+                "/reel notes <ref> <notes> - notes without the button\n"
+                "/reel cancel <ref> - drop one\n"
+                "/reel posted <ref> - mark one as live"
+            )
+        elif sub == "pitch":
+            thinking = await message.answer("Thinking of three...")
+            try:
+                pitches = await self._reels.pitch()
+            except Exception as exc:
+                log.error("reel pitch failed", exc_info=True)
+                await thinking.edit_text(f"No pitches, sir: {exc}")
+                return
+            if not pitches:
+                await thinking.edit_text("Nothing usable came back, sir. Ask again.")
+                return
+            body = "\n\n".join(
+                f"{i}. {p.title} ({EPISODE_TYPE_LABELS[p.episode_type]})\n{p.premise}"
+                for i, p in enumerate(pitches, start=1)
+            )
+            await thinking.edit_text(f"{body}\n\n/reel pick <number> to make one.")
+        elif sub == "pick":
+            pitch = self._reels.pitch_at(int(rest)) if rest.isdigit() else None
+            if pitch is None:
+                await message.answer("No such pitch, sir. /reel pitch first.")
+                return
+            await self._request_reel(message, f"{pitch.title}: {pitch.premise}")
+        elif sub == "status":
+            await message.answer(await self._reels.status_text())
+        elif sub == "posted":
+            await message.answer(await self._reels.mark_posted(rest or "last"))
+        elif sub == "cancel":
+            await message.answer(await self._reels.cancel(rest or "last"))
+        elif sub == "notes":
+            ref, _, notes = rest.partition(" ")
+            found = await self._reels.resolve(ref)
+            if isinstance(found, str):
+                await message.answer(found)
+                return
+            await message.answer(
+                await self._reels.decide(found.id, ReviewAction.NOTES, notes)
+            )
+        else:
+            await self._request_reel(message, args)
+
+    async def _request_reel(self, message: Message, idea: str) -> None:
+        assert self._reels is not None
+        status = await message.answer("Briefing...")
+        try:
+            outcome = await self._reels.request(idea)
+        except ReelBusy as busy:
+            e = busy.episode
+            await status.edit_text(
+                f"One reel at a time, sir: \u201c{e.title or e.request[:40]}\u201d is "
+                f"{e.status.value.replace('_', ' ')}. /reel cancel {e.ref} to drop it."
+            )
+            return
+        except BriefRejected as exc:
+            await status.edit_text(f"I will not brief that one, sir: {exc}")
+            return
+        except Exception as exc:
+            log.error("reel request failed", exc_info=True)
+            await status.edit_text(f"The brief failed, sir: {type(exc).__name__}.")
+            return
+
+        episode = outcome.episode
+        reply = (
+            f"Briefed - {EPISODE_TYPE_LABELS[episode.type]}.\n"
+            f"{episode.brief.premise}\n\n"
+            f"Drafting on the Mac; script, stills and voice follow for your "
+            f"review.  (ref {episode.ref})"
+        )
+        if not outcome.worker_online:
+            reply += "\n\nThe Mac is not connected - it starts when it is."
+        await status.edit_text(reply)
+
     # -- inbound: messages ----------------------------------------------------
 
     async def _on_message(self, message: Message) -> None:
@@ -293,6 +589,10 @@ class TelegramBridge:
             await message.answer(
                 "Text or a voice note, sir - I cannot read the rest yet."
             )
+            return
+
+        if self._awaiting_notes is not None and not text.startswith("/"):
+            await self._take_reel_notes(message, text)
             return
 
         if text.startswith("/"):
@@ -362,6 +662,10 @@ class TelegramBridge:
         # obvious rather than confusing.
         await thinking.edit_text(f"\u201c{text}\u201d")
 
+        if self._awaiting_notes is not None:
+            await self._take_reel_notes(message, text)
+            return
+
         reply = _StreamingReply(self._bot, message.chat.id)
         try:
             result = await self._mgr.handle_user_message(
@@ -388,7 +692,7 @@ class TelegramBridge:
                 "Online, sir. Type or send a voice note - either works. "
                 "/status for vitals, /approvals for anything awaiting "
                 "your say-so, /quiet to silence me, /new for a fresh "
-                "thread."
+                "thread, /reel for the show."
             )
 
         elif command == "/new":
@@ -411,6 +715,13 @@ class TelegramBridge:
 
         elif command == "/quiet":
             await self._snooze(message, text)
+
+        elif command == "/reel":
+            await self._reel_command(message, text)
+
+        elif command == "/skip":
+            self._awaiting_notes = None
+            await message.answer("Back to conversation, sir.")
 
         else:
             await message.answer(f"No such command, sir: {command}")
@@ -453,39 +764,6 @@ class TelegramBridge:
             f"work stops without them."
         )
 
-    async def _snooze(self, message: Message, text: str) -> None:
-        """Silence everything but urgent for a while.
-
-        Runtime state, not persisted: a snooze that survives a restart
-        is a snooze the owner forgets he set, and then wonders why
-        JARVIS has gone quiet.
-        """
-        if self._policy is None:
-            await message.answer("Notification policy is not available.")
-            return
-
-        parts = text.split()
-        duration = parts[1] if len(parts) > 1 else "2h"
-        match = re.fullmatch(r"(\d+)([hm])", duration.lower())
-        if not match:
-            await message.answer(
-                "Usage: /quiet 2h, or /quiet 30m. /quiet off to cancel."
-            )
-            return
-
-        amount, unit = int(match.group(1)), match.group(2)
-        delta = (
-            timedelta(hours=amount) if unit == "h" else timedelta(minutes=amount)
-        )
-        until = datetime.now(timezone.utc) + delta
-        self._policy.snooze_until = until
-
-        local = until.astimezone(self._tz).strftime("%H:%M")
-        await message.answer(
-            f"Quiet until {local}, sir. Approvals will still reach you - "
-            f"work stops without them."
-        )
-
     async def _list_approvals(self, message: Message) -> None:
         """Re-present anything still waiting - useful when a request was
         scrolled past, or its message was tapped and lost."""
@@ -499,6 +777,14 @@ class TelegramBridge:
             return
 
         for request in pending:
+            if request.tool == REEL_REVIEW_TOOL:
+                # Reel drafts have their own buttons; a generic approve
+                # would only make the Mac ask again.
+                await message.answer(
+                    f"{request.summary}\n\nAnswer it on the draft message, "
+                    f"or /reel status."
+                )
+                continue
             body = f"{request.summary}\n\n{request.detail}"
             if request.risk_note:
                 body += f"\n\nRisk: {request.risk_note}"

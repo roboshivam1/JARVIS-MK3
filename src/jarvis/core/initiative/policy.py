@@ -47,7 +47,7 @@ class Decision(StrEnum):
     DIGEST = "digest"      # batch with others
 
 
-@dataclass(frozen=True)
+@dataclass
 class NotificationPolicy:
     """The rules. Owner-tunable; defaults chosen to be quiet."""
 

@@ -41,6 +41,7 @@ from jarvis.core.memory.profile import ProfileStore
 from jarvis.core.memory.service import MemoryService
 from jarvis.core.orchestrator.agent import Orchestrator
 from jarvis.core.people.service import PeopleService
+from jarvis.core.reels.service import ReelService
 from jarvis.llm.layer import TextCallback
 
 log = get_logger("core.sessionmgr")
@@ -82,6 +83,7 @@ class SessionManager:
         profile: ProfileStore | None = None,
         artifacts: "ArtifactsRepo | None" = None,
         people: "PeopleService | None" = None,
+        reels: "ReelService | None" = None,
     ) -> None:
         self._sessions = sessions
         self._events = events
@@ -92,6 +94,7 @@ class SessionManager:
         self._profile = profile
         self._artifacts = artifacts
         self._people = people
+        self._reels = reels
         # session id -> the task currently generating its reply
         self._inflight: dict[str, asyncio.Task[LoopResult]] = {}
 
@@ -167,6 +170,20 @@ class SessionManager:
                 retrieved_memory = "\n\n".join(
                     part for part in (retrieved_memory,
                                       "People mentioned:\n" + people_block) if part)
+
+        # His own reels, every turn: the reel service talks to the owner
+        # outside this conversation, and "what should the caption be?"
+        # needs to know which film just went out.
+        if self._reels is not None:
+            try:
+                reels_block = await self._reels.context_block()
+            except Exception:
+                log.warning("reel context unavailable", exc_info=True)
+                reels_block = ""
+            if reels_block:
+                retrieved_memory = "\n\n".join(
+                    part for part in (retrieved_memory,
+                                      "Your reels, newest first:\n" + reels_block) if part)
 
         # 4. Think, inside a tracked and cancellable task.
         gen_task = asyncio.create_task(

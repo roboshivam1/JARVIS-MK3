@@ -20,6 +20,8 @@
 #   list_jobs        - what work exists, by status
 #   get_job          - one job in detail, including its result
 #   cancel_job       - stop work the owner no longer wants
+#   reels_recent, reel_details, reel_request, reel_mark_posted
+#                    - his own Instagram channel; see core/reels/service.py
 #
 # enqueue_job (direct job-type dispatch from the registry catalogue)
 # arrives when there are job types that are NOT subagent work - the
@@ -55,6 +57,7 @@ from jarvis.core.db.repos.jobs import JobsRepo
 from jarvis.core.memory.service import MemoryService
 from jarvis.core.orchestrator.prompts import assemble_system_prompt
 from jarvis.core.people.service import ExtractionFailed, PeopleService
+from jarvis.core.reels.service import BriefRejected, ReelBusy, ReelService
 from jarvis.core.queue.dispatcher import cancel_job as queue_cancel_job
 from jarvis.core.queue.registry import JobTypeRegistry
 from jarvis.llm.layer import LLMLayer, TextCallback
@@ -217,6 +220,27 @@ class _PeopleDebriefArgs(BaseModel):
     )
 
 
+class _ReelRefArgs(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    ref: str = Field(
+        default="last",
+        description="The reel's ref (six characters), or 'last' for the newest.",
+    )
+
+
+class _ReelRequestArgs(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    idea: str = Field(
+        min_length=5,
+        description=(
+            "What the reel is about, in the owner's words. The brief "
+            "writer turns it into a premise and beats."
+        ),
+    )
+
+
 class Orchestrator:
     """JARVIS's front mind: persona + tools + tier, applied per turn."""
 
@@ -234,6 +258,7 @@ class Orchestrator:
         schedules: "SchedulesRepo | None" = None,
         tz: "ZoneInfo | None" = None,
         people: "PeopleService | None" = None,
+        reels: "ReelService | None" = None,
     ) -> None:
         self._llm = llm
         self._settings = settings
@@ -247,6 +272,7 @@ class Orchestrator:
         self._schedules = schedules
         self._tz = tz or settings.tz
         self._people = people
+        self._reels = reels
 
     # -- per-turn toolset -----------------------------------------------------
 
@@ -623,6 +649,84 @@ class Orchestrator:
                 ),
                 args_model=_PeopleDebriefArgs,
                 handler=people_debrief,
+            ))
+
+        # -- reels ------------------------------------------------------------
+        #
+        # His own channel. The newest reels are already in his context
+        # each turn; these look further, start one, or log it as posted.
+        # Starting one is safe to offer: the draft still comes back to
+        # the owner for review before anything is rendered.
+        if self._reels is not None:
+            reels = self._reels
+
+            async def reels_recent(_: _NoArgs) -> str:
+                return await reels.status_text(limit=10)
+
+            tools.register(InlineTool(
+                name="reels_recent",
+                description="The episode log of your channel: recent reels and their state.",
+                args_model=_NoArgs,
+                handler=reels_recent,
+            ))
+
+            async def reel_details(args: _ReelRefArgs) -> str:
+                return await reels.describe(args.ref)
+
+            tools.register(InlineTool(
+                name="reel_details",
+                description=(
+                    "Everything about one reel: what was asked for, the "
+                    "premise and beats, the script, Sir's notes, the film. "
+                    "Use for an older reel, or when the summary in front of "
+                    "you is not enough."
+                ),
+                args_model=_ReelRefArgs,
+                handler=reel_details,
+            ))
+
+            async def reel_request(args: _ReelRequestArgs) -> str:
+                try:
+                    outcome = await reels.request(args.idea, record=False)
+                except ReelBusy as busy:
+                    e = busy.episode
+                    return (
+                        f"Refused: one reel at a time, and {e.title or e.ref} "
+                        f"(ref {e.ref}) is {e.status.value.replace('_', ' ')}."
+                    )
+                except BriefRejected as exc:
+                    return f"Refused: {exc}"
+                e = outcome.episode
+                reply = (
+                    f"Briefed reel {e.ref}: {e.brief.premise} Drafting on the "
+                    f"Mac; the draft comes to the owner on Telegram for review."
+                )
+                if not outcome.worker_online:
+                    reply += " The Mac is not connected, so it starts when it is."
+                return reply
+
+            tools.register(InlineTool(
+                name="reel_request",
+                description=(
+                    "Start a new reel for your channel when the owner asks "
+                    "for one. One at a time; the draft goes to him for "
+                    "review before anything is rendered."
+                ),
+                args_model=_ReelRequestArgs,
+                handler=reel_request,
+            ))
+
+            async def reel_mark_posted(args: _ReelRefArgs) -> str:
+                return await reels.mark_posted(args.ref, record=False)
+
+            tools.register(InlineTool(
+                name="reel_mark_posted",
+                description=(
+                    "Record that the owner has posted a delivered reel. Only "
+                    "when he says it is up - you never post anything yourself."
+                ),
+                args_model=_ReelRefArgs,
+                handler=reel_mark_posted,
             ))
 
         return tools

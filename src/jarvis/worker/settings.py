@@ -60,6 +60,22 @@ class WorkerSettings(CommonSettings):
     # is reachable at all if anything goes wrong.
     github_token: SecretStr = SecretStr("")
 
+    # -- reels ---------------------------------------------------------------
+
+    # The reel kit folder. Empty means this machine does not make reels.
+    # Reels also need "render" and "gpu" in capabilities_raw, or the Core
+    # will never offer one here.
+    reels_kit_dir: str = ""
+
+    # Claude Code, run headless on the owner's subscription. A bare name
+    # is looked up on PATH; give a full path if the worker's PATH differs
+    # from a terminal's.
+    claude_bin: str = "claude"
+
+    # Per-phase limits, inside the job's own one-hour ceiling.
+    reels_draft_timeout_s: int = 1500
+    reels_render_timeout_s: int = 2700
+
     @property
     def capabilities(self) -> list[str]:
         """The capability tags this worker advertises."""

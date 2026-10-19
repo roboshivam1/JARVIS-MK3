@@ -67,6 +67,8 @@ from jarvis.core.observability.traces import TracesRepo, make_db_trace_sink
 from jarvis.core.orchestrator.agent import Orchestrator
 from jarvis.core.db.repos.people import PeopleRepo
 from jarvis.core.people.service import PeopleService
+from jarvis.core.db.repos.reels import ReelsRepo
+from jarvis.core.reels.service import ReelService
 from jarvis.core.queue.coreworker import CoreWorker
 from jarvis.core.queue.dispatcher import ReclaimLoop
 from jarvis.core.queue.registry import JobTypeRegistry
@@ -101,6 +103,7 @@ class CoreApp:
         self.profile: ProfileStore | None = None
         self.people_repo: PeopleRepo | None = None
         self.people: PeopleService | None = None
+        self.reels: ReelService | None = None
         self.schedules: SchedulesRepo | None = None
         self.watchers: WatchersRepo | None = None
         self.initiative: InitiativeEngine | None = None
@@ -191,6 +194,7 @@ class CoreApp:
         from jarvis.jobs.browser import register_browser_job_metadata
         from jarvis.jobs.code import register_code_job_metadata
         from jarvis.jobs.maintenance import register_maintenance_jobs
+        from jarvis.jobs.reels import register_reel_job_metadata
         from jarvis.jobs.research import register_research_jobs
         from jarvis.jobs.watch import register_watch_jobs
         from jarvis.jobs.worker_types import register_worker_job_types
@@ -200,6 +204,7 @@ class CoreApp:
         register_worker_job_types(self.registry)
         register_browser_job_metadata(self.registry)
         register_code_job_metadata(self.registry)
+        register_reel_job_metadata(self.registry)
         register_writing_jobs(self.registry, self.llm, self.artifacts)
         register_backup_jobs(self.registry, self.settings)
         register_watch_jobs(
@@ -212,6 +217,15 @@ class CoreApp:
             people=self.people,
         )
 
+        # -- reels ------------------------------------------------------------
+        self.reels = ReelService(
+            ReelsRepo(self.db), self.jobs, self.events, self.approvals,
+            self.approval_service, self.artifacts, self.llm, self.workers,
+            people=self.people_repo, tz=self.settings.tz,
+            bible_path=self.settings.reels_bible_path,
+            sessions=self.sessions,
+        )
+
         # -- conversation -----------------------------------------------------
         orchestrator = Orchestrator(
             self.llm, self.settings, self.jobs, self.events,
@@ -220,12 +234,14 @@ class CoreApp:
             watchers=self.watchers, schedules=self.schedules,
             tz=self.settings.tz,
             people=self.people,
+            reels=self.reels,
         )
         self.session_mgr = SessionManager(
             self.sessions, self.events, orchestrator,
             memory=self.memory, profile=self.profile,
             artifacts=self.artifacts,
             people=self.people,
+            reels=self.reels,
         )
 
         # -- gateway ----------------------------------------------------------
@@ -264,8 +280,10 @@ class CoreApp:
                 policy=self.policy,
                 tz=self.settings.tz,
                 transcriber=self.transcriber,
+                reels=self.reels,
             )
             self.notifier.register_deliverer("telegram", self.telegram)
+            self.reels.attach(self.telegram)
         else:
             log.info("no telegram token - bridge disabled")
 
@@ -375,6 +393,7 @@ class CoreApp:
         assert self._core_worker is not None and self._reclaim is not None
         assert self.notifier is not None and self.initiative is not None
         assert self.approval_service is not None
+        assert self.reels is not None
 
         for name, coroutine in (
             ("core-worker", self._core_worker.run()),
@@ -382,6 +401,7 @@ class CoreApp:
             ("notifier", self.notifier.run()),
             ("initiative", self.initiative.run()),
             ("approvals", self.approval_service.run()),
+            ("reels", self.reels.run()),
         ):
             essential[name] = asyncio.create_task(coroutine, name=name)
 
