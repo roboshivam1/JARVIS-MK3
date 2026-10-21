@@ -387,7 +387,7 @@ class CoreApp:
         # The gateway is essential: without it there is no way in at
         # all, for clients or workers.
         essential["gateway"] = asyncio.create_task(
-            self._uvicorn.serve(), name="gateway"
+            self._serve_gateway(), name="gateway"
         )
 
         assert self._core_worker is not None and self._reclaim is not None
@@ -424,14 +424,41 @@ class CoreApp:
             return_when=asyncio.FIRST_COMPLETED,
         )
 
+        crashed = False
         for name, task in essential.items():
             if task in done and (exc := task.exception()) is not None:
+                crashed = True
                 log.critical("essential resident crashed - stopping daemon",
                              extra={"resident": name},
                              exc_info=(type(exc), exc, exc.__traceback__))
 
         await self._stop_residents({**essential, **optional}, stop_wait)
         await self.shutdown()
+        if crashed:
+            # A non-zero exit, after a clean shutdown, so the supervisor
+            # (systemd) restarts us and the failure shows in its status.
+            raise SystemExit(1)
+
+    async def _serve_gateway(self) -> None:
+        """uvicorn, with its failures turned into ordinary ones.
+
+        uvicorn calls sys.exit() when it cannot bind its port. Raised
+        inside a task, SystemExit skips the supervisor above and tears
+        the event loop down mid-flight, leaving a process that looks
+        alive to systemd but answers nothing. As a RuntimeError it is
+        just an essential resident dying: logged, shut down, restarted.
+        """
+        assert self._uvicorn is not None
+        try:
+            await self._uvicorn.serve()
+        except SystemExit as exc:
+            raise RuntimeError(
+                f"the gateway could not start (uvicorn exit {exc.code}) - is "
+                f"{self.settings.gateway_host}:{self.settings.gateway_port} "
+                f"already in use by another JARVIS?"
+            ) from None
+        if not self._stop.is_set():
+            raise RuntimeError("the gateway stopped on its own")
 
     async def _keep_alive(self, name: str, factory) -> None:  # type: ignore[no-untyped-def]
         """Run an optional resident forever, restarting it on failure.

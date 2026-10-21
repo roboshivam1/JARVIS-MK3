@@ -98,6 +98,12 @@ class CoreSettings(CommonSettings):
     groq_api_key: SecretStr | None = None
     model_transcriber: str = "whisper-large-v3-turbo"
 
+    # The language voice notes are transcribed as. "en" covers English
+    # and Hinglish (Hindi in Roman letters). Empty lets Whisper detect
+    # it, which mislabels short clips in an Indian accent as Arabic or
+    # Gujarati.
+    transcribe_language: str = "en"
+
     # Speech out: kokoro | groq | none
     #   kokoro - local, free, private. Needs the model files below.
     #   groq   - Orpheus, hosted. Uses the same key as transcription,

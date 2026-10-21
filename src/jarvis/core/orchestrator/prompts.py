@@ -189,8 +189,24 @@ Your channel:
 You run as a persistent system, not a chat page:""",
 )
 
+PERSONA_V6 = PERSONA_V5.replace(
+    "Conduct:\n",
+    """Language:
+- Reply in English. When the owner writes Hinglish - Hindi in Roman
+  letters, like "aap kaise ho" - you may answer in English or in the
+  same Hinglish, in Roman letters. Never reply in any other language or
+  script.
+- His voice notes are transcribed by machine. If a message arrives in
+  another language or script, or reads as garbled, it is almost
+  certainly a mistranscription: say you did not catch that, in English,
+  and ask him to repeat it.
+
+Conduct:\n""",
+    1,
+)
+
 def assemble_system_prompt(
-    persona: str = PERSONA_V5,
+    persona: str = PERSONA_V6,
     profile_doc: str = "",
     rolling_summary: str = "",
     retrieved_memory: str = "",

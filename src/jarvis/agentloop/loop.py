@@ -7,7 +7,7 @@
 #
 #   1. call the model with the conversation so far + the tool contracts
 #   2. model returns text and/or tool call requests
-#   3. no tool calls -> done, return the text
+#   3. no tool calls -> done, return everything it said
 #   4. otherwise run each tool, append the results to the conversation,
 #      and go to 1 - the model now KNOWS what the tools found
 #
@@ -110,6 +110,24 @@ class LoopResult:
     results_pruned: int = 0                    # bulky tool outputs trimmed
 
 
+def _separated(on_text: TextCallback | None, said: list[str]) -> TextCallback | None:
+    """The streaming callback for one model call. When earlier calls
+    already said something, a paragraph break goes out before this
+    call's first words, so the live message reads like the final one."""
+    if on_text is None or not said:
+        return on_text
+    started = False
+
+    async def forward(chunk: str) -> None:
+        nonlocal started
+        if not started:
+            started = True
+            await on_text("\n\n")
+        await on_text(chunk)
+
+    return forward
+
+
 async def run_agent_loop(
     llm: LLMLayer,
     tier: Tier,
@@ -134,6 +152,11 @@ async def run_agent_loop(
     convo = list(messages)
     specs = None if toolset.is_empty() else toolset.specs()
     result = LoopResult(text="")
+    # Everything the model says, across every call. Keeping only the last
+    # call's text lost real answers: the model would answer, store a fact,
+    # then close with "Noted, sir" - and the closing line replaced the
+    # answer, on screen and in the stored conversation.
+    said: list[str] = []
 
     for iteration in range(1, max_iterations + 1):
         result.iterations = iteration
@@ -147,13 +170,12 @@ async def run_agent_loop(
             tools=specs,
             provider_tools=provider_tools,
             max_tokens=max_tokens,
-            on_text=on_text,
+            on_text=_separated(on_text, said),
         )
         result.llm_call_ids.append(response.call_id)
-        if response.text:
-            # Keep the LAST text the model produced; with tool use the
-            # model often says a little, acts, then says the real answer.
-            result.text = response.text
+        if response.text.strip():
+            said.append(response.text.strip())
+            result.text = "\n\n".join(said)
 
         if not response.wants_tools:
             return result   # the model is done talking

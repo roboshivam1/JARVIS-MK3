@@ -13,3 +13,5 @@ data/git-workspace/
 .playwright-mcp/
 .mypy_cache/
 .pytest_cache/
+
+vps-env.txt

@@ -18,6 +18,13 @@
 #
 # Unavailability is normal, not exceptional: no key means no voice,
 # and text keeps working.
+#
+# LANGUAGE IS PINNED. Left to detect it, Whisper heard the owner's
+# English as Arabic or Gujarati often enough to matter, and JARVIS then
+# answered in that language. The owner speaks English and Hinglish -
+# Hindi in Roman letters - so the language is set (English by default)
+# and the prompt carries a little Hinglish, which steers Hindi words
+# toward Roman spelling instead of Devanagari or a translation.
 # =============================================================================
 
 from __future__ import annotations
@@ -41,7 +48,8 @@ MAX_AUDIO_BYTES = 25_000_000
 # merely permitting it.
 _VOCABULARY_PROMPT = (
     "JARVIS, ATHENA, PROTEUS, DAEDALUS, CALLIOPE, MNEMOSYNE, "
-    "Shivam, SqOnion, LNMIIT, Jaipur, MK3."
+    "Shivam, SqOnion, LNMIIT, Jaipur, MK3. "
+    "Haan JARVIS, theek hai. Aap kaise ho? Kal milte hain."
 )
 
 
@@ -50,6 +58,8 @@ class Transcriber:
 
     def __init__(self, settings: CoreSettings) -> None:
         self._model = settings.model_transcriber
+        # Empty means let Whisper guess, which is what went wrong before.
+        self._language = settings.transcribe_language.strip()
         self._key = (
             settings.groq_api_key.get_secret_value().strip()
             if settings.groq_api_key else ""
@@ -92,6 +102,7 @@ class Transcriber:
             "model": (None, self._model),
             "prompt": (None, _VOCABULARY_PROMPT),
         }
+        language = language or self._language
         if language:
             form["language"] = (None, language)
 
