@@ -49,11 +49,15 @@ from aiogram.types import (
     Message,
 )
 
+from jarvis.common.ids import new_ulid
 from jarvis.common.log import get_logger
 from jarvis.common.reels import EPISODE_TYPE_LABELS, REEL_REVIEW_TOOL, ReviewAction
 from jarvis.core.approvals.service import ApprovalService
 from jarvis.core.db.repos.approvals import ApprovalsRepo
+from jarvis.core.db.repos.schedules import SchedulesRepo
 from jarvis.core.db.repos.sessions import SessionsRepo
+from jarvis.core.initiative.brief import BRIEF_SCHEDULE, BriefService
+from jarvis.core.initiative.engine import next_cron_time
 from jarvis.core.initiative.policy import NotificationPolicy
 from jarvis.llm.transcription import Transcriber
 from jarvis.core.initiative.policy import NotificationPolicy
@@ -184,6 +188,8 @@ class TelegramBridge:
         tz: "ZoneInfo | None" = None,
         transcriber: "Transcriber | None" = None,
         reels: "ReelService | None" = None,
+        brief: "BriefService | None" = None,
+        schedules: "SchedulesRepo | None" = None,
     ) -> None:
         if owner_id <= 0:
             raise ValueError(
@@ -199,6 +205,8 @@ class TelegramBridge:
         self._policy = policy
         self._transcriber = transcriber
         self._reels = reels
+        self._brief = brief
+        self._schedules = schedules
         # Set by a Notes tap: (episode id, chat id, message id, prop id -
         # empty for the draft itself). The next thing the owner sends
         # becomes the notes for that draft or prop.
@@ -692,7 +700,7 @@ class TelegramBridge:
                 "Online, sir. Type or send a voice note - either works. "
                 "/status for vitals, /approvals for anything awaiting "
                 "your say-so, /quiet to silence me, /new for a fresh "
-                "thread, /reel for the show."
+                "thread, /reel for the show, /brief for the morning brief."
             )
 
         elif command == "/new":
@@ -719,12 +727,76 @@ class TelegramBridge:
         elif command == "/reel":
             await self._reel_command(message, text)
 
+        elif command == "/brief":
+            await self._brief_command(message, text)
+
         elif command == "/skip":
             self._awaiting_notes = None
             await message.answer("Back to conversation, sir.")
 
         else:
             await message.answer(f"No such command, sir: {command}")
+
+    async def _brief_command(self, message: Message, text: str) -> None:
+        """/brief - the brief now. /brief off | on - stop or restart the
+        daily one. /brief at 8:15 - move it."""
+        if self._brief is None:
+            await message.answer("The morning brief is not available in this build.")
+            return
+        parts = text.split()
+        arg = parts[1].lower() if len(parts) > 1 else ""
+
+        if not arg or arg == "now":
+            await self._bot.send_chat_action(message.chat.id, "typing")
+            reply = await self._brief.on_demand(new_ulid())
+            for start in range(0, len(reply), _TG_LIMIT):
+                await message.answer(reply[start:start + _TG_LIMIT])
+            return
+
+        if self._schedules is None:
+            await message.answer("Schedules are not available in this build.")
+            return
+        schedule = await self._schedules.by_name(BRIEF_SCHEDULE)
+        if schedule is None or not schedule.cron_expr:
+            await message.answer("There is no morning brief schedule to change, sir.")
+            return
+
+        if arg in ("off", "on"):
+            enabled = arg == "on"
+            await self._schedules.set_enabled(
+                BRIEF_SCHEDULE, enabled,
+                next_cron_time(schedule.cron_expr, self._tz) if enabled else None,
+            )
+            await message.answer(
+                f"The morning brief is back on, sir - {_cron_clock(schedule.cron_expr)} daily."
+                if enabled else
+                "No more morning briefs until you say /brief on, sir. "
+                "/brief still gets you one whenever you like."
+            )
+            return
+
+        if arg == "at" and len(parts) > 2:
+            match = re.fullmatch(r"(\d{1,2})(?:[:.](\d{2}))?", parts[2])
+            hour = int(match.group(1)) if match else 99
+            minute = int(match.group(2) or 0) if match else 99
+            if hour > 23 or minute > 59:
+                await message.answer("Usage: /brief at 8:15 (24-hour clock).")
+                return
+            cron = f"{minute} {hour} * * *"
+            await self._schedules.set_cron(
+                BRIEF_SCHEDULE, cron, next_cron_time(cron, self._tz))
+            note = ""
+            if self._policy is not None and self._policy.is_quiet_hour(
+                    datetime.now(self._tz).replace(hour=hour, minute=minute)):
+                note = (" That is inside quiet hours, so it will wait until "
+                        f"{self._policy.quiet_end.strftime('%H:%M')}.")
+            state = "" if schedule.enabled else " It is switched off - /brief on to restart it."
+            await message.answer(
+                f"Morning brief moved to {hour:02d}:{minute:02d}, sir.{note}{state}")
+            return
+
+        await message.answer(
+            "Usage: /brief for one now, /brief off | on, /brief at 8:15.")
 
     async def _snooze(self, message: Message, text: str) -> None:
         """Silence everything but urgent for a while.
@@ -791,3 +863,11 @@ class TelegramBridge:
             await message.answer(
                 body[:_TG_LIMIT], reply_markup=_approval_keyboard(request.id)
             )
+
+
+def _cron_clock(cron_expr: str) -> str:
+    """"35 7 * * *" -> "07:35"; anything fancier is shown as the rule."""
+    fields = cron_expr.split()
+    if len(fields) == 5 and fields[0].isdigit() and fields[1].isdigit():
+        return f"{int(fields[1]):02d}:{int(fields[0]):02d}"
+    return cron_expr

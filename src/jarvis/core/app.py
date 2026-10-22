@@ -58,6 +58,10 @@ from jarvis.core.db.repos.sessions import SessionsRepo
 from jarvis.core.db.repos.watchers import WatchersRepo
 from jarvis.core.gateway.clients import ClientRegistry
 from jarvis.core.gateway.http import GatewayDeps, build_status_snapshot, create_app
+from jarvis.core.initiative.brief import BRIEF_JOB_TYPE, BRIEF_SCHEDULE, BriefService
+from jarvis.core.queue.claude_code import ClaudeCodeRouter
+from jarvis.core.db.repos.projects import ProjectsRepo
+from jarvis.core.projects.service import ProjectService
 from jarvis.core.initiative.engine import InitiativeEngine, next_cron_time
 from jarvis.core.initiative.notifier import Notifier
 from jarvis.core.initiative.policy import NotificationPolicy
@@ -104,6 +108,10 @@ class CoreApp:
         self.people_repo: PeopleRepo | None = None
         self.people: PeopleService | None = None
         self.reels: ReelService | None = None
+        self.brief: BriefService | None = None
+        self.router: ClaudeCodeRouter | None = None
+        self.projects_repo: ProjectsRepo | None = None
+        self.projects: ProjectService | None = None
         self.schedules: SchedulesRepo | None = None
         self.watchers: WatchersRepo | None = None
         self.initiative: InitiativeEngine | None = None
@@ -170,6 +178,8 @@ class CoreApp:
         self.profile = ProfileStore(self.db)
         self.people_repo = PeopleRepo(self.db)
         self.people = PeopleService(self.people_repo, self.llm, self.settings.tz)
+        self.projects_repo = ProjectsRepo(self.db)
+        self.projects = ProjectService(self.projects_repo, self.llm, self.settings.tz)
 
         # -- initiative and approvals -----------------------------------------
         self.approval_service = ApprovalService(
@@ -191,6 +201,9 @@ class CoreApp:
         # at run time rather than at boot - which is exactly what the
         # sleep cycle did, three identical retries before giving up.
         from jarvis.jobs.backup import register_backup_jobs
+        from jarvis.jobs.brief import register_brief_jobs
+        from jarvis.jobs.projects import register_project_jobs
+        from jarvis.jobs.claude_code import register_claude_code_job_metadata
         from jarvis.jobs.browser import register_browser_job_metadata
         from jarvis.jobs.code import register_code_job_metadata
         from jarvis.jobs.maintenance import register_maintenance_jobs
@@ -204,6 +217,7 @@ class CoreApp:
         register_worker_job_types(self.registry)
         register_browser_job_metadata(self.registry)
         register_code_job_metadata(self.registry)
+        register_claude_code_job_metadata(self.registry)
         register_reel_job_metadata(self.registry)
         register_writing_jobs(self.registry, self.llm, self.artifacts)
         register_backup_jobs(self.registry, self.settings)
@@ -217,6 +231,18 @@ class CoreApp:
             people=self.people,
         )
 
+        # -- the morning brief ------------------------------------------------
+        self.brief = BriefService(
+            self.db,
+            people=self.people_repo, approvals=self.approvals,
+            watchers=self.watchers, sessions=self.sessions,
+            notifications=self.notifications, llm=self.llm,
+            tz=self.settings.tz,
+            projects=self.projects_repo,
+        )
+        register_brief_jobs(self.registry, self.brief)
+        register_project_jobs(self.registry, self.llm, self.projects_repo, self.projects)
+
         # -- reels ------------------------------------------------------------
         self.reels = ReelService(
             ReelsRepo(self.db), self.jobs, self.events, self.approvals,
@@ -225,6 +251,10 @@ class CoreApp:
             bible_path=self.settings.reels_bible_path,
             sessions=self.sessions,
         )
+
+        # -- the Claude Code shift --------------------------------------------
+        self.router = ClaudeCodeRouter(
+            self.db, self.jobs, self.workers, self.registry)
 
         # -- conversation -----------------------------------------------------
         orchestrator = Orchestrator(
@@ -235,6 +265,8 @@ class CoreApp:
             tz=self.settings.tz,
             people=self.people,
             reels=self.reels,
+            router=self.router,
+            projects=self.projects,
         )
         self.session_mgr = SessionManager(
             self.sessions, self.events, orchestrator,
@@ -242,6 +274,7 @@ class CoreApp:
             artifacts=self.artifacts,
             people=self.people,
             reels=self.reels,
+            projects=self.projects,
         )
 
         # -- gateway ----------------------------------------------------------
@@ -264,6 +297,8 @@ class CoreApp:
             speaker=self.speaker,
             people_repo=self.people_repo,
             people=self.people,
+            projects_repo=self.projects_repo,
+            projects=self.projects,
         )
 
         # -- clients ----------------------------------------------------------
@@ -281,6 +316,8 @@ class CoreApp:
                 tz=self.settings.tz,
                 transcriber=self.transcriber,
                 reels=self.reels,
+                brief=self.brief,
+                schedules=self.schedules,
             )
             self.notifier.register_deliverer("telegram", self.telegram)
             self.reels.attach(self.telegram)
@@ -340,6 +377,18 @@ class CoreApp:
         ))
 
         await self.schedules.ensure(Schedule(
+            name=BRIEF_SCHEDULE,
+            kind=ScheduleKind.CRON,
+            cron_expr=self.settings.brief_cron,
+            job_type=BRIEF_JOB_TYPE,
+            job_payload={"reason": "scheduled"},
+            priority=4,
+            next_fire_ts=next_cron_time(
+                self.settings.brief_cron, self.settings.tz
+            ),
+        ))
+
+        await self.schedules.ensure(Schedule(
             name="watcher tick",
             kind=ScheduleKind.INTERVAL,
             interval_s=900,
@@ -393,7 +442,7 @@ class CoreApp:
         assert self._core_worker is not None and self._reclaim is not None
         assert self.notifier is not None and self.initiative is not None
         assert self.approval_service is not None
-        assert self.reels is not None
+        assert self.reels is not None and self.router is not None
 
         for name, coroutine in (
             ("core-worker", self._core_worker.run()),
@@ -402,6 +451,7 @@ class CoreApp:
             ("initiative", self.initiative.run()),
             ("approvals", self.approval_service.run()),
             ("reels", self.reels.run()),
+            ("claude-code-router", self.router.run()),
         ):
             essential[name] = asyncio.create_task(coroutine, name=name)
 

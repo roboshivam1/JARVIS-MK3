@@ -57,8 +57,13 @@ from jarvis.core.db.repos.jobs import JobsRepo
 from jarvis.core.memory.service import MemoryService
 from jarvis.core.orchestrator.prompts import assemble_system_prompt
 from jarvis.core.people.service import ExtractionFailed, PeopleService
+from jarvis.core.projects.service import ExtractionFailed as ProjectExtractionFailed
+from jarvis.core.projects.service import ProjectService
+from jarvis.jobs.projects import DOCUMENT_JOB_TYPE as PROJECT_DOCUMENT_JOB
 from jarvis.core.reels.service import BriefRejected, ReelBusy, ReelService
 from jarvis.core.queue.dispatcher import cancel_job as queue_cancel_job
+from jarvis.core.queue.claude_code import ClaudeCodeRouter
+from jarvis.jobs.claude_code import ROUTES
 from jarvis.core.queue.registry import JobTypeRegistry
 from jarvis.llm.layer import LLMLayer, TextCallback
 from jarvis.llm.tiers import Tier
@@ -73,6 +78,8 @@ _SUBAGENT_JOBS: dict[str, str] = {
     "writer": "write.document",
 }
 
+# The Claude Code versions, for saying which way a job went.
+_CLAUDE_CODE_TYPES = frozenset(cc for cc, _ in ROUTES.values())
 
 class _NoArgs(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -220,6 +227,31 @@ class _PeopleDebriefArgs(BaseModel):
     )
 
 
+class _ProjectNameArgs(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    name: str = Field(min_length=1,
+                      description="The project's name or another name he uses for it, "
+                                  "or words describing it.")
+
+
+class _ProjectDebriefArgs(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    text: str = Field(
+        min_length=10,
+        description=("What the owner said about his project work, in his own "
+                     "words and in full. Do not summarise it."),
+    )
+
+
+class _ProjectNoteArgs(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    name: str = Field(min_length=1, description="The project's exact name.")
+    text: str = Field(min_length=2, description="The log line, as he dictated it.")
+
+
 class _ReelRefArgs(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -259,6 +291,8 @@ class Orchestrator:
         tz: "ZoneInfo | None" = None,
         people: "PeopleService | None" = None,
         reels: "ReelService | None" = None,
+        router: "ClaudeCodeRouter | None" = None,
+        projects: "ProjectService | None" = None,
     ) -> None:
         self._llm = llm
         self._settings = settings
@@ -273,6 +307,8 @@ class Orchestrator:
         self._tz = tz or settings.tz
         self._people = people
         self._reels = reels
+        self._router = router
+        self._projects = projects
 
     # -- per-turn toolset -----------------------------------------------------
 
@@ -298,6 +334,14 @@ class Orchestrator:
             payload_key = (
                 "brief" if args.agent in ("researcher", "writer") else "task"
             )
+            payload: dict[str, Any] = {payload_key: args.brief}
+            # Claude Code on the Mac when it is online, the API otherwise.
+            routed = (self._router.route(args.agent, args.brief)
+                      if self._router is not None else None)
+            if routed is not None:
+                job_type, payload = routed
+            via = (" via Claude Code on the Mac" if job_type in _CLAUDE_CODE_TYPES
+                   else "")
             spec = self._registry.get(job_type)
             if spec is None:
                 return (
@@ -306,7 +350,7 @@ class Orchestrator:
                 )
             job = Job(
                 type=job_type,
-                payload={payload_key: args.brief},
+                payload=payload,
                 priority=args.priority,
                 requires=spec.requires,
                 session_id=session_id,   # so the result finds its way back
@@ -314,7 +358,7 @@ class Orchestrator:
             )
             await self._jobs.create(job)
             return (
-                f"Job {job.id} enqueued for {args.agent}. It runs in the "
+                f"Job {job.id} enqueued for {args.agent}{via}. It runs in the "
                 f"background; the owner will be told when it finishes. "
                 f"Acknowledge briefly and move on - do not wait."
             )
@@ -429,7 +473,8 @@ class Orchestrator:
                 "when he shares something worth keeping, or asks you to "
                 "remember. Not for passing chatter or one-off logistics. "
                 "Facts about other people go to people_debrief instead, "
-                "when that tool is available."
+                "and work on his projects to project_debrief, when those "
+                "tools are available."
             ),
             args_model=_MemoryStoreArgs,
             handler=memory_store,
@@ -650,6 +695,104 @@ class Orchestrator:
                 args_model=_PeopleDebriefArgs,
                 handler=people_debrief,
             ))
+
+        # -- projects ---------------------------------------------------------
+        #
+        # The projects database. Same rule as people: the debrief tool only
+        # STAGES proposals for the owner's review. A note is the one direct
+        # write - a log line he dictated himself, word for word.
+        if self._projects is not None:
+            projects = self._projects
+
+            async def projects_list(_: _NoArgs) -> str:
+                return await projects.overview()
+
+            tools.register(InlineTool(
+                name="projects_list",
+                description="Every project the owner has, with status and open work.",
+                args_model=_NoArgs,
+                handler=projects_list,
+            ))
+
+            async def project_lookup(args: _ProjectNameArgs) -> str:
+                return await projects.lookup(args.name)
+
+            tools.register(InlineTool(
+                name="project_lookup",
+                description=(
+                    "Everything recorded about one project: decisions and why, "
+                    "facts, parts, open tasks, people, recent log. Projects he "
+                    "names are summarised in front of you already; use this for "
+                    "the full record or to find one by description."
+                ),
+                args_model=_ProjectNameArgs,
+                handler=project_lookup,
+            ))
+
+            async def project_debrief(args: _ProjectDebriefArgs) -> str:
+                try:
+                    outcome = await projects.debrief(
+                        args.text, trace_id=trace_id, source="conversation")
+                except ProjectExtractionFailed as exc:
+                    return f"That could not be processed: {exc}"
+                return outcome.summary() + " The owner reviews them at /app/projects."
+
+            tools.register(InlineTool(
+                name="project_debrief",
+                description=(
+                    "Record what the owner tells you about his projects: work "
+                    "done, decisions and the reasons, parts bought or needed, "
+                    "problems, things still to do, a new project. Pass his words "
+                    "in full. This only stages proposals for his review - tell "
+                    "him they are waiting."
+                ),
+                args_model=_ProjectDebriefArgs,
+                handler=project_debrief,
+            ))
+
+            async def project_note(args: _ProjectNoteArgs) -> str:
+                return await projects.note(args.name, args.text)
+
+            tools.register(InlineTool(
+                name="project_note",
+                description=(
+                    "Add one line to a project's log straight away, without "
+                    "review. ONLY when he explicitly says to log or note "
+                    "something on a project; otherwise use project_debrief."
+                ),
+                args_model=_ProjectNoteArgs,
+                handler=project_note,
+            ))
+
+            spec = self._registry.get(PROJECT_DOCUMENT_JOB)
+            if spec is not None:
+
+                async def project_document(args: _ProjectNameArgs) -> str:
+                    found = await projects.find(args.name)
+                    if len(found) != 1:
+                        return (f"No project called {args.name!r}." if not found else
+                                f"{len(found)} projects match {args.name!r} - be exact.")
+                    job = Job(
+                        type=PROJECT_DOCUMENT_JOB,
+                        payload={"project_id": found[0]["id"]},
+                        requires=spec.requires,
+                        session_id=session_id,
+                        trace_id=trace_id,
+                    )
+                    await self._jobs.create(job)
+                    return (f"Job {job.id}: writing the master document for "
+                            f"{found[0]['name']}. He will be sent it when it is done.")
+
+                tools.register(InlineTool(
+                    name="project_document",
+                    description=(
+                        "Write a new version of a project's master document - a "
+                        "patent-style write-up of everything recorded about it. "
+                        "Runs in the background."
+                    ),
+                    args_model=_ProjectNameArgs,
+                    handler=project_document,
+                ))
 
         # -- reels ------------------------------------------------------------
         #

@@ -88,6 +88,38 @@ class SchedulesRepo:
             "UPDATE schedules SET enabled = 0 WHERE id = ?", (schedule_id,)
         )
 
+    async def by_name(self, name: str) -> Schedule | None:
+        row = await self._db.query_one(
+            "SELECT * FROM schedules WHERE name = ?", (name,)
+        )
+        return self._to_schedule(row) if row is not None else None
+
+    async def set_enabled(
+        self, name: str, enabled: bool, next_fire_ts: datetime | None = None
+    ) -> bool:
+        """Switch a schedule on or off by name. Switching one back on
+        should pass its next proper time: the stored one may be days
+        stale, and a stale time fires at once. False if no such name."""
+        if next_fire_ts is None:
+            changed = await self._db.execute_returning_changes(
+                "UPDATE schedules SET enabled = ? WHERE name = ?",
+                (1 if enabled else 0, name),
+            )
+        else:
+            changed = await self._db.execute_returning_changes(
+                "UPDATE schedules SET enabled = ?, next_fire_ts = ? WHERE name = ?",
+                (1 if enabled else 0, next_fire_ts.isoformat(), name),
+            )
+        return changed > 0
+
+    async def set_cron(self, name: str, cron_expr: str, next_fire_ts: datetime) -> bool:
+        """Move a cron schedule to a new time. False if no such name."""
+        changed = await self._db.execute_returning_changes(
+            "UPDATE schedules SET cron_expr = ?, next_fire_ts = ? WHERE name = ?",
+            (cron_expr, next_fire_ts.isoformat(), name),
+        )
+        return changed > 0
+
     async def all(self) -> list[Schedule]:
         rows = await self._db.query("SELECT * FROM schedules ORDER BY name ASC")
         return [self._to_schedule(r) for r in rows]

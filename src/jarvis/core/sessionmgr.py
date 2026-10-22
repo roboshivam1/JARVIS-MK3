@@ -41,6 +41,7 @@ from jarvis.core.memory.profile import ProfileStore
 from jarvis.core.memory.service import MemoryService
 from jarvis.core.orchestrator.agent import Orchestrator
 from jarvis.core.people.service import PeopleService
+from jarvis.core.projects.service import ProjectService
 from jarvis.core.reels.service import ReelService
 from jarvis.llm.layer import TextCallback
 
@@ -84,6 +85,7 @@ class SessionManager:
         artifacts: "ArtifactsRepo | None" = None,
         people: "PeopleService | None" = None,
         reels: "ReelService | None" = None,
+        projects: "ProjectService | None" = None,
     ) -> None:
         self._sessions = sessions
         self._events = events
@@ -95,6 +97,7 @@ class SessionManager:
         self._artifacts = artifacts
         self._people = people
         self._reels = reels
+        self._projects = projects
         # session id -> the task currently generating its reply
         self._inflight: dict[str, asyncio.Task[LoopResult]] = {}
 
@@ -170,6 +173,18 @@ class SessionManager:
                 retrieved_memory = "\n\n".join(
                     part for part in (retrieved_memory,
                                       "People mentioned:\n" + people_block) if part)
+
+        # Projects this message names: what they are and where they stand.
+        if self._projects is not None:
+            try:
+                project_block = await self._projects.mention_context(text)
+            except Exception:
+                log.exception("project context failed - carrying on without it")
+                project_block = ""
+            if project_block:
+                retrieved_memory = "\n\n".join(
+                    part for part in (retrieved_memory,
+                                      "Projects mentioned:\n" + project_block) if part)
 
         # His own reels, every turn: the reel service talks to the owner
         # outside this conversation, and "what should the caption be?"

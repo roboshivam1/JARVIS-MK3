@@ -132,6 +132,10 @@ class CoreSettings(CommonSettings):
     # day, early enough to be done before morning.
     sleep_cycle_cron: str = "30 3 * * *"
 
+    # When the morning brief goes out, owner's timezone. Default 07:35:
+    # just after quiet hours end (07:30), so it is not held back.
+    brief_cron: str = "35 7 * * *"
+
     # -- Backups -------------------------------------------------------------
 
     # When the nightly backup runs. After the sleep cycle, so the day's

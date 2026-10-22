@@ -1,0 +1,536 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>JARVIS · Projects</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+/* ==========================================================================
+   Projects - another section of the same Gazette as /app and /app/people.
+   Tokens copied from app.html on purpose.
+   ========================================================================== */
+
+:root {
+  --ink: #ece5d8;
+  --paper: #17171a;
+  --paper-raised: #1e1e22;
+  --rule: #3a3a40;
+  --muted: #8a8a92;
+  --accent: #d4685f;
+  --accent-dim: #8f4842;
+  --serif: 'Source Serif 4', Georgia, serif;
+  --mono: 'JetBrains Mono', ui-monospace, monospace;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--paper); color: var(--ink); font-family: var(--serif);
+  font-size: 16px; line-height: 1.65; min-height: 100dvh;
+}
+:focus-visible { outline: 1px solid var(--accent); outline-offset: 2px; }
+
+header {
+  border-bottom: 1px solid var(--rule); padding: 14px 24px 12px;
+  display: flex; align-items: baseline; gap: 24px;
+}
+.masthead {
+  font-family: var(--mono); font-size: 17px; font-weight: 600; letter-spacing: 0.34em;
+  line-height: 1; color: var(--ink); text-decoration: none;
+}
+.section-name, header a.nav {
+  font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--muted); text-decoration: none;
+}
+.section-name { color: var(--accent); }
+header a.nav:hover { color: var(--accent); }
+.tabs { display: flex; gap: 16px; margin-left: auto; }
+.tab {
+  background: none; border: none; padding: 0; font-family: var(--mono); font-size: 11px;
+  letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); cursor: pointer;
+}
+.tab:hover { color: var(--ink); }
+.tab.on { color: var(--accent); }
+.badge {
+  font-family: var(--mono); font-size: 10px; color: var(--paper);
+  background: var(--accent); padding: 0 5px; margin-left: 6px;
+}
+
+main { padding: 28px 40px 80px; }
+.column { max-width: 72ch; }
+section + section { margin-top: 44px; }
+h2 {
+  font-family: var(--mono); font-size: 10px; font-weight: 600; letter-spacing: 0.18em;
+  text-transform: uppercase; color: var(--accent); padding-bottom: 6px;
+  border-bottom: 1px solid var(--rule); margin-bottom: 14px;
+}
+.hint, .empty { color: var(--muted); font-size: 15px; }
+.hint { margin-bottom: 12px; }
+
+textarea, input[type=text], select {
+  width: 100%; background: var(--paper-raised); border: 1px solid var(--rule);
+  color: var(--ink); font-family: var(--serif); font-size: 16px; line-height: 1.5;
+  padding: 8px 12px; outline: none;
+}
+textarea { resize: vertical; }
+textarea:focus, input:focus, select:focus { border-color: var(--accent-dim); }
+select { font-family: var(--mono); font-size: 13px; width: auto; }
+button {
+  background: transparent; border: 1px solid var(--rule); color: var(--ink);
+  font-family: var(--mono); font-size: 11px; letter-spacing: 0.12em;
+  text-transform: uppercase; padding: 10px 16px; cursor: pointer;
+}
+button:hover { border-color: var(--accent); color: var(--accent); }
+button.primary { border-color: var(--accent-dim); color: var(--accent); }
+button.small { padding: 4px 9px; font-size: 10px; }
+button:disabled { opacity: 0.45; cursor: default; }
+.row-end, .inline { display: flex; gap: 10px; align-items: center; margin-top: 10px; }
+.inline input { flex: 1; }
+.status { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+.error { color: var(--accent); }
+
+.debrief { border-top: 1px solid var(--rule); padding-top: 18px; margin-top: 26px; }
+.debrief:first-child { border-top: none; margin-top: 0; padding-top: 0; }
+.byline {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.16em;
+  text-transform: uppercase; color: var(--muted); margin-bottom: 6px;
+}
+.said {
+  border-left: 2px solid var(--accent-dim); padding-left: 14px; color: #d8d2c6;
+  white-space: pre-wrap; margin-bottom: 10px;
+}
+.row {
+  display: grid; grid-template-columns: 1fr auto; gap: 2px 16px;
+  padding: 8px 0; border-bottom: 1px dotted var(--rule);
+}
+.kind { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.detail { color: var(--muted); font-size: 14px; }
+.actions { display: flex; gap: 8px; align-items: flex-start; }
+.row .error { grid-column: 1 / -1; font-family: var(--mono); font-size: 12px; }
+
+.panes { display: grid; grid-template-columns: 260px 1fr; gap: 32px; align-items: start; }
+.dir-item { padding: 6px 0; cursor: pointer; border-bottom: 1px dotted var(--rule); }
+.dir-item:hover .name, .dir-item.on .name { color: var(--accent); }
+.dir-item .meta { font-family: var(--mono); font-size: 10px; color: var(--muted); }
+.profile h3 { font-size: 26px; font-weight: 600; line-height: 1.2; }
+.fields { display: grid; grid-template-columns: 6em 1fr; gap: 6px 12px; margin-top: 14px; align-items: center; }
+.fields label { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.block { margin-top: 26px; }
+.block h4 {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--muted); border-bottom: 1px solid var(--rule); padding-bottom: 4px; margin-bottom: 6px;
+  display: flex; justify-content: space-between;
+}
+.row .actions { visibility: hidden; }
+.row:hover .actions { visibility: visible; }
+.gone { color: var(--muted); text-decoration: line-through; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+td { padding: 5px 8px 5px 0; border-bottom: 1px dotted var(--rule); vertical-align: top; }
+td.num { font-family: var(--mono); font-size: 12px; white-space: nowrap; }
+
+#gate { position: fixed; inset: 0; background: var(--paper); display: none; place-items: center; z-index: 200; }
+#gate.open { display: grid; }
+#gate .inner { text-align: center; max-width: 340px; width: 100%; padding: 0 20px; }
+#gate input { margin-top: 18px; font-family: var(--mono); font-size: 13px; }
+
+@media (max-width: 760px) {
+  header { padding: 10px 16px 8px; gap: 14px; flex-wrap: wrap; }
+  main { padding: 18px 16px calc(60px + env(safe-area-inset-bottom)); }
+  .panes, .row, .fields { grid-template-columns: 1fr; }
+  .row .actions { visibility: visible; }
+  .actions button { flex: 1; }
+}
+</style>
+</head>
+<body>
+
+<div id="gate">
+  <div class="inner">
+    <div class="masthead">JARVIS</div>
+    <input id="token-input" type="password" placeholder="access token" autocomplete="off">
+  </div>
+</div>
+
+<header>
+  <a class="masthead" href="/app">JARVIS</a>
+  <span class="section-name">Projects</span>
+  <div class="tabs">
+    <button class="tab on" data-view="review">Review<span class="badge" id="badge" hidden></span></button>
+    <button class="tab" data-view="projects">Projects</button>
+  </div>
+  <a class="nav" href="/app/people">People</a>
+  <a class="nav" href="/app">Conversation</a>
+</header>
+
+<main>
+  <div class="column" id="review-view">
+    <section>
+      <h2>New debrief</h2>
+      <p class="hint">Tell JARVIS what you worked on, decided or bought. Nothing is saved
+        until you approve it below.</p>
+      <textarea id="debrief-text" rows="5"
+        placeholder="Worked on the rover today. Switched to the ESP32-S3 because the Pi drew too much power. Ordered four N20 motors from Robu, Rs 1,200..."></textarea>
+      <div class="row-end">
+        <button id="debrief-send" class="primary">Extract</button>
+        <span id="debrief-status" class="status" role="status"></span>
+      </div>
+    </section>
+    <section>
+      <h2>Waiting for review</h2>
+      <div id="debriefs" aria-live="polite"><p class="empty">Loading...</p></div>
+    </section>
+  </div>
+
+  <div id="projects-view" hidden>
+    <div class="panes">
+      <div>
+        <input type="text" id="dir-search" placeholder="search projects">
+        <div id="directory"><p class="empty">Loading...</p></div>
+      </div>
+      <div class="profile" id="profile"><p class="empty">Pick a project on the left.</p></div>
+    </div>
+  </div>
+</main>
+
+<script>
+'use strict';
+
+const $ = (id) => document.getElementById(id);
+const state = {
+  token: localStorage.getItem('jarvis_token') || '',
+  debriefs: [], projects: [], open: null, history: false, errors: {},
+};
+
+const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => (
+  { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+const KIND_NAMES = {
+  new_project: 'New project', alias: 'Also called', status: 'Status', decision: 'Decision',
+  fact: 'Fact', part: 'Part', part_update: 'Part update', task: 'To do',
+  task_done: 'Done', log: 'Log', person: 'Person', link: 'Link',
+};
+const STATUSES = ['idea', 'active', 'paused', 'shipped', 'abandoned'];
+const KINDS = ['hardware', 'software', 'mixed', 'research', 'creative', 'other'];
+const PART_STATUSES = ['needed', 'ordered', 'have', 'used', 'dropped'];
+
+async function api(path, body, method) {
+  const options = { headers: { Authorization: `Bearer ${state.token}` } };
+  if (method) options.method = method;
+  if (body !== undefined) {
+    options.method = method || 'POST';
+    options.headers['Content-Type'] = 'application/json';
+    options.body = JSON.stringify(body);
+  }
+  const response = await fetch(path, options);
+  if (response.status === 401) {
+    localStorage.removeItem('jarvis_token');
+    state.token = '';
+    openGate();
+    throw new Error('The access token was rejected.');
+  }
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const detail = Array.isArray(data.detail) ? data.detail.map((d) => d.msg).join('; ') : data.detail;
+    throw new Error(detail || `Request failed with status ${response.status}.`);
+  }
+  return data;
+}
+
+function openGate() { $('gate').classList.add('open'); $('token-input').focus(); }
+
+$('token-input').addEventListener('keydown', (event) => {
+  if (event.key !== 'Enter') return;
+  const token = event.target.value.trim();
+  if (!token) return;
+  state.token = token;
+  localStorage.setItem('jarvis_token', token);
+  $('gate').classList.remove('open');
+  load();
+});
+
+// -- review ------------------------------------------------------------------
+
+function describe(p) {
+  const d = p.payload;
+  switch (p.kind) {
+    case 'new_project': return [d.name, [d.kind, d.status, d.pitch].filter(Boolean).join(' - ')];
+    case 'alias': return [d.alias, ''];
+    case 'status': return [d.status, ''];
+    case 'decision': return [d.decision, [d.why && `because ${d.why}`,
+      d.alternatives && `instead of ${d.alternatives}`].filter(Boolean).join('; ')];
+    case 'fact': return [d.text, d.category];
+    case 'part': return [`${d.quantity} x ${d.name}${d.spec ? ' ' + d.spec : ''}`,
+      [d.status, d.source, d.cost_inr != null && `Rs ${d.cost_inr}`].filter(Boolean).join(' - ')];
+    case 'part_update': return [`now ${d.status}`, d.note || ''];
+    case 'task': return [d.text, d.due_date ? `due ${d.due_date}` : ''];
+    case 'task_done': return ['a task is finished', ''];
+    case 'log': return [d.text, d.happened_on];
+    case 'person': return ['someone joins', d.role || ''];
+    case 'link': return [d.label, d.url];
+    default: return [JSON.stringify(d), ''];
+  }
+}
+
+function renderDebriefs() {
+  const pending = state.debriefs.reduce((n, d) => n + d.proposals.length, 0);
+  $('badge').hidden = !pending;
+  $('badge').textContent = pending;
+  if (!state.debriefs.length) {
+    $('debriefs').innerHTML = '<p class="empty">Nothing waiting.</p>';
+    return;
+  }
+  $('debriefs').innerHTML = state.debriefs.map((d) => `
+    <div class="debrief">
+      <div class="byline">${esc(new Date(d.created_ts).toLocaleString())} · ${esc(d.source)}</div>
+      <div class="said">${esc(d.raw_text)}</div>
+      ${d.proposals.map((p) => {
+        const [main, detail] = describe(p);
+        const error = state.errors[p.id];
+        return `<div class="row">
+          <div><span class="kind">${esc(KIND_NAMES[p.kind] || p.kind)}${p.project ? ' · ' + esc(p.project) : ''}</span><br>
+            ${esc(main)}${detail ? `<div class="detail">${esc(detail)}</div>` : ''}</div>
+          <div class="actions" style="visibility:visible">
+            <button class="small primary" data-approve="${p.id}">Approve</button>
+            <button class="small" data-reject="${p.id}">Reject</button>
+          </div>
+          ${error ? `<div class="error">${esc(error)}</div>` : ''}
+        </div>`;
+      }).join('')}
+      <div class="row-end"><button class="small" data-all="${d.id}">Approve all</button></div>
+    </div>`).join('');
+}
+
+async function decide(id, action) {
+  try {
+    await api(`/projects/proposals/${id}/${action}`, {});
+    delete state.errors[id];
+  } catch (error) {
+    state.errors[id] = error.message;
+  }
+}
+
+$('debriefs').addEventListener('click', async (event) => {
+  const b = event.target.closest('button');
+  if (!b) return;
+  b.disabled = true;
+  if (b.dataset.approve) await decide(b.dataset.approve, 'approve');
+  if (b.dataset.reject) await decide(b.dataset.reject, 'reject');
+  if (b.dataset.all) {
+    const debrief = state.debriefs.find((d) => d.id === b.dataset.all);
+    // New projects first: everything else may point at them.
+    const order = [...debrief.proposals].sort((a, c) =>
+      (a.kind === 'new_project' ? 0 : 1) - (c.kind === 'new_project' ? 0 : 1));
+    for (const p of order) await decide(p.id, 'approve');
+  }
+  await loadReview();
+});
+
+$('debrief-send').addEventListener('click', async () => {
+  const text = $('debrief-text').value.trim();
+  if (text.length < 10) return;
+  $('debrief-send').disabled = true;
+  $('debrief-status').textContent = 'Reading it...';
+  try {
+    const result = await api('/projects/debrief', { text });
+    $('debrief-status').textContent = result.summary;
+    $('debrief-text').value = '';
+    await loadReview();
+  } catch (error) {
+    $('debrief-status').textContent = error.message;
+  } finally {
+    $('debrief-send').disabled = false;
+  }
+});
+
+// -- projects ----------------------------------------------------------------
+
+function renderDirectory() {
+  const q = $('dir-search').value.trim().toLowerCase();
+  const rows = state.projects.filter((p) => !q || p.name.toLowerCase().includes(q)
+    || (p.pitch || '').toLowerCase().includes(q));
+  $('directory').innerHTML = rows.length ? rows.map((p) => `
+    <div class="dir-item ${state.open?.id === p.id ? 'on' : ''}" data-id="${p.id}">
+      <div class="name">${esc(p.name)}</div>
+      <div class="meta">${esc(p.status)} · ${esc(p.kind)}${p.open_tasks ? ` · ${p.open_tasks} to do` : ''}</div>
+    </div>`).join('') : '<p class="empty">No projects yet. Approve a debrief to start one.</p>';
+}
+
+function options(list, current) {
+  return list.map((v) => `<option ${v === current ? 'selected' : ''}>${v}</option>`).join('');
+}
+
+function renderProfile() {
+  const p = state.open;
+  if (!p) { $('profile').innerHTML = '<p class="empty">Pick a project on the left.</p>'; return; }
+  const field = (key, label) => `<label>${label}</label>
+    <input type="text" data-field="${key}" value="${esc(p[key])}">`;
+  const parts = p.parts.length ? `<table>${p.parts.map((b) => `<tr>
+      <td class="num">${b.quantity} x</td>
+      <td>${esc(b.name)}${b.spec ? `<div class="detail">${esc(b.spec)}</div>` : ''}</td>
+      <td class="num">${b.cost_inr != null ? 'Rs ' + Math.round(b.cost_inr) : ''}</td>
+      <td><select data-part="${b.id}">${options(PART_STATUSES, b.status)}</select></td>
+    </tr>`).join('')}</table>` : '<p class="empty">None recorded.</p>';
+  const hist = p.history;
+  $('profile').innerHTML = `
+    <h3>${esc(p.name)}</h3>
+    <div class="fields">
+      <label>Status</label><select data-field="status">${options(STATUSES, p.status)}</select>
+      <label>Kind</label><select data-field="kind">${options(KINDS, p.kind)}</select>
+      ${field('pitch', 'What')}${field('goal', 'Goal')}${field('repo_url', 'Repo')}${field('folder', 'Folder')}
+    </div>
+    ${p.aliases.length ? `<p class="detail" style="margin-top:8px">Also called ${esc(p.aliases.join(', '))}</p>` : ''}
+
+    <div class="block"><h4>Decisions</h4>
+      ${p.decisions.map((d) => `<div class="row"><div>${esc(d.decision)}
+        <div class="detail">${[d.decided_on, d.why && 'because ' + d.why,
+          d.alternatives && 'instead of ' + d.alternatives].filter(Boolean).map(esc).join(' · ')}</div></div>
+        <div class="actions"><button class="small" data-reverse="${d.id}">Reverse</button></div></div>`).join('')
+        || '<p class="empty">None recorded.</p>'}
+    </div>
+
+    <div class="block"><h4>To do</h4>
+      ${p.tasks.map((t) => `<div class="row"><div>${esc(t.text)}${t.due_date ? `<div class="detail">due ${esc(t.due_date)}</div>` : ''}</div>
+        <div class="actions"><button class="small" data-task="${t.id}" data-to="done">Done</button>
+        <button class="small" data-task="${t.id}" data-to="dropped">Drop</button></div></div>`).join('')
+        || '<p class="empty">Nothing open.</p>'}
+    </div>
+
+    <div class="block"><h4>Bill of materials</h4>${parts}</div>
+
+    <div class="block"><h4>Facts</h4>
+      ${p.facts.map((f) => `<div class="row"><div><span class="kind">${esc(f.category)}</span> ${esc(f.text)}</div>
+        <div class="actions"><button class="small" data-retire="${f.id}">Retire</button></div></div>`).join('')
+        || '<p class="empty">None recorded.</p>'}
+    </div>
+
+    ${p.people.length ? `<div class="block"><h4>People</h4>${p.people.map((x) =>
+      `<div class="row"><div>${esc(x.name)}${x.role ? ` <span class="detail">${esc(x.role)}</span>` : ''}</div></div>`).join('')}</div>` : ''}
+    ${p.links.length ? `<div class="block"><h4>Links</h4>${p.links.map((l) =>
+      `<div class="row"><div>${esc(l.label)} <span class="detail">${esc(l.url)}</span></div></div>`).join('')}</div>` : ''}
+    ${p.relations.length ? `<div class="block"><h4>Related</h4>${p.relations.map((r) =>
+      `<div class="row"><div>${esc(r.kind.replace(/_/g, ' '))} ${r.direction === 'out' ? '→' : '←'} ${esc(r.other)}</div></div>`).join('')}</div>` : ''}
+
+    <div class="block"><h4>Log</h4>
+      <div class="inline"><input type="text" id="log-text" placeholder="what happened today">
+        <button class="small" id="log-add">Add</button></div>
+      ${p.log.map((e) => `<div class="row"><div><span class="kind">${esc(e.happened_on)}</span> ${esc(e.text)}</div></div>`).join('')}
+    </div>
+
+    <div class="block"><h4>Master document</h4>
+      <div class="row-end"><button class="small primary" id="doc-write">Write ${p.documents.length ? 'a new version' : 'it'}</button>
+        <span class="status" id="doc-status"></span></div>
+      ${p.documents.map((d) => `<div class="row"><div>Version ${d.version}
+        <span class="detail">${esc(new Date(d.created_ts).toLocaleString())}</span></div>
+        <div class="actions" style="visibility:visible"><button class="small" data-doc="${d.artifact_id}" data-name="${esc(p.name)}-v${d.version}.md">Download</button></div></div>`).join('')}
+    </div>
+
+    <div class="block"><h4>History <button class="small" id="hist">${state.history ? 'Hide' : 'Show'}</button></h4>
+      ${state.history ? [...hist.decisions.map((d) => `<div class="row"><div class="gone">${esc(d.decision)}</div><div class="kind">${esc(d.status)}</div></div>`),
+        ...hist.facts.map((f) => `<div class="row"><div class="gone">${esc(f.text)}</div><div class="kind">${esc(f.status)}</div></div>`)].join('')
+        || '<p class="empty">Nothing superseded yet.</p>' : ''}
+    </div>
+
+    <div class="block"><button class="small" id="delete" style="border-color:var(--accent-dim);color:var(--accent)">Delete project</button></div>
+    <p class="status error" id="profile-status" role="alert"></p>`;
+}
+
+async function openProject(id) {
+  state.open = await api(`/projects/project/${id}`);
+  state.history = false;
+  renderDirectory();
+  renderProfile();
+}
+
+async function act(fn) {
+  try {
+    await fn();
+    await loadDirectory();
+    if (state.open) await openProject(state.open.id);
+  } catch (error) {
+    const el = $('profile-status');
+    if (el) el.textContent = error.message;
+  }
+}
+
+$('directory').addEventListener('click', (event) => {
+  const item = event.target.closest('.dir-item');
+  if (item) openProject(item.dataset.id).catch(() => {});
+});
+$('dir-search').addEventListener('input', renderDirectory);
+
+$('profile').addEventListener('change', (event) => {
+  const el = event.target;
+  const id = state.open.id;
+  if (el.dataset.field) act(() => api(`/projects/project/${id}`, { [el.dataset.field]: el.value || null }, 'PATCH'));
+  if (el.dataset.part) act(() => api(`/projects/parts/${el.dataset.part}`, { status: el.value }));
+});
+
+$('profile').addEventListener('click', async (event) => {
+  const b = event.target.closest('button');
+  if (!b) return;
+  const id = state.open.id;
+  if (b.dataset.task) act(() => api(`/projects/tasks/${b.dataset.task}`, { status: b.dataset.to }));
+  if (b.dataset.retire) act(() => api(`/projects/facts/${b.dataset.retire}/retire`, {}));
+  if (b.dataset.reverse) act(() => api(`/projects/decisions/${b.dataset.reverse}/reverse`, {}));
+  if (b.id === 'hist') { state.history = !state.history; renderProfile(); }
+  if (b.id === 'log-add') {
+    const text = $('log-text').value.trim();
+    if (text) act(() => api(`/projects/project/${id}/log`, { text }));
+  }
+  if (b.id === 'delete' && confirm(`Delete ${state.open.name} and everything recorded about it?`)) {
+    await act(() => api(`/projects/project/${id}`, undefined, 'DELETE'));
+    state.open = null;
+    renderProfile();
+  }
+  if (b.id === 'doc-write') {
+    b.disabled = true;
+    try {
+      await api(`/projects/project/${id}/document`, {});
+      $('doc-status').textContent = 'Writing - it appears here in a minute or two.';
+      setTimeout(() => state.open?.id === id && openProject(id), 90000);
+    } catch (error) { $('doc-status').textContent = error.message; b.disabled = false; }
+  }
+  if (b.dataset.doc) {
+    const response = await fetch(`/artifact/${b.dataset.doc}`, {
+      headers: { Authorization: `Bearer ${state.token}` } });
+    const url = URL.createObjectURL(await response.blob());
+    const a = Object.assign(document.createElement('a'), { href: url, download: b.dataset.name });
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+});
+
+// -- loading -----------------------------------------------------------------
+
+async function loadReview() {
+  const data = await api('/projects/pending');
+  state.debriefs = data.debriefs;
+  renderDebriefs();
+}
+
+async function loadDirectory() {
+  const data = await api('/projects/directory');
+  state.projects = data.projects;
+  renderDirectory();
+}
+
+async function load() {
+  if (!state.token) { openGate(); return; }
+  try {
+    await Promise.all([loadReview(), loadDirectory()]);
+  } catch (error) {
+    $('debriefs').innerHTML = `<p class="error">${esc(error.message)}</p>`;
+  }
+}
+
+document.querySelectorAll('.tab').forEach((tab) => tab.addEventListener('click', () => {
+  document.querySelectorAll('.tab').forEach((t) => t.classList.toggle('on', t === tab));
+  $('review-view').hidden = tab.dataset.view !== 'review';
+  $('projects-view').hidden = tab.dataset.view !== 'projects';
+}));
+
+load();
+</script>
+</body>
+</html>

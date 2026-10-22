@@ -91,6 +91,17 @@ def build_registry(settings: WorkerSettings) -> JobTypeRegistry:
             ),
             settings.capabilities,
         )
+    # The Claude Code shift: DAEDALUS, ATHENA and CALLIOPE on the owner's
+    # subscription. Only when "claude-code" is in the capabilities - the
+    # tag is what makes the Core route work here.
+    from pathlib import Path as _Path
+
+    from jarvis.worker.claude_jobs import register_claude_jobs
+
+    register_claude_jobs(
+        registry, settings.claude_bin,
+        _Path(settings.workspace_dir).expanduser(), settings.capabilities,
+    )
     return registry
 
 

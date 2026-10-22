@@ -54,7 +54,10 @@ from jarvis.core.db.repos.watchers import WatchersRepo
 from jarvis.core.db.repos.people import PeopleRepo
 from jarvis.core.gateway.people_directory_routes import people_directory_router
 from jarvis.core.gateway.people_routes import people_router
+from jarvis.core.gateway.projects_routes import projects_router
 from jarvis.core.people.service import PeopleService
+from jarvis.core.db.repos.projects import ProjectsRepo
+from jarvis.core.projects.service import ProjectService
 from jarvis.core.queue.registry_workers import WorkerRegistry
 
 log = get_logger("core.gateway")
@@ -87,6 +90,9 @@ class GatewayDeps:
     # review page's API simply is not mounted.
     people_repo: "PeopleRepo | None" = None
     people: "PeopleService | None" = None
+    # The projects database, mounted the same way.
+    projects_repo: "ProjectsRepo | None" = None
+    projects: "ProjectService | None" = None
 
 
 async def build_status_snapshot(deps: GatewayDeps) -> dict[str, Any]:
@@ -168,6 +174,15 @@ def create_app(deps: GatewayDeps) -> FastAPI:
         /app is: the page is not a secret, every request it makes is."""
         return FileResponse(
             Path(__file__).parent / "static" / "people.html",
+            media_type="text/html",
+        )
+
+    @app.get("/app/projects")
+    async def projects_page() -> FileResponse:
+        """The projects page: review queue and records. Public page,
+        authed requests - as /app/people."""
+        return FileResponse(
+            Path(__file__).parent / "static" / "projects.html",
             media_type="text/html",
         )
 
@@ -288,5 +303,9 @@ def create_app(deps: GatewayDeps) -> FastAPI:
     if deps.people_repo is not None and deps.people is not None:
         app.include_router(people_router(deps.people_repo, deps.people, auth))
         app.include_router(people_directory_router(deps.people_repo, auth))
+
+    if deps.projects_repo is not None and deps.projects is not None:
+        app.include_router(projects_router(deps.projects_repo, deps.projects, auth,
+                                           jobs=deps.jobs))
 
     return app
