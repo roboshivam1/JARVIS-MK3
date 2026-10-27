@@ -58,6 +58,7 @@ from jarvis.core.db.repos.schedules import SchedulesRepo
 from jarvis.core.db.repos.sessions import SessionsRepo
 from jarvis.core.initiative.brief import BRIEF_SCHEDULE, BriefService
 from jarvis.core.initiative.engine import next_cron_time
+from jarvis.core.life.service import LifeService
 from jarvis.core.initiative.policy import NotificationPolicy
 from jarvis.llm.transcription import Transcriber
 from jarvis.core.initiative.policy import NotificationPolicy
@@ -190,6 +191,7 @@ class TelegramBridge:
         reels: "ReelService | None" = None,
         brief: "BriefService | None" = None,
         schedules: "SchedulesRepo | None" = None,
+        life: "LifeService | None" = None,
     ) -> None:
         if owner_id <= 0:
             raise ValueError(
@@ -207,6 +209,7 @@ class TelegramBridge:
         self._reels = reels
         self._brief = brief
         self._schedules = schedules
+        self._life = life
         # Set by a Notes tap: (episode id, chat id, message id, prop id -
         # empty for the draft itself). The next thing the owner sends
         # becomes the notes for that draft or prop.
@@ -700,7 +703,8 @@ class TelegramBridge:
                 "Online, sir. Type or send a voice note - either works. "
                 "/status for vitals, /approvals for anything awaiting "
                 "your say-so, /quiet to silence me, /new for a fresh "
-                "thread, /reel for the show, /brief for the morning brief."
+                "thread, /reel for the show, /brief for the morning brief, "
+                "/today for today's checklist, /undo to take back the last log."
             )
 
         elif command == "/new":
@@ -726,6 +730,18 @@ class TelegramBridge:
 
         elif command == "/reel":
             await self._reel_command(message, text)
+
+        elif command == "/today":
+            if self._life is None:
+                await message.answer("The life log is not available in this build.")
+            else:
+                await message.answer(await self._life.status_text())
+
+        elif command == "/undo":
+            if self._life is None:
+                await message.answer("The life log is not available in this build.")
+            else:
+                await message.answer(await self._life.undo_last())
 
         elif command == "/brief":
             await self._brief_command(message, text)

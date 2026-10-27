@@ -1,0 +1,576 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>JARVIS · Life</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+/* ==========================================================================
+   Life - the same Gazette as /app, /app/people and /app/projects.
+   Left: one day, as a page of the diary. Right: the last four weeks.
+   ========================================================================== */
+
+:root {
+  --ink: #ece5d8;
+  --paper: #17171a;
+  --paper-raised: #1e1e22;
+  --rule: #3a3a40;
+  --muted: #8a8a92;
+  --accent: #d4685f;
+  --accent-dim: #8f4842;
+  --serif: 'Source Serif 4', Georgia, serif;
+  --mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  /* one hue per kind of time, readable on the dark paper */
+  --k-gym: #d4685f;
+  --k-study: #c9b79c;
+  --k-project: #d9a441;
+  --k-learning: #7fa37a;
+  --k-other: #6d6d76;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--paper); color: var(--ink); font-family: var(--serif);
+  font-size: 16px; line-height: 1.6; min-height: 100dvh;
+}
+:focus-visible { outline: 1px solid var(--accent); outline-offset: 2px; }
+
+header {
+  border-bottom: 1px solid var(--rule); padding: 14px 24px 12px;
+  display: flex; align-items: baseline; gap: 24px; flex-wrap: wrap;
+}
+.masthead {
+  font-family: var(--mono); font-size: 17px; font-weight: 600; letter-spacing: 0.34em;
+  line-height: 1; color: var(--ink); text-decoration: none;
+}
+.section-name, header a.nav {
+  font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--muted); text-decoration: none;
+}
+.section-name { color: var(--accent); margin-right: auto; }
+header a.nav:hover { color: var(--accent); }
+
+main {
+  padding: 28px 40px 80px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 48px; align-items: start;
+}
+section + section { margin-top: 40px; }
+h2 {
+  font-family: var(--mono); font-size: 10px; font-weight: 600; letter-spacing: 0.18em;
+  text-transform: uppercase; color: var(--accent); padding-bottom: 6px;
+  border-bottom: 1px solid var(--rule); margin-bottom: 12px;
+  display: flex; justify-content: space-between; align-items: baseline;
+}
+.empty, .hint { color: var(--muted); font-size: 15px; }
+.mono { font-family: var(--mono); font-size: 12px; }
+
+textarea, input[type=text], input[type=time], select {
+  width: 100%; background: var(--paper-raised); border: 1px solid var(--rule);
+  color: var(--ink); font-family: var(--serif); font-size: 16px; line-height: 1.5;
+  padding: 8px 12px; outline: none;
+}
+input[type=time], select { font-family: var(--mono); font-size: 13px; width: auto; }
+textarea { resize: vertical; }
+textarea:focus, input:focus, select:focus { border-color: var(--accent-dim); }
+button {
+  background: transparent; border: 1px solid var(--rule); color: var(--ink);
+  font-family: var(--mono); font-size: 11px; letter-spacing: 0.12em;
+  text-transform: uppercase; padding: 9px 14px; cursor: pointer;
+}
+button:hover { border-color: var(--accent); color: var(--accent); }
+button.primary { border-color: var(--accent-dim); color: var(--accent); }
+button.small { padding: 4px 9px; font-size: 10px; }
+button.bare { border: none; padding: 0 4px; color: var(--muted); }
+button.bare:hover { color: var(--accent); }
+button:disabled { opacity: 0.45; cursor: default; }
+.inline { display: flex; gap: 8px; align-items: center; margin-top: 10px; }
+.inline input[type=text] { flex: 1; }
+.status { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+.error { color: var(--accent); }
+
+/* -- the day ------------------------------------------------------------- */
+
+.daynav { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
+.daynav h3 { font-size: 26px; font-weight: 600; line-height: 1.1; flex: 1; }
+.daynav .sub { font-family: var(--mono); font-size: 11px; color: var(--muted); display: block; font-weight: 400; letter-spacing: 0.1em; text-transform: uppercase; }
+
+.check {
+  display: grid; grid-template-columns: 26px 1fr auto; gap: 10px; align-items: center;
+  padding: 8px 0; border-bottom: 1px dotted var(--rule);
+}
+.box {
+  width: 20px; height: 20px; border: 1px solid var(--muted); background: none;
+  padding: 0; font-size: 13px; line-height: 18px; text-align: center; color: var(--paper);
+}
+.check.done .box { background: var(--accent); border-color: var(--accent); }
+.check.missed .box { border-color: var(--accent-dim); color: var(--accent); }
+.check.done .text { color: var(--muted); }
+.check .tag { font-family: var(--mono); font-size: 10px; color: var(--muted); }
+
+.record { display: grid; grid-template-columns: 7em 1fr auto; gap: 4px 12px; align-items: baseline; }
+.record .label { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.row { display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; padding: 6px 0; border-bottom: 1px dotted var(--rule); }
+.dot { display: inline-block; width: 8px; height: 8px; margin-right: 8px; vertical-align: 1px; }
+.detail { color: var(--muted); font-size: 14px; }
+
+/* -- trends ---------------------------------------------------------------- */
+
+.figures { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.figure .n { font-size: 28px; font-weight: 600; line-height: 1.1; }
+.figure .l { font-family: var(--mono); font-size: 10px; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; }
+svg { display: block; width: 100%; height: auto; overflow: visible; }
+svg text { font-family: var(--mono); font-size: 9px; fill: var(--muted); }
+.legend { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 6px; font-family: var(--mono); font-size: 11px; color: var(--muted); }
+
+.gym { display: grid; grid-template-columns: 3.2em repeat(7, 1fr); gap: 4px; }
+.gym .h { font-family: var(--mono); font-size: 10px; color: var(--muted); text-align: center; }
+.gym .w { font-family: var(--mono); font-size: 10px; color: var(--muted); align-self: center; }
+.gym .c { aspect-ratio: 1; border: 1px solid var(--rule); }
+.gym .c.done { background: var(--k-gym); border-color: var(--k-gym); }
+.gym .c.miss { border-color: var(--accent-dim); background: repeating-linear-gradient(45deg, transparent 0 4px, rgba(212,104,95,0.18) 4px 6px); }
+.gym .c.free { border-style: dotted; }
+.gym .c.future { border-color: transparent; }
+
+.habit { padding: 8px 0; border-bottom: 1px dotted var(--rule); }
+.habit .top { display: flex; justify-content: space-between; align-items: baseline; }
+.days { display: flex; gap: 4px; margin-top: 6px; flex-wrap: wrap; }
+.days button { padding: 3px 7px; font-size: 10px; }
+.days button.on { border-color: var(--accent-dim); color: var(--accent); }
+
+#gate { position: fixed; inset: 0; background: var(--paper); display: none; place-items: center; z-index: 200; }
+#gate.open { display: grid; }
+#gate .inner { text-align: center; max-width: 340px; width: 100%; padding: 0 20px; }
+#gate input { margin-top: 18px; font-family: var(--mono); font-size: 13px; }
+
+@media (max-width: 900px) {
+  main { grid-template-columns: 1fr; padding: 18px 16px calc(60px + env(safe-area-inset-bottom)); gap: 36px; }
+  header { padding: 10px 16px 8px; gap: 14px; }
+  .figures { grid-template-columns: repeat(2, 1fr); }
+  textarea, input[type=text] { font-size: 16px; }
+}
+</style>
+</head>
+<body>
+
+<div id="gate">
+  <div class="inner">
+    <div class="masthead">JARVIS</div>
+    <input id="token-input" type="password" placeholder="access token" autocomplete="off">
+  </div>
+</div>
+
+<header>
+  <a class="masthead" href="/app">JARVIS</a>
+  <span class="section-name">Life</span>
+  <a class="nav" href="/app/projects">Projects</a>
+  <a class="nav" href="/app/people">People</a>
+  <a class="nav" href="/app">Conversation</a>
+</header>
+
+<main>
+  <div>
+    <div class="daynav">
+      <button class="small" id="prev" aria-label="Previous day">‹</button>
+      <h3 id="day-title">…</h3>
+      <button class="small" id="next" aria-label="Next day">›</button>
+      <button class="small" id="today-btn">Today</button>
+    </div>
+
+    <section>
+      <h2>Checklist <span class="mono" id="check-count"></span></h2>
+      <div id="checklist"><p class="empty">Loading…</p></div>
+      <div class="inline">
+        <input type="text" id="target-text" placeholder="add a target for this day">
+        <button class="small" id="target-add">Add</button>
+      </div>
+    </section>
+
+    <section>
+      <h2>Log</h2>
+      <textarea id="log-text" rows="3" placeholder="Up at 7:10. Gym, legs, 50 minutes. Lunch at the mess. Two hours on OS. Tomorrow: one Coursera module."></textarea>
+      <div class="inline">
+        <button class="primary" id="log-send">Log it</button>
+        <button id="undo">Undo last</button>
+        <span class="status" id="log-status" role="status"></span>
+      </div>
+    </section>
+
+    <section>
+      <h2>The record</h2>
+      <div class="record" id="record"></div>
+      <div id="activities" style="margin-top:14px"></div>
+      <div id="meals" style="margin-top:14px"></div>
+    </section>
+  </div>
+
+  <div>
+    <section>
+      <h2>Last four weeks</h2>
+      <div class="figures" id="figures"></div>
+    </section>
+    <section>
+      <h2>Wake time <span class="mono" id="wake-target-label"></span></h2>
+      <div id="wake-chart"></div>
+    </section>
+    <section>
+      <h2>Gym</h2>
+      <div class="gym" id="gym"></div>
+    </section>
+    <section>
+      <h2>Time logged</h2>
+      <div id="time-chart"></div>
+      <div class="legend" id="time-legend"></div>
+      <div id="project-time" style="margin-top:12px"></div>
+    </section>
+    <section>
+      <h2>Fixed targets</h2>
+      <div id="habits"></div>
+      <div class="inline">
+        <input type="text" id="habit-name" placeholder="new fixed target">
+        <select id="habit-kind">
+          <option value="">no auto-tick</option>
+          <option>gym</option><option>study</option><option>project</option>
+          <option>learning</option><option>other</option>
+        </select>
+        <button class="small" id="habit-add">Add</button>
+      </div>
+      <div class="inline">
+        <span class="mono" style="color:var(--muted)">Wake by</span>
+        <input type="time" id="wake-by">
+        <button class="small" id="wake-save">Save</button>
+        <button class="small" id="wake-clear">Clear</button>
+      </div>
+      <p class="status error" id="settings-status" role="alert"></p>
+    </section>
+  </div>
+</main>
+
+<script>
+'use strict';
+
+const $ = (id) => document.getElementById(id);
+const state = {
+  token: localStorage.getItem('jarvis_token') || '',
+  today: null, date: null, day: null, stats: null, habits: [],
+};
+const KINDS = ['gym', 'study', 'project', 'learning', 'other'];
+const WEEK = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+
+const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => (
+  { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const color = (kind) => `var(--k-${kind})`;
+const hours = (m) => (m >= 60 ? `${Math.floor(m / 60)}h${String(m % 60).padStart(2, '0')}` : `${m}m`);
+const toMin = (hhmm) => {
+  if (!hhmm) return null;
+  const [h, m] = String(hhmm).split(':').map(Number);
+  return Number.isFinite(h) && Number.isFinite(m) ? h * 60 + m : null;
+};
+const shift = (iso, n) => {
+  const d = new Date(`${iso}T12:00:00`);
+  d.setDate(d.getDate() + n);
+  return d.toISOString().slice(0, 10);
+};
+
+async function api(path, body, method) {
+  const options = { headers: { Authorization: `Bearer ${state.token}` } };
+  if (method) options.method = method;
+  if (body !== undefined) {
+    options.method = method || 'POST';
+    options.headers['Content-Type'] = 'application/json';
+    options.body = JSON.stringify(body);
+  }
+  const response = await fetch(path, options);
+  if (response.status === 401) {
+    localStorage.removeItem('jarvis_token');
+    state.token = '';
+    openGate();
+    throw new Error('The access token was rejected.');
+  }
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const detail = Array.isArray(data.detail) ? data.detail.map((d) => d.msg).join('; ') : data.detail;
+    throw new Error(detail || `Request failed with status ${response.status}.`);
+  }
+  return data;
+}
+
+function openGate() { $('gate').classList.add('open'); $('token-input').focus(); }
+$('token-input').addEventListener('keydown', (event) => {
+  if (event.key !== 'Enter') return;
+  const token = event.target.value.trim();
+  if (!token) return;
+  state.token = token;
+  localStorage.setItem('jarvis_token', token);
+  $('gate').classList.remove('open');
+  load();
+});
+
+// -- one day ---------------------------------------------------------------
+
+function renderDay() {
+  const d = state.day;
+  const when = new Date(`${state.date}T12:00:00`);
+  const label = state.date === state.today ? 'Today'
+    : state.date === shift(state.today, 1) ? 'Tomorrow'
+    : state.date === shift(state.today, -1) ? 'Yesterday'
+    : when.toLocaleDateString(undefined, { weekday: 'long' });
+  $('day-title').innerHTML = `${esc(label)}<span class="sub">${esc(when.toLocaleDateString(undefined,
+    { day: 'numeric', month: 'long', year: 'numeric' }))}</span>`;
+
+  const items = d.checklist;
+  const done = items.filter((i) => i.status === 'done').length;
+  $('check-count').textContent = items.length ? `${done} / ${items.length}` : '';
+  $('checklist').innerHTML = items.length ? items.map((i) => `
+    <div class="check ${i.status}">
+      <button class="box" data-toggle="${i.id}" data-status="${i.status}"
+        aria-label="${i.status === 'done' ? 'Mark not done' : 'Mark done'}">${i.status === 'done' ? '✓' : i.status === 'missed' ? '✗' : ''}</button>
+      <span class="text">${esc(i.text)} ${i.habit_id ? '<span class="tag">fixed</span>' : ''}</span>
+      ${i.habit_id ? '<span></span>' : `<button class="bare" data-remove="${i.id}" aria-label="Remove">×</button>`}
+    </div>`).join('') : '<p class="empty">Nothing on the checklist.</p>';
+
+  const day = d.day;
+  const late = d.wake_by && day.wake_time && toMin(day.wake_time) > toMin(d.wake_by);
+  $('record').innerHTML = `
+    <span class="label">Woke</span><span>${esc(day.wake_time || '—')}${d.wake_by ? ` <span class="detail">target ${esc(d.wake_by)}${late ? ' · late' : ''}</span>` : ''}</span><span></span>
+    <span class="label">Slept</span><span>${esc(day.sleep_time || '—')}</span><span></span>
+    ${day.note ? `<span class="label">Note</span><span>${esc(day.note)}</span><span></span>` : ''}`;
+
+  $('activities').innerHTML = d.activities.length ? d.activities.map((a) => `
+    <div class="row"><div><span class="dot" style="background:${color(a.kind)}"></span>${esc(a.kind)}
+      ${a.project || a.subject ? `<span class="detail"> · ${esc(a.project || a.subject)}</span>` : ''}
+      <div class="detail mono">${[a.started_at && `${a.started_at}–${a.ended_at || 'running'}`,
+        a.minutes && hours(a.minutes), a.note].filter(Boolean).map(esc).join(' · ')}</div></div>
+      <button class="bare" data-activity="${a.id}" aria-label="Delete">×</button></div>`).join('')
+    : '<p class="empty">No activities logged.</p>';
+
+  $('meals').innerHTML = d.meals.length ? d.meals.map((m) => `
+    <div class="row"><div>${esc(m.slot)} <span class="detail">${m.status === 'skipped' ? 'skipped'
+      : [m.what, m.place].filter(Boolean).map(esc).join(' · ')}</span></div>
+      <button class="bare" data-meal="${m.id}" aria-label="Delete">×</button></div>`).join('')
+    : '<p class="empty">No meals logged.</p>';
+}
+
+async function loadDay() {
+  const data = await api(`/life/day?date=${state.date || ''}`);
+  state.today = data.today;
+  state.date = state.date || data.today;
+  state.day = data;
+  renderDay();
+}
+
+$('prev').addEventListener('click', () => { state.date = shift(state.date, -1); loadDay(); });
+$('next').addEventListener('click', () => { state.date = shift(state.date, 1); loadDay(); });
+$('today-btn').addEventListener('click', () => { state.date = state.today; loadDay(); });
+
+document.querySelector('main').addEventListener('click', async (event) => {
+  const b = event.target.closest('button');
+  if (!b) return;
+  try {
+    if (b.dataset.toggle) {
+      await api(`/life/checklist/${b.dataset.toggle}`, {
+        status: b.dataset.status === 'done' ? (state.date < state.today ? 'missed' : 'open') : 'done' });
+    } else if (b.dataset.remove) {
+      await api(`/life/checklist/${b.dataset.remove}`, undefined, 'DELETE');
+    } else if (b.dataset.activity) {
+      await api(`/life/activities/${b.dataset.activity}`, undefined, 'DELETE');
+    } else if (b.dataset.meal) {
+      await api(`/life/meals/${b.dataset.meal}`, undefined, 'DELETE');
+    } else if (b.dataset.day) {
+      const habit = state.habits.find((h) => h.id === b.dataset.habit);
+      const days = habit.weekdays.includes(b.dataset.day)
+        ? habit.weekdays.filter((d) => d !== b.dataset.day) : [...habit.weekdays, b.dataset.day];
+      if (!days.length) return;
+      await api(`/life/habits/${habit.id}`, { name: habit.name, kind: habit.kind, weekdays: days, active: habit.active }, 'PUT');
+    } else if (b.dataset.pause) {
+      const habit = state.habits.find((h) => h.id === b.dataset.pause);
+      await api(`/life/habits/${habit.id}`, { name: habit.name, kind: habit.kind, weekdays: habit.weekdays, active: !habit.active }, 'PUT');
+    } else if (b.dataset.drop) {
+      if (!confirm('Delete this fixed target? Past days keep their record.')) return;
+      await api(`/life/habits/${b.dataset.drop}`, undefined, 'DELETE');
+    } else {
+      return;
+    }
+    await refresh();
+  } catch (error) {
+    $('settings-status').textContent = error.message;
+  }
+});
+
+$('target-add').addEventListener('click', async () => {
+  const text = $('target-text').value.trim();
+  if (!text) return;
+  await api('/life/checklist', { date: state.date, text });
+  $('target-text').value = '';
+  await refresh();
+});
+$('target-text').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('target-add').click(); });
+
+$('log-send').addEventListener('click', async () => {
+  const text = $('log-text').value.trim();
+  if (text.length < 2) return;
+  $('log-send').disabled = true;
+  $('log-status').textContent = 'Reading it…';
+  try {
+    const result = await api('/life/report', { text });
+    $('log-status').textContent = result.summary;
+    $('log-text').value = '';
+    await refresh();
+  } catch (error) {
+    $('log-status').textContent = error.message;
+  } finally {
+    $('log-send').disabled = false;
+  }
+});
+$('undo').addEventListener('click', async () => {
+  const result = await api('/life/undo', {});
+  $('log-status').textContent = result.summary;
+  await refresh();
+});
+
+// -- four weeks --------------------------------------------------------------
+
+function renderStats() {
+  const s = state.stats;
+  const days = s.days;
+  const past = days.filter((d) => d.date <= state.today);
+  const total = past.reduce((n, d) => n + d.total, 0);
+  const done = past.reduce((n, d) => n + d.done, 0);
+  const planned = past.filter((d) => d.gym_planned && d.date < state.today);
+  const gymDone = planned.filter((d) => d.gym_done).length;
+  const wakes = past.map((d) => toMin(d.wake)).filter((m) => m !== null);
+  const avg = wakes.length ? Math.round(wakes.reduce((a, b) => a + b, 0) / wakes.length) : null;
+  const work = past.reduce((n, d) => n + d.minutes.study + d.minutes.project + d.minutes.learning, 0);
+  const fig = (n, l) => `<div class="figure"><div class="n">${n}</div><div class="l">${l}</div></div>`;
+  $('figures').innerHTML = [
+    fig(total ? `${Math.round((done / total) * 100)}%` : '—', 'checklist done'),
+    fig(planned.length ? `${gymDone}/${planned.length}` : '—', 'gym days'),
+    fig(avg !== null ? `${String(Math.floor(avg / 60)).padStart(2, '0')}:${String(avg % 60).padStart(2, '0')}` : '—', 'average wake'),
+    fig(work ? hours(work) : '—', 'study · projects · learning'),
+  ].join('');
+
+  // Wake time: one dot per day, earlier is higher. Target as a dashed line.
+  const W = 560, H = 150, padL = 34, padB = 18;
+  const target = toMin(s.wake_by);
+  const vals = [...wakes, ...(target !== null ? [target] : [])];
+  const lo = Math.min(300, ...vals) - 15, hi = Math.max(600, ...vals) + 15;
+  const x = (i) => padL + (i + 0.5) * ((W - padL) / days.length);
+  const y = (m) => ((m - lo) / (hi - lo)) * (H - padB);
+  const ticks = [];
+  for (let t = Math.ceil(lo / 60) * 60; t <= hi; t += 60) {
+    ticks.push(`<line x1="${padL}" x2="${W}" y1="${y(t)}" y2="${y(t)}" stroke="var(--rule)" stroke-width="0.5"/>
+      <text x="0" y="${y(t) + 3}">${String(t / 60).padStart(2, '0')}:00</text>`);
+  }
+  const dots = days.map((d, i) => {
+    const m = toMin(d.wake);
+    if (m === null) return '';
+    const late = target !== null && m > target;
+    return `<circle cx="${x(i)}" cy="${y(m)}" r="3.5" fill="${late ? 'var(--accent)' : 'var(--ink)'}"><title>${d.date} ${d.wake}</title></circle>`;
+  }).join('');
+  const line = target !== null ? `<line x1="${padL}" x2="${W}" y1="${y(target)}" y2="${y(target)}" stroke="var(--accent-dim)" stroke-dasharray="4 4"/>` : '';
+  const labels = days.map((d, i) => (i % 7 === 0 ? `<text x="${x(i)}" y="${H}" text-anchor="middle">${d.date.slice(5)}</text>` : '')).join('');
+  $('wake-chart').innerHTML = wakes.length
+    ? `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Wake times, last four weeks">${ticks.join('')}${line}${dots}${labels}</svg>`
+    : '<p class="empty">No wake times logged yet.</p>';
+  $('wake-target-label').textContent = s.wake_by ? `target ${s.wake_by}` : 'no target set';
+
+  // Gym: weeks as rows, Monday first.
+  const firstMon = (() => {
+    const d = new Date(`${days[0].date}T12:00:00`);
+    d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+    return d.toISOString().slice(0, 10);
+  })();
+  const byDate = Object.fromEntries(days.map((d) => [d.date, d]));
+  let grid = '<span></span>' + WEEK.map((w) => `<span class="h">${w.slice(0, 2)}</span>`).join('');
+  for (let start = firstMon; start <= state.today; start = shift(start, 7)) {
+    grid += `<span class="w">${start.slice(5)}</span>`;
+    for (let k = 0; k < 7; k++) {
+      const date = shift(start, k);
+      const d = byDate[date];
+      let cls = 'future';
+      if (d && date <= state.today) {
+        cls = d.gym_done ? 'done' : d.gym_planned ? (date < state.today ? 'miss' : 'free') : 'free';
+      }
+      grid += `<span class="c ${cls}" title="${date}${d && d.minutes.gym ? ' · ' + hours(d.minutes.gym) : ''}"></span>`;
+    }
+  }
+  $('gym').innerHTML = grid;
+
+  // Time logged: stacked bars per day.
+  const most = Math.max(60, ...days.map((d) => KINDS.reduce((n, k) => n + d.minutes[k], 0)));
+  const bw = (W - padL) / days.length;
+  const bars = days.map((d, i) => {
+    let top = H - padB;
+    return KINDS.map((k) => {
+      const h = (d.minutes[k] / most) * (H - padB - 6);
+      if (!h) return '';
+      top -= h;
+      return `<rect x="${padL + i * bw + 1}" y="${top}" width="${bw - 2}" height="${h}" fill="${color(k)}"><title>${d.date} ${k} ${hours(d.minutes[k])}</title></rect>`;
+    }).join('');
+  }).join('');
+  const scale = [0, Math.round(most / 2), most].map((m) => {
+    const yy = H - padB - (m / most) * (H - padB - 6);
+    return `<line x1="${padL}" x2="${W}" y1="${yy}" y2="${yy}" stroke="var(--rule)" stroke-width="0.5"/><text x="0" y="${yy + 3}">${hours(m)}</text>`;
+  }).join('');
+  $('time-chart').innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Time logged per day">${scale}${bars}${labels}</svg>`;
+  $('time-legend').innerHTML = KINDS.map((k) => `<span><span class="dot" style="background:${color(k)}"></span>${k}</span>`).join('');
+  const projects = Object.entries(s.projects).sort((a, b) => b[1] - a[1]);
+  $('project-time').innerHTML = projects.length ? projects.map(([name, m]) =>
+    `<div class="row"><div>${esc(name)}</div><div class="mono">${hours(m)}</div></div>`).join('') : '';
+}
+
+function renderHabits() {
+  $('habits').innerHTML = state.habits.length ? state.habits.map((h) => `
+    <div class="habit">
+      <div class="top"><span>${esc(h.name)} ${h.kind ? `<span class="detail mono">ticks itself on ${esc(h.kind)}</span>` : ''}
+        ${h.active ? '' : '<span class="detail mono">paused</span>'}</span>
+        <span><button class="small" data-pause="${h.id}">${h.active ? 'Pause' : 'Resume'}</button>
+        <button class="bare" data-drop="${h.id}" aria-label="Delete">×</button></span></div>
+      <div class="days">${WEEK.map((d) => `<button class="${h.weekdays.includes(d) ? 'on' : ''}" data-habit="${h.id}" data-day="${d}">${d}</button>`).join('')}</div>
+    </div>`).join('') : '<p class="empty">No fixed targets.</p>';
+}
+
+$('habit-add').addEventListener('click', async () => {
+  const name = $('habit-name').value.trim();
+  if (name.length < 2) return;
+  try {
+    await api('/life/habits', { name, kind: $('habit-kind').value || null });
+    $('habit-name').value = '';
+    await refresh();
+  } catch (error) { $('settings-status').textContent = error.message; }
+});
+$('wake-save').addEventListener('click', async () => {
+  try { await api('/life/settings', { wake_by: $('wake-by').value || null }); await refresh(); }
+  catch (error) { $('settings-status').textContent = error.message; }
+});
+$('wake-clear').addEventListener('click', async () => {
+  await api('/life/settings', { wake_by: null });
+  $('wake-by').value = '';
+  await refresh();
+});
+
+// -- loading ---------------------------------------------------------------
+
+async function refresh() {
+  $('settings-status').textContent = '';
+  const [stats, habits] = await Promise.all([api('/life/stats?days=28'), api('/life/habits')]);
+  state.stats = stats;
+  state.habits = habits.habits;
+  $('wake-by').value = habits.wake_by || '';
+  await loadDay();
+  renderStats();
+  renderHabits();
+}
+
+async function load() {
+  if (!state.token) { openGate(); return; }
+  try { await refresh(); }
+  catch (error) { $('checklist').innerHTML = `<p class="error">${esc(error.message)}</p>`; }
+}
+
+load();
+</script>
+</body>
+</html>

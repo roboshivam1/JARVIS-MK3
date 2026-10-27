@@ -59,6 +59,8 @@ from jarvis.core.orchestrator.prompts import assemble_system_prompt
 from jarvis.core.people.service import ExtractionFailed, PeopleService
 from jarvis.core.projects.service import ExtractionFailed as ProjectExtractionFailed
 from jarvis.core.projects.service import ProjectService
+from jarvis.core.life.service import LifeService
+from jarvis.core.life.service import ReportFailed as LifeReportFailed
 from jarvis.jobs.projects import DOCUMENT_JOB_TYPE as PROJECT_DOCUMENT_JOB
 from jarvis.core.reels.service import BriefRejected, ReelBusy, ReelService
 from jarvis.core.queue.dispatcher import cancel_job as queue_cancel_job
@@ -252,6 +254,24 @@ class _ProjectNoteArgs(BaseModel):
     text: str = Field(min_length=2, description="The log line, as he dictated it.")
 
 
+class _LifeReportArgs(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    text: str = Field(
+        min_length=2,
+        description=("What he said about his day, in his own words and in full: "
+                     "waking, sleep, gym, meals, study, project work, learning, "
+                     "things done, targets for another day."),
+    )
+
+
+class _LifeDayArgs(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    date: str | None = Field(None, pattern=r"^\d{4}-\d{2}-\d{2}$",
+                             description="YYYY-MM-DD; leave empty for today.")
+
+
 class _ReelRefArgs(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -293,6 +313,7 @@ class Orchestrator:
         reels: "ReelService | None" = None,
         router: "ClaudeCodeRouter | None" = None,
         projects: "ProjectService | None" = None,
+        life: "LifeService | None" = None,
     ) -> None:
         self._llm = llm
         self._settings = settings
@@ -309,6 +330,7 @@ class Orchestrator:
         self._reels = reels
         self._router = router
         self._projects = projects
+        self._life = life
 
     # -- per-turn toolset -----------------------------------------------------
 
@@ -793,6 +815,65 @@ class Orchestrator:
                     args_model=_ProjectNameArgs,
                     handler=project_document,
                 ))
+
+        # -- the life log -----------------------------------------------------
+        #
+        # His own record of his days. Reports go straight in (no review),
+        # and the last one can always be undone.
+        if self._life is not None:
+            life = self._life
+
+            async def life_report(args: _LifeReportArgs) -> str:
+                try:
+                    outcome = await life.report(args.text, trace_id=trace_id)
+                except LifeReportFailed as exc:
+                    return f"That could not be logged: {exc}"
+                return outcome.summary()
+
+            tools.register(InlineTool(
+                name="life_report",
+                description=(
+                    "Log what the owner reports about his day: when he woke or "
+                    "slept, gym, meals, study, project work, learning, checklist "
+                    "items done, and targets he sets for a day ('tomorrow I want "
+                    "to finish a Coursera module'). Use it whenever he reports "
+                    "any of these, including in reply to the evening check-in. "
+                    "Pass his words in full. Confirm briefly what was logged."
+                ),
+                args_model=_LifeReportArgs,
+                handler=life_report,
+            ))
+
+            async def life_day(args: _LifeDayArgs) -> str:
+                return await life.status_text(args.date)
+
+            tools.register(InlineTool(
+                name="life_day",
+                description="One day's checklist, wake and sleep, time logged and meals.",
+                args_model=_LifeDayArgs,
+                handler=life_day,
+            ))
+
+            async def life_week(_: _NoArgs) -> str:
+                return await life.week_text()
+
+            tools.register(InlineTool(
+                name="life_week",
+                description=("How the last seven days went: checklist completion, gym "
+                             "days, wake times, hours on study, projects and learning."),
+                args_model=_NoArgs,
+                handler=life_week,
+            ))
+
+            async def life_undo(_: _NoArgs) -> str:
+                return await life.undo_last()
+
+            tools.register(InlineTool(
+                name="life_undo",
+                description="Take back the last thing logged, when he says it was wrong.",
+                args_model=_NoArgs,
+                handler=life_undo,
+            ))
 
         # -- reels ------------------------------------------------------------
         #

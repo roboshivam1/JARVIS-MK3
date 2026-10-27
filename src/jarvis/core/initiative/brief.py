@@ -47,6 +47,7 @@ from jarvis.llm.layer import user_message
 from jarvis.llm.tiers import Tier
 
 if TYPE_CHECKING:
+    from jarvis.core.life.service import LifeService
     from jarvis.llm.layer import LLMLayer
 
 log = get_logger("core.initiative.brief")
@@ -78,11 +79,12 @@ formality. The brief goes to Telegram as plain text.
 Rules:
 - Use ONLY the facts given. Never add, guess, round up or soften a fact.
 - Open with a short greeting that includes the day and date.
+- If there is a "Checklist for today" section, give it right after the greeting as "- " lines, every item, worded exactly as given. Then yesterday in one sentence.
 - Lead with what needs him: approvals, reviews, things he owes or is \
 owed, anything that failed. Then dates coming up. Spend last.
 - One short paragraph per section, or a few "- " lines where a list is \
 clearer. No headings, no markdown, no emoji.
-- Under 160 words. If the facts are thin, be brief - do not pad.
+- Under 200 words. If the facts are thin, be brief - do not pad.
 - Close with one line at most. No questions unless a fact asks for one."""
 
 
@@ -123,6 +125,7 @@ class BriefService:
         llm: "LLMLayer | None",
         tz: ZoneInfo,
         projects: ProjectsRepo | None = None,
+        life: "LifeService | None" = None,
     ) -> None:
         self._db = db
         self._people = people
@@ -134,6 +137,7 @@ class BriefService:
         self._llm = llm
         self._tz = tz
         self._projects = projects
+        self._life = life
 
     # -- the whole thing ------------------------------------------------------
 
@@ -181,6 +185,12 @@ class BriefService:
         facts = BriefFacts(today=local.date())
         since = moment - _LOOKBACK
 
+        if self._life is not None:
+            try:
+                for name, lines in (await self._life.brief_sections(moment)).items():
+                    facts.add(name, lines)
+            except Exception:
+                log.warning("life sections unavailable", exc_info=True)
         facts.add("Waiting on sir", await self._waiting(since))
         facts.add("Commitments", await self._commitments(local.date()))
         facts.add("Coming up", await self._dates(local.date()))

@@ -62,6 +62,9 @@ from jarvis.core.initiative.brief import BRIEF_JOB_TYPE, BRIEF_SCHEDULE, BriefSe
 from jarvis.core.queue.claude_code import ClaudeCodeRouter
 from jarvis.core.db.repos.projects import ProjectsRepo
 from jarvis.core.projects.service import ProjectService
+from jarvis.core.db.repos.life import LifeRepo
+from jarvis.core.life.service import LifeService
+from jarvis.jobs.life import CHECKIN_JOB_TYPE, CHECKIN_SCHEDULE
 from jarvis.core.initiative.engine import InitiativeEngine, next_cron_time
 from jarvis.core.initiative.notifier import Notifier
 from jarvis.core.initiative.policy import NotificationPolicy
@@ -112,6 +115,8 @@ class CoreApp:
         self.router: ClaudeCodeRouter | None = None
         self.projects_repo: ProjectsRepo | None = None
         self.projects: ProjectService | None = None
+        self.life_repo: LifeRepo | None = None
+        self.life: LifeService | None = None
         self.schedules: SchedulesRepo | None = None
         self.watchers: WatchersRepo | None = None
         self.initiative: InitiativeEngine | None = None
@@ -180,6 +185,9 @@ class CoreApp:
         self.people = PeopleService(self.people_repo, self.llm, self.settings.tz)
         self.projects_repo = ProjectsRepo(self.db)
         self.projects = ProjectService(self.projects_repo, self.llm, self.settings.tz)
+        self.life_repo = LifeRepo(self.db)
+        self.life = LifeService(self.life_repo, self.llm, self.settings.tz,
+                                projects=self.projects_repo)
 
         # -- initiative and approvals -----------------------------------------
         self.approval_service = ApprovalService(
@@ -203,6 +211,7 @@ class CoreApp:
         from jarvis.jobs.backup import register_backup_jobs
         from jarvis.jobs.brief import register_brief_jobs
         from jarvis.jobs.projects import register_project_jobs
+        from jarvis.jobs.life import register_life_jobs
         from jarvis.jobs.claude_code import register_claude_code_job_metadata
         from jarvis.jobs.browser import register_browser_job_metadata
         from jarvis.jobs.code import register_code_job_metadata
@@ -239,9 +248,11 @@ class CoreApp:
             notifications=self.notifications, llm=self.llm,
             tz=self.settings.tz,
             projects=self.projects_repo,
+            life=self.life,
         )
         register_brief_jobs(self.registry, self.brief)
         register_project_jobs(self.registry, self.llm, self.projects_repo, self.projects)
+        register_life_jobs(self.registry, self.life, self.sessions, self.notifications)
 
         # -- reels ------------------------------------------------------------
         self.reels = ReelService(
@@ -267,6 +278,7 @@ class CoreApp:
             reels=self.reels,
             router=self.router,
             projects=self.projects,
+            life=self.life,
         )
         self.session_mgr = SessionManager(
             self.sessions, self.events, orchestrator,
@@ -275,6 +287,7 @@ class CoreApp:
             people=self.people,
             reels=self.reels,
             projects=self.projects,
+            life=self.life,
         )
 
         # -- gateway ----------------------------------------------------------
@@ -299,6 +312,8 @@ class CoreApp:
             people=self.people,
             projects_repo=self.projects_repo,
             projects=self.projects,
+            life_repo=self.life_repo,
+            life=self.life,
         )
 
         # -- clients ----------------------------------------------------------
@@ -318,6 +333,7 @@ class CoreApp:
                 reels=self.reels,
                 brief=self.brief,
                 schedules=self.schedules,
+                life=self.life,
             )
             self.notifier.register_deliverer("telegram", self.telegram)
             self.reels.attach(self.telegram)
@@ -385,6 +401,18 @@ class CoreApp:
             priority=4,
             next_fire_ts=next_cron_time(
                 self.settings.brief_cron, self.settings.tz
+            ),
+        ))
+
+        await self.schedules.ensure(Schedule(
+            name=CHECKIN_SCHEDULE,
+            kind=ScheduleKind.CRON,
+            cron_expr=self.settings.life_checkin_cron,
+            job_type=CHECKIN_JOB_TYPE,
+            job_payload={"reason": "scheduled"},
+            priority=4,
+            next_fire_ts=next_cron_time(
+                self.settings.life_checkin_cron, self.settings.tz
             ),
         ))
 

@@ -55,9 +55,12 @@ from jarvis.core.db.repos.people import PeopleRepo
 from jarvis.core.gateway.people_directory_routes import people_directory_router
 from jarvis.core.gateway.people_routes import people_router
 from jarvis.core.gateway.projects_routes import projects_router
+from jarvis.core.gateway.life_routes import life_router
 from jarvis.core.people.service import PeopleService
 from jarvis.core.db.repos.projects import ProjectsRepo
 from jarvis.core.projects.service import ProjectService
+from jarvis.core.db.repos.life import LifeRepo
+from jarvis.core.life.service import LifeService
 from jarvis.core.queue.registry_workers import WorkerRegistry
 
 log = get_logger("core.gateway")
@@ -93,6 +96,9 @@ class GatewayDeps:
     # The projects database, mounted the same way.
     projects_repo: "ProjectsRepo | None" = None
     projects: "ProjectService | None" = None
+    # The life log.
+    life_repo: "LifeRepo | None" = None
+    life: "LifeService | None" = None
 
 
 async def build_status_snapshot(deps: GatewayDeps) -> dict[str, Any]:
@@ -183,6 +189,14 @@ def create_app(deps: GatewayDeps) -> FastAPI:
         authed requests - as /app/people."""
         return FileResponse(
             Path(__file__).parent / "static" / "projects.html",
+            media_type="text/html",
+        )
+
+    @app.get("/app/life")
+    async def life_page() -> FileResponse:
+        """The life log: today's checklist, the day's record, the trends."""
+        return FileResponse(
+            Path(__file__).parent / "static" / "life.html",
             media_type="text/html",
         )
 
@@ -307,5 +321,8 @@ def create_app(deps: GatewayDeps) -> FastAPI:
     if deps.projects_repo is not None and deps.projects is not None:
         app.include_router(projects_router(deps.projects_repo, deps.projects, auth,
                                            jobs=deps.jobs))
+
+    if deps.life_repo is not None and deps.life is not None:
+        app.include_router(life_router(deps.life_repo, deps.life, auth))
 
     return app

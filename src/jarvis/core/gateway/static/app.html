@@ -192,6 +192,9 @@ aside {
   border-bottom: 1px solid var(--rule);
   margin-bottom: 10px;
 }
+.panel h2 a { color: inherit; text-decoration: none; }
+.panel h2 a::after { content: ' \2192'; color: var(--muted); }
+.panel h2 a:hover { color: var(--ink); }
 
 .row {
   font-family: var(--mono);
@@ -317,7 +320,8 @@ body.dragging::after {
   .turn { margin-bottom: 22px; }
   .body { font-size: 16px; }
 
-  header { padding: 10px 16px 8px; }
+  header { padding: 10px 16px 8px; gap: 14px; }
+  header a.nav { letter-spacing: 0.08em; }
   .masthead { font-size: 14px; letter-spacing: 0.28em; }
   .dateline { display: none; }
 
@@ -366,6 +370,8 @@ body.dragging::after {
 <header>
   <span class="masthead">JARVIS</span>
   <span class="dateline" id="dateline"></span>
+  <a class="nav" href="/app/life">Life</a>
+  <a class="nav" href="/app/projects">Projects</a>
   <a class="nav" href="/app/people">People</a>
   <span class="connection" id="connection">connecting</span>
 </header>
@@ -384,6 +390,14 @@ body.dragging::after {
     <div class="panel">
       <h2>Watching</h2>
       <div id="watchers"><div class="empty">nothing watched</div></div>
+    </div>
+    <div class="panel">
+      <h2><a class="nav" href="/app/life">Today</a></h2>
+      <div id="life-panel"><div class="empty">-</div></div>
+    </div>
+    <div class="panel">
+      <h2><a class="nav" href="/app/projects">Projects</a></h2>
+      <div id="projects-panel"><div class="empty">-</div></div>
     </div>
     <div class="panel">
       <h2><a class="nav" href="/app/people">People</a></h2>
@@ -441,6 +455,8 @@ $('token-input').addEventListener('keydown', (event) => {
   localStorage.setItem('jarvis_token', token);
   $('gate').style.display = 'none';
   refreshPeople();
+  refreshLife();
+  refreshProjects();
   connect();
 });
 
@@ -627,6 +643,47 @@ async function refreshPeople() {
   if (next) items.push([next.label, next.when]);
   if (!items.length) items.push([`${data.people} known`, `${data.groups} groups`]);
   rows('people-panel', items, '-');
+}
+
+// The life log, in a few lines: today's checklist progress and what is
+// still open. The heading links to the full page.
+const escapeText = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => (
+  { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+async function refreshLife() {
+  let data;
+  try {
+    const response = await fetch('/life/summary', {
+      headers: { Authorization: `Bearer ${state.token}` },
+    });
+    if (!response.ok) return;
+    data = await response.json();
+  } catch (_) { return; }
+  const items = [];
+  if (data.total) items.push(['checklist', `${data.done} / ${data.total}`]);
+  items.push(['woke', data.wake || 'not logged']);
+  for (const text of (data.open || []).slice(0, 3)) items.push([escapeText(text), 'open']);
+  rows('life-panel', items, '-');
+}
+
+// Projects: what is waiting for review, and the live ones.
+async function refreshProjects() {
+  let data;
+  try {
+    const response = await fetch('/projects/directory', {
+      headers: { Authorization: `Bearer ${state.token}` },
+    });
+    if (!response.ok) return;
+    data = await response.json();
+  } catch (_) { return; }
+  const items = [];
+  if (data.pending) items.push([`${data.pending} waiting`, 'review']);
+  const live = (data.projects || []).filter((p) => p.status === 'active');
+  for (const p of live.slice(0, 4)) {
+    items.push([escapeText(p.name), p.open_tasks ? `${p.open_tasks} to do` : 'active']);
+  }
+  if (!items.length) items.push([`${(data.projects || []).length} projects`, '']);
+  rows('projects-panel', items, '-');
 }
 
 // Recurring dates are stored as MM-DD, so the next one is this year's
@@ -1027,6 +1084,10 @@ if (state.token) {
 setInterval(refreshStatus, 15000);
 refreshPeople();
 setInterval(refreshPeople, 60000);
+refreshLife();
+setInterval(refreshLife, 60000);
+refreshProjects();
+setInterval(refreshProjects, 60000);
 </script>
 </body>
 </html>

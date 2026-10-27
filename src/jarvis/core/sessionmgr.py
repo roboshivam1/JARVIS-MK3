@@ -42,6 +42,7 @@ from jarvis.core.memory.service import MemoryService
 from jarvis.core.orchestrator.agent import Orchestrator
 from jarvis.core.people.service import PeopleService
 from jarvis.core.projects.service import ProjectService
+from jarvis.core.life.service import LifeService
 from jarvis.core.reels.service import ReelService
 from jarvis.llm.layer import TextCallback
 
@@ -86,6 +87,7 @@ class SessionManager:
         people: "PeopleService | None" = None,
         reels: "ReelService | None" = None,
         projects: "ProjectService | None" = None,
+        life: "LifeService | None" = None,
     ) -> None:
         self._sessions = sessions
         self._events = events
@@ -98,6 +100,7 @@ class SessionManager:
         self._people = people
         self._reels = reels
         self._projects = projects
+        self._life = life
         # session id -> the task currently generating its reply
         self._inflight: dict[str, asyncio.Task[LoopResult]] = {}
 
@@ -199,6 +202,19 @@ class SessionManager:
                 retrieved_memory = "\n\n".join(
                     part for part in (retrieved_memory,
                                       "Your reels, newest first:\n" + reels_block) if part)
+
+        # His day so far: the checklist and what is logged. Small, and it
+        # is what lets "done with the module" tick the right item.
+        if self._life is not None:
+            try:
+                life_block = await self._life.status_text()
+            except Exception:
+                log.warning("life context unavailable", exc_info=True)
+                life_block = ""
+            if life_block:
+                retrieved_memory = "\n\n".join(
+                    part for part in (retrieved_memory,
+                                      "His day (life log):\n" + life_block) if part)
 
         # 4. Think, inside a tracked and cancellable task.
         gen_task = asyncio.create_task(

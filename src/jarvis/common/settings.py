@@ -136,6 +136,10 @@ class CoreSettings(CommonSettings):
     # just after quiet hours end (07:30), so it is not held back.
     brief_cron: str = "35 7 * * *"
 
+    # The evening check-in: today's checklist, what is unlogged, and
+    # tomorrow's list. Before quiet hours (22:30) so it is not held back.
+    life_checkin_cron: str = "0 22 * * *"
+
     # -- Backups -------------------------------------------------------------
 
     # When the nightly backup runs. After the sleep cycle, so the day's
