@@ -54,6 +54,13 @@ DEFAULT_POLICIES: dict[str, ActorPolicy] = {
             # the owner reviews it before anything renders, and posting
             # is always his.
             "reels_recent", "reel_details", "reel_request", "reel_mark_posted",
+            # The projects database. Same shape as people: reads, a debrief
+            # that only stages proposals, a log line he dictated himself,
+            # and the master document as a background job.
+            "projects_list", "project_lookup", "project_debrief",
+            "project_note", "project_document",
+            # The life log - his own record of his own days.
+            "life_report", "life_day", "life_week", "life_undo",
         ),
         description=(
             "The front mind. Talks, remembers, and delegates. No hands: "
