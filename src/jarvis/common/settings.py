@@ -140,6 +140,17 @@ class CoreSettings(CommonSettings):
     # tomorrow's list. Before quiet hours (22:30) so it is not held back.
     life_checkin_cron: str = "0 22 * * *"
 
+    # -- Money (PLUTUS) ------------------------------------------------------
+
+    # JARVIS's own mailbox, which the owner's Gmail forwards bank alerts
+    # to. Empty user or password means no mailbox: nothing is read.
+    money_imap_host: str = "imap.gmail.com"
+    money_imap_user: str = ""
+    money_imap_password: SecretStr = SecretStr("")      # a Gmail app password
+
+    # How often to look for new alerts, in seconds.
+    money_poll_s: int = 300
+
     # -- Backups -------------------------------------------------------------
 
     # When the nightly backup runs. After the sleep cycle, so the day's

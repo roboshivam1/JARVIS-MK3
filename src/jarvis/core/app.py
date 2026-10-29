@@ -64,6 +64,9 @@ from jarvis.core.db.repos.projects import ProjectsRepo
 from jarvis.core.projects.service import ProjectService
 from jarvis.core.db.repos.life import LifeRepo
 from jarvis.core.life.service import LifeService
+from jarvis.core.db.repos.money import MoneyRepo
+from jarvis.core.money.mailbox import ImapMailbox
+from jarvis.core.money.service import MoneyService
 from jarvis.jobs.life import CHECKIN_JOB_TYPE, CHECKIN_SCHEDULE
 from jarvis.core.initiative.engine import InitiativeEngine, next_cron_time
 from jarvis.core.initiative.notifier import Notifier
@@ -117,6 +120,7 @@ class CoreApp:
         self.projects: ProjectService | None = None
         self.life_repo: LifeRepo | None = None
         self.life: LifeService | None = None
+        self.money: MoneyService | None = None
         self.schedules: SchedulesRepo | None = None
         self.watchers: WatchersRepo | None = None
         self.initiative: InitiativeEngine | None = None
@@ -188,6 +192,12 @@ class CoreApp:
         self.life_repo = LifeRepo(self.db)
         self.life = LifeService(self.life_repo, self.llm, self.settings.tz,
                                 projects=self.projects_repo)
+        imap_password = self.settings.money_imap_password.get_secret_value().strip()
+        mailbox = (ImapMailbox(self.settings.money_imap_host,
+                               self.settings.money_imap_user.strip(), imap_password)
+                   if self.settings.money_imap_user.strip() and imap_password else None)
+        self.money = MoneyService(MoneyRepo(self.db), self.settings.tz,
+                                  mailbox=mailbox, projects=self.projects_repo)
 
         # -- initiative and approvals -----------------------------------------
         self.approval_service = ApprovalService(
@@ -249,6 +259,7 @@ class CoreApp:
             tz=self.settings.tz,
             projects=self.projects_repo,
             life=self.life,
+            money=self.money,
         )
         register_brief_jobs(self.registry, self.brief)
         register_project_jobs(self.registry, self.llm, self.projects_repo, self.projects)
@@ -279,6 +290,7 @@ class CoreApp:
             router=self.router,
             projects=self.projects,
             life=self.life,
+            money=self.money,
         )
         self.session_mgr = SessionManager(
             self.sessions, self.events, orchestrator,
@@ -314,6 +326,7 @@ class CoreApp:
             projects=self.projects,
             life_repo=self.life_repo,
             life=self.life,
+            money=self.money,
         )
 
         # -- clients ----------------------------------------------------------
@@ -471,6 +484,7 @@ class CoreApp:
         assert self.notifier is not None and self.initiative is not None
         assert self.approval_service is not None
         assert self.reels is not None and self.router is not None
+        assert self.money is not None
 
         for name, coroutine in (
             ("core-worker", self._core_worker.run()),
@@ -480,6 +494,7 @@ class CoreApp:
             ("approvals", self.approval_service.run()),
             ("reels", self.reels.run()),
             ("claude-code-router", self.router.run()),
+            ("money", self.money.run(self.settings.money_poll_s)),
         ):
             essential[name] = asyncio.create_task(coroutine, name=name)
 

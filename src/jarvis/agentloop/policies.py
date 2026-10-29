@@ -29,6 +29,7 @@ OPERATOR = "subagent.operator"
 ENGINEER = "subagent.engineer"
 WRITER = "subagent.writer"
 ARCHIVIST = "subagent.archivist"
+PLUTUS = "subagent.plutus"
 
 
 DEFAULT_POLICIES: dict[str, ActorPolicy] = {
@@ -61,6 +62,9 @@ DEFAULT_POLICIES: dict[str, ActorPolicy] = {
             "project_note", "project_document",
             # The life log - his own record of his own days.
             "life_report", "life_day", "life_week", "life_undo",
+            # Money goes through PLUTUS: JARVIS asks, PLUTUS answers. He
+            # never reads the ledger himself.
+            "ask_plutus",
         ),
         description=(
             "The front mind. Talks, remembers, and delegates. No hands: "
@@ -109,6 +113,15 @@ DEFAULT_POLICIES: dict[str, ActorPolicy] = {
             "Reads and writes artifacts only - no browser, no shell, no "
             "network. The narrowest surface of any subagent, because "
             "writing needs nothing else."
+        ),
+    ),
+    PLUTUS: ActorPolicy(
+        actor=PLUTUS,
+        tools=("money_*",),
+        description=(
+            "PLUTUS. Keeps the owner's books: reads and corrects the money "
+            "ledger, nothing else. No web, no memory, and no tool that "
+            "could move money exists for it to call."
         ),
     ),
     ARCHIVIST: ActorPolicy(

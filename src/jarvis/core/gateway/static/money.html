@@ -1,0 +1,416 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>JARVIS · Money</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+/* ==========================================================================
+   Money - PLUTUS's ledger, as another section of the same Gazette.
+   Left: the month, by category and by day. Right: what to sort, and
+   every payment.
+   ========================================================================== */
+
+:root {
+  --ink: #ece5d8;
+  --paper: #17171a;
+  --paper-raised: #1e1e22;
+  --rule: #3a3a40;
+  --muted: #8a8a92;
+  --accent: #d4685f;
+  --accent-dim: #8f4842;
+  --bar: #c9b79c;
+  --serif: 'Source Serif 4', Georgia, serif;
+  --mono: 'JetBrains Mono', ui-monospace, monospace;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--paper); color: var(--ink); font-family: var(--serif);
+  font-size: 16px; line-height: 1.6; min-height: 100dvh;
+}
+:focus-visible { outline: 1px solid var(--accent); outline-offset: 2px; }
+
+header {
+  border-bottom: 1px solid var(--rule); padding: 14px 24px 12px;
+  display: flex; align-items: baseline; gap: 24px; flex-wrap: wrap;
+}
+.masthead {
+  font-family: var(--mono); font-size: 17px; font-weight: 600; letter-spacing: 0.34em;
+  line-height: 1; color: var(--ink); text-decoration: none;
+}
+.section-name, header a.nav {
+  font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--muted); text-decoration: none;
+}
+.section-name { color: var(--accent); margin-right: auto; }
+header a.nav:hover { color: var(--accent); }
+
+main {
+  padding: 28px 40px 80px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+  gap: 48px; align-items: start;
+}
+section + section { margin-top: 40px; }
+h2 {
+  font-family: var(--mono); font-size: 10px; font-weight: 600; letter-spacing: 0.18em;
+  text-transform: uppercase; color: var(--accent); padding-bottom: 6px;
+  border-bottom: 1px solid var(--rule); margin-bottom: 12px;
+  display: flex; justify-content: space-between; align-items: baseline;
+}
+.empty, .hint { color: var(--muted); font-size: 15px; }
+.mono { font-family: var(--mono); font-size: 12px; }
+.detail { color: var(--muted); font-size: 14px; }
+
+input[type=text], input[type=date], select, textarea {
+  background: var(--paper-raised); border: 1px solid var(--rule); color: var(--ink);
+  font-family: var(--serif); font-size: 15px; padding: 7px 10px; outline: none; width: 100%;
+}
+select, input[type=date] { font-family: var(--mono); font-size: 12px; width: auto; }
+textarea { resize: vertical; }
+input:focus, select:focus, textarea:focus { border-color: var(--accent-dim); }
+button {
+  background: transparent; border: 1px solid var(--rule); color: var(--ink);
+  font-family: var(--mono); font-size: 11px; letter-spacing: 0.12em;
+  text-transform: uppercase; padding: 8px 13px; cursor: pointer;
+}
+button:hover { border-color: var(--accent); color: var(--accent); }
+button.small { padding: 4px 9px; font-size: 10px; }
+button.bare { border: none; padding: 0 4px; color: var(--muted); }
+button.bare:hover { color: var(--accent); }
+.inline { display: flex; gap: 8px; align-items: center; margin-top: 10px; flex-wrap: wrap; }
+.inline input[type=text] { flex: 1; min-width: 8em; width: auto; }
+.status { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+.error { color: var(--accent); }
+
+.monthnav { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
+.monthnav h3 { font-size: 26px; font-weight: 600; line-height: 1.1; flex: 1; }
+.total { font-size: 44px; font-weight: 600; line-height: 1; }
+.total-sub { font-family: var(--mono); font-size: 11px; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; margin-top: 6px; }
+
+.cat { display: grid; grid-template-columns: 9em 1fr 6.5em; gap: 10px; align-items: center; padding: 4px 0; }
+.cat .bar { height: 10px; background: var(--bar); }
+.cat .bar.sort { background: var(--accent); }
+.cat .amt { font-family: var(--mono); font-size: 12px; text-align: right; }
+svg { display: block; width: 100%; height: auto; overflow: visible; }
+svg text { font-family: var(--mono); font-size: 9px; fill: var(--muted); }
+
+.row {
+  display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; padding: 8px 0;
+  border-bottom: 1px dotted var(--rule); align-items: center;
+}
+.row .amt { font-family: var(--mono); font-size: 13px; text-align: right; }
+.row .controls { grid-column: 1 / -1; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.tag { font-family: var(--mono); font-size: 10px; color: var(--muted); border: 1px solid var(--rule); padding: 0 5px; }
+.tag.bad { color: var(--accent); border-color: var(--accent-dim); }
+.daylabel { font-family: var(--mono); font-size: 10px; color: var(--muted); letter-spacing: 0.12em; text-transform: uppercase; margin-top: 14px; }
+
+#gate { position: fixed; inset: 0; background: var(--paper); display: none; place-items: center; z-index: 200; }
+#gate.open { display: grid; }
+#gate .inner { text-align: center; max-width: 340px; width: 100%; padding: 0 20px; }
+#gate input { margin-top: 18px; font-family: var(--mono); font-size: 13px; }
+
+@media (max-width: 900px) {
+  main { grid-template-columns: 1fr; padding: 18px 16px calc(60px + env(safe-area-inset-bottom)); gap: 36px; }
+  header { padding: 10px 16px 8px; gap: 14px; }
+  .cat { grid-template-columns: 7em 1fr 5.5em; }
+  input[type=text], textarea { font-size: 16px; }
+}
+</style>
+</head>
+<body>
+
+<div id="gate">
+  <div class="inner">
+    <div class="masthead">JARVIS</div>
+    <input id="token-input" type="password" placeholder="access token" autocomplete="off">
+  </div>
+</div>
+
+<header>
+  <a class="masthead" href="/app">JARVIS</a>
+  <span class="section-name">Money</span>
+  <a class="nav" href="/app/life">Life</a>
+  <a class="nav" href="/app/projects">Projects</a>
+  <a class="nav" href="/app/people">People</a>
+  <a class="nav" href="/app">Conversation</a>
+</header>
+
+<main>
+  <div>
+    <div class="monthnav">
+      <button class="small" id="prev" aria-label="Previous month">‹</button>
+      <h3 id="month-title">…</h3>
+      <button class="small" id="next" aria-label="Next month">›</button>
+    </div>
+    <section>
+      <div class="total" id="total">—</div>
+      <div class="total-sub" id="total-sub"></div>
+    </section>
+    <section>
+      <h2>By category</h2>
+      <div id="categories"></div>
+    </section>
+    <section>
+      <h2>By day</h2>
+      <div id="days"></div>
+    </section>
+    <section>
+      <h2>Cash</h2>
+      <div class="inline">
+        <input type="text" id="cash-amount" placeholder="amount" style="max-width:7em">
+        <input type="text" id="cash-what" placeholder="what / who">
+      </div>
+      <div class="inline">
+        <select id="cash-category"></select>
+        <input type="date" id="cash-date">
+        <button class="small" id="cash-add">Add</button>
+      </div>
+      <p class="status" id="cash-status"></p>
+    </section>
+    <section>
+      <h2>Mailbox <button class="small" id="poll">Check now</button></h2>
+      <p class="status" id="mailbox"></p>
+      <details style="margin-top:10px">
+        <summary class="mono" style="cursor:pointer;color:var(--muted)">Paste an alert by hand</summary>
+        <textarea id="alert-text" rows="5" placeholder="Paste a Union Bank debit alert email here" style="margin-top:8px"></textarea>
+        <div class="inline"><button class="small" id="alert-add">Record</button><span class="status" id="alert-status"></span></div>
+      </details>
+    </section>
+  </div>
+
+  <div>
+    <section>
+      <h2>To sort <span class="mono" id="sort-count"></span></h2>
+      <p class="hint" id="sort-hint">Say once what a payee is, and every payment to it follows.</p>
+      <div id="to-sort"></div>
+    </section>
+    <section>
+      <h2>Payments</h2>
+      <div id="transactions"><p class="empty">Loading…</p></div>
+    </section>
+  </div>
+</main>
+
+<script>
+'use strict';
+
+const $ = (id) => document.getElementById(id);
+const state = {
+  token: localStorage.getItem('jarvis_token') || '',
+  month: null, today: null, data: null, categories: [],
+};
+const SCOPES = { personal: 'personal', basement_supply: 'Basement Supply' };
+
+const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => (
+  { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const rs = (paise) => {
+  const whole = Math.floor(paise / 100), frac = paise % 100;
+  return `Rs ${whole.toLocaleString('en-IN')}${frac ? '.' + String(frac).padStart(2, '0') : ''}`;
+};
+const shiftMonth = (ym, n) => {
+  const d = new Date(Number(ym.slice(0, 4)), Number(ym.slice(5, 7)) - 1 + n, 1);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+};
+
+async function api(path, body, method) {
+  const options = { headers: { Authorization: `Bearer ${state.token}` } };
+  if (method) options.method = method;
+  if (body !== undefined) {
+    options.method = method || 'POST';
+    options.headers['Content-Type'] = 'application/json';
+    options.body = JSON.stringify(body);
+  }
+  const response = await fetch(path, options);
+  if (response.status === 401) {
+    localStorage.removeItem('jarvis_token');
+    state.token = '';
+    openGate();
+    throw new Error('The access token was rejected.');
+  }
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const detail = Array.isArray(data.detail) ? data.detail.map((d) => d.msg).join('; ') : data.detail;
+    throw new Error(detail || `Request failed with status ${response.status}.`);
+  }
+  return data;
+}
+
+function openGate() { $('gate').classList.add('open'); $('token-input').focus(); }
+$('token-input').addEventListener('keydown', (event) => {
+  if (event.key !== 'Enter') return;
+  const token = event.target.value.trim();
+  if (!token) return;
+  state.token = token;
+  localStorage.setItem('jarvis_token', token);
+  $('gate').classList.remove('open');
+  load();
+});
+
+function catOptions(current, withBlank) {
+  return (withBlank ? `<option value="">category…</option>` : '') + state.categories.map((c) =>
+    `<option value="${esc(c.name)}" ${c.name === current ? 'selected' : ''}>${esc(c.name)}</option>`).join('');
+}
+
+function render() {
+  const d = state.data;
+  const when = new Date(`${state.month}-01T12:00:00`);
+  $('month-title').textContent = when.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+  $('next').disabled = state.month >= state.today.slice(0, 7);
+  $('total').textContent = rs(d.total_paise);
+  const extras = [`${d.count} payment${d.count === 1 ? '' : 's'}`];
+  if (d.by_scope.basement_supply) extras.push(`${rs(d.by_scope.basement_supply)} Basement Supply`);
+  if (d.transfers_paise) extras.push(`${rs(d.transfers_paise)} transfers not counted`);
+  $('total-sub').textContent = extras.join(' · ');
+
+  const cats = Object.entries(d.by_category);
+  const most = Math.max(1, ...cats.map(([, v]) => v));
+  $('categories').innerHTML = cats.length ? cats.map(([name, v]) => `
+    <div class="cat"><span>${esc(name)}</span>
+      <div><div class="bar ${name === 'to sort' ? 'sort' : ''}" style="width:${(v / most) * 100}%"></div></div>
+      <span class="amt">${rs(v)}</span></div>`).join('') : '<p class="empty">Nothing spent.</p>';
+
+  // By day: one bar per day of the month.
+  const year = Number(state.month.slice(0, 4)), mon = Number(state.month.slice(5, 7));
+  const days = new Date(year, mon, 0).getDate();
+  const W = 560, H = 120, padL = 40, padB = 16;
+  const values = Array.from({ length: days }, (_, i) =>
+    d.by_day[`${state.month}-${String(i + 1).padStart(2, '0')}`] || 0);
+  const top = Math.max(10000, ...values);
+  const bw = (W - padL) / days;
+  const bars = values.map((v, i) => {
+    const h = (v / top) * (H - padB - 4);
+    return v ? `<rect x="${padL + i * bw + 1}" y="${H - padB - h}" width="${bw - 2}" height="${h}" fill="var(--bar)"><title>${i + 1}: ${rs(v)}</title></rect>` : '';
+  }).join('');
+  const labels = [1, 8, 15, 22, 29].filter((n) => n <= days).map((n) =>
+    `<text x="${padL + (n - 0.5) * bw}" y="${H}" text-anchor="middle">${n}</text>`).join('');
+  const grid = [0, top / 2, top].map((v) => {
+    const y = H - padB - (v / top) * (H - padB - 4);
+    return `<line x1="${padL}" x2="${W}" y1="${y}" y2="${y}" stroke="var(--rule)" stroke-width="0.5"/><text x="0" y="${y + 3}">${rs(Math.round(v / 100) * 100).replace('Rs ', '')}</text>`;
+  }).join('');
+  $('days').innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Spending per day">${grid}${bars}${labels}</svg>`;
+
+  // Payments, grouped by day.
+  let html = '', last = '';
+  for (const t of d.transactions) {
+    if (t.date !== last) {
+      last = t.date;
+      html += `<div class="daylabel">${esc(new Date(`${t.date}T12:00:00`).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' }))}</div>`;
+    }
+    const flags = [
+      t.status !== 'success' ? `<span class="tag bad">${esc(t.status)}</span>` : '',
+      t.channel === 'cash' ? '<span class="tag">cash</span>' : '',
+      !t.is_spend ? '<span class="tag">not counted</span>' : '',
+    ].join(' ');
+    html += `<div class="row">
+      <div>${esc(t.payee)} ${flags}<div class="detail mono">${esc(t.occurred_at.slice(11, 16))}${t.project ? ' · ' + esc(t.project) : ''}${t.note ? ' · ' + esc(t.note) : ''}</div></div>
+      <div class="amt">${rs(t.amount_paise)}</div>
+      <div class="controls">
+        <select data-txn="${t.id}" data-field="category">${catOptions(t.category, !t.category)}</select>
+        <select data-txn="${t.id}" data-field="scope">${Object.entries(SCOPES).map(([k, v]) =>
+          `<option value="${k}" ${k === t.scope ? 'selected' : ''}>${v}</option>`).join('')}</select>
+        <button class="bare" data-delete="${t.id}" aria-label="Delete">×</button>
+      </div></div>`;
+  }
+  $('transactions').innerHTML = html || '<p class="empty">No payments this month.</p>';
+}
+
+async function renderToSort() {
+  const { payees } = await api('/money/to-sort');
+  $('sort-count').textContent = payees.length ? String(payees.length) : '';
+  $('sort-hint').hidden = !payees.length;
+  $('to-sort').innerHTML = payees.length ? payees.map((p) => `
+    <div class="row">
+      <div>${esc(p.payee)}<div class="detail mono">${p.n} payment${p.n === 1 ? '' : 's'} · last ${esc(p.last)}</div></div>
+      <div class="amt">${rs(p.paise)}</div>
+      <div class="controls">
+        <input type="text" data-label="${esc(p.payee_key)}" placeholder="clearer name (optional)" style="flex:1;min-width:8em;width:auto">
+        <select data-sortcat="${esc(p.payee_key)}" data-payee="${esc(p.payee)}">${catOptions(null, true)}</select>
+      </div></div>`).join('') : '<p class="empty">Nothing to sort.</p>';
+}
+
+async function renderMailbox() {
+  const s = await api('/money/status');
+  if (!s.configured) { $('mailbox').textContent = 'No mailbox configured - see JARVIS_MONEY_IMAP_USER.'; return; }
+  const ok = s.last_ok ? new Date(s.last_ok).toLocaleString() : 'never';
+  $('mailbox').innerHTML = s.last_error
+    ? `<span class="error">Failing: ${esc(s.last_error)}</span><br>Last good check: ${esc(ok)}`
+    : `Last checked ${esc(ok)}`;
+}
+
+async function load() {
+  if (!state.token) { openGate(); return; }
+  try {
+    state.categories = (await api('/money/categories')).categories;
+    $('cash-category').innerHTML = catOptions(null, true);
+    const data = await api(`/money/period?period=${state.month || 'month'}`);
+    state.today = data.today;
+    if (!state.month) {
+      state.month = data.today.slice(0, 7);
+      $('cash-date').value = data.today;
+    }
+    state.data = data.start.slice(0, 7) === state.month ? data : await api(`/money/period?period=${state.month}`);
+    render();
+    await Promise.all([renderToSort(), renderMailbox()]);
+  } catch (error) {
+    $('transactions').innerHTML = `<p class="error">${esc(error.message)}</p>`;
+  }
+}
+
+$('prev').addEventListener('click', () => { state.month = shiftMonth(state.month, -1); load(); });
+$('next').addEventListener('click', () => { state.month = shiftMonth(state.month, 1); load(); });
+
+document.querySelector('main').addEventListener('change', async (event) => {
+  const el = event.target;
+  try {
+    if (el.dataset.txn) {
+      await api(`/money/transactions/${el.dataset.txn}`, { [el.dataset.field]: el.value }, 'PATCH');
+    } else if (el.dataset.sortcat && el.value) {
+      const label = document.querySelector(`[data-label="${CSS.escape(el.dataset.sortcat)}"]`).value.trim();
+      await api('/money/rules', { payee: el.dataset.payee, category: el.value, label: label || null });
+    } else {
+      return;
+    }
+    await load();
+  } catch (error) { alert(error.message); }
+});
+
+document.querySelector('main').addEventListener('click', async (event) => {
+  const b = event.target.closest('button');
+  if (!b || !b.dataset.delete) return;
+  if (!confirm('Delete this payment from the ledger?')) return;
+  await api(`/money/transactions/${b.dataset.delete}`, undefined, 'DELETE');
+  await load();
+});
+
+$('cash-add').addEventListener('click', async () => {
+  try {
+    await api('/money/cash', { amount: $('cash-amount').value.trim(), what: $('cash-what').value.trim(),
+      category: $('cash-category').value || null, date: $('cash-date').value || null });
+    $('cash-amount').value = ''; $('cash-what').value = '';
+    $('cash-status').textContent = 'Recorded.';
+    await load();
+  } catch (error) { $('cash-status').textContent = error.message; }
+});
+
+$('poll').addEventListener('click', async () => {
+  const r = await api('/money/poll', {});
+  $('mailbox').textContent = r.error ? `Failed: ${r.error}` : r.configured === false
+    ? 'No mailbox configured.' : `Checked: ${r.added} new payment(s).`;
+  await load();
+});
+
+$('alert-add').addEventListener('click', async () => {
+  try {
+    const r = await api('/money/alert', { text: $('alert-text').value });
+    $('alert-status').textContent = r.recorded ? 'Recorded.' : 'Already recorded.';
+    $('alert-text').value = '';
+    await load();
+  } catch (error) { $('alert-status').textContent = error.message; }
+});
+
+load();
+</script>
+</body>
+</html>

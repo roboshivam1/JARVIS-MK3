@@ -371,6 +371,7 @@ body.dragging::after {
   <span class="masthead">JARVIS</span>
   <span class="dateline" id="dateline"></span>
   <a class="nav" href="/app/life">Life</a>
+  <a class="nav" href="/app/money">Money</a>
   <a class="nav" href="/app/projects">Projects</a>
   <a class="nav" href="/app/people">People</a>
   <span class="connection" id="connection">connecting</span>
@@ -394,6 +395,10 @@ body.dragging::after {
     <div class="panel">
       <h2><a class="nav" href="/app/life">Today</a></h2>
       <div id="life-panel"><div class="empty">-</div></div>
+    </div>
+    <div class="panel">
+      <h2><a class="nav" href="/app/money">Money</a></h2>
+      <div id="money-panel"><div class="empty">-</div></div>
     </div>
     <div class="panel">
       <h2><a class="nav" href="/app/projects">Projects</a></h2>
@@ -457,6 +462,7 @@ $('token-input').addEventListener('keydown', (event) => {
   refreshPeople();
   refreshLife();
   refreshProjects();
+  refreshMoney();
   connect();
 });
 
@@ -664,6 +670,23 @@ async function refreshLife() {
   items.push(['woke', data.wake || 'not logged']);
   for (const text of (data.open || []).slice(0, 3)) items.push([escapeText(text), 'open']);
   rows('life-panel', items, '-');
+}
+
+// Money: today, the month so far, anything to sort, and a failing mailbox.
+async function refreshMoney() {
+  let data;
+  try {
+    const response = await fetch('/money/summary', {
+      headers: { Authorization: `Bearer ${state.token}` },
+    });
+    if (!response.ok) return;
+    data = await response.json();
+  } catch (_) { return; }
+  const rs = (p) => `Rs ${Math.round(p / 100).toLocaleString('en-IN')}`;
+  const items = [['today', rs(data.today_paise)], ['this month', rs(data.month_paise)]];
+  if (data.to_sort) items.push([`${data.to_sort} to sort`, '']);
+  if (data.last_error) items.push(['mailbox', 'failing']);
+  rows('money-panel', items, '-');
 }
 
 // Projects: what is waiting for review, and the live ones.
@@ -1088,6 +1111,8 @@ refreshLife();
 setInterval(refreshLife, 60000);
 refreshProjects();
 setInterval(refreshProjects, 60000);
+refreshMoney();
+setInterval(refreshMoney, 60000);
 </script>
 </body>
 </html>

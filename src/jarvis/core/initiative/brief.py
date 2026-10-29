@@ -48,6 +48,7 @@ from jarvis.llm.tiers import Tier
 
 if TYPE_CHECKING:
     from jarvis.core.life.service import LifeService
+    from jarvis.core.money.service import MoneyService
     from jarvis.llm.layer import LLMLayer
 
 log = get_logger("core.initiative.brief")
@@ -81,7 +82,7 @@ Rules:
 - Open with a short greeting that includes the day and date.
 - If there is a "Checklist for today" section, give it right after the greeting as "- " lines, every item, worded exactly as given. Then yesterday in one sentence.
 - Lead with what needs him: approvals, reviews, things he owes or is \
-owed, anything that failed. Then dates coming up. Spend last.
+owed, anything that failed. Then dates coming up. Running costs last.
 - One short paragraph per section, or a few "- " lines where a list is \
 clearer. No headings, no markdown, no emoji.
 - Under 200 words. If the facts are thin, be brief - do not pad.
@@ -126,6 +127,7 @@ class BriefService:
         tz: ZoneInfo,
         projects: ProjectsRepo | None = None,
         life: "LifeService | None" = None,
+        money: "MoneyService | None" = None,
     ) -> None:
         self._db = db
         self._people = people
@@ -138,6 +140,7 @@ class BriefService:
         self._tz = tz
         self._projects = projects
         self._life = life
+        self._money = money
 
     # -- the whole thing ------------------------------------------------------
 
@@ -197,7 +200,12 @@ class BriefService:
         facts.add("Overnight", await self._overnight(moment, since))
         facts.add("Projects", await self._project_lines(moment, local.date()))
         facts.add("Reels", await self._reel_lines())
-        facts.add("Spend", await self._spend(local))
+        if self._money is not None:
+            try:
+                facts.add("Money", await self._money.brief_lines(moment))
+            except Exception:
+                log.warning("money lines unavailable", exc_info=True)
+        facts.add("JARVIS running costs", await self._spend(local))
         return facts
 
     async def _waiting(self, since: datetime) -> list[str]:

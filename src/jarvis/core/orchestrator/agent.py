@@ -60,6 +60,8 @@ from jarvis.core.people.service import ExtractionFailed, PeopleService
 from jarvis.core.projects.service import ExtractionFailed as ProjectExtractionFailed
 from jarvis.core.projects.service import ProjectService
 from jarvis.core.life.service import LifeService
+from jarvis.core.money.plutus import ask_plutus
+from jarvis.core.money.service import MoneyService
 from jarvis.core.life.service import ReportFailed as LifeReportFailed
 from jarvis.jobs.projects import DOCUMENT_JOB_TYPE as PROJECT_DOCUMENT_JOB
 from jarvis.core.reels.service import BriefRejected, ReelBusy, ReelService
@@ -272,6 +274,17 @@ class _LifeDayArgs(BaseModel):
                              description="YYYY-MM-DD; leave empty for today.")
 
 
+class _PlutusArgs(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    request: str = Field(
+        min_length=3,
+        description=("The owner's question or instruction about his money, in full: "
+                     "'how much on food this month?', 'Campus P is the canteen, food', "
+                     "'I paid 200 cash for chai'."),
+    )
+
+
 class _ReelRefArgs(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -314,6 +327,7 @@ class Orchestrator:
         router: "ClaudeCodeRouter | None" = None,
         projects: "ProjectService | None" = None,
         life: "LifeService | None" = None,
+        money: "MoneyService | None" = None,
     ) -> None:
         self._llm = llm
         self._settings = settings
@@ -331,6 +345,7 @@ class Orchestrator:
         self._router = router
         self._projects = projects
         self._life = life
+        self._money = money
 
     # -- per-turn toolset -----------------------------------------------------
 
@@ -873,6 +888,29 @@ class Orchestrator:
                 description="Take back the last thing logged, when he says it was wrong.",
                 args_model=_NoArgs,
                 handler=life_undo,
+            ))
+
+        # -- money ------------------------------------------------------------
+        #
+        # PLUTUS keeps the books behind its own wall. JARVIS asks; the
+        # ledger itself never enters this conversation.
+        if self._money is not None:
+            money = self._money
+
+            async def plutus(args: _PlutusArgs) -> str:
+                return await ask_plutus(self._llm, money, args.request, trace_id=trace_id)
+
+            tools.register(InlineTool(
+                name="ask_plutus",
+                description=(
+                    "PLUTUS keeps the owner's books: payments from his bank account "
+                    "(read from the bank's alerts) and cash he mentions. Ask it any "
+                    "question about his spending, and pass on any money instruction - "
+                    "what a payee is, a cash payment, a correction. Pass his words in "
+                    "full and relay its answer. Income is not tracked."
+                ),
+                args_model=_PlutusArgs,
+                handler=plutus,
             ))
 
         # -- reels ------------------------------------------------------------
