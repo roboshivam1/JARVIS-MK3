@@ -62,6 +62,7 @@ BRIEF_CLIENT = "telegram"
 # successes are noise in a brief; its failures are not.
 _ROUTINE = frozenset({
     "memory.sleep_cycle", "system.backup", "watch.check", BRIEF_JOB_TYPE,
+    "life.checkin", "money.daily", "money.review",
 })
 # Reels report under their own heading, not as jobs.
 _OWN_SECTION = frozenset({"reel.make"})

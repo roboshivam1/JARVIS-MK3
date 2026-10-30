@@ -181,10 +181,18 @@ svg text { font-family: var(--mono); font-size: 9px; fill: var(--muted); }
   </div>
 
   <div>
+    <section id="watch-section" hidden>
+      <h2>Watch list <span class="mono" id="watch-count"></span></h2>
+      <div id="watch"></div>
+    </section>
     <section>
       <h2>To sort <span class="mono" id="sort-count"></span></h2>
       <p class="hint" id="sort-hint">Say once what a payee is, and every payment to it follows.</p>
       <div id="to-sort"></div>
+    </section>
+    <section>
+      <h2>Subscriptions</h2>
+      <div id="subscriptions"></div>
     </section>
     <section>
       <h2>Payments</h2>
@@ -330,6 +338,32 @@ async function renderToSort() {
       </div></div>`).join('') : '<p class="empty">Nothing to sort.</p>';
 }
 
+async function renderWatch() {
+  const { items } = await api('/money/watch');
+  $('watch-section').hidden = !items.length;
+  $('watch-count').textContent = items.length ? String(items.length) : '';
+  $('watch').innerHTML = items.map((i) => `
+    <div class="row">
+      <div><span class="tag bad">${esc(i.kind)}</span> ${esc(i.reason)}
+        <div class="detail mono">${esc(i.occurred_at.slice(0, 16))}</div></div>
+      <div class="amt">${rs(i.amount_paise)}</div>
+      <div class="controls">
+        <input type="text" data-clearnote="${i.id}" placeholder="what happened (optional)" style="flex:1;min-width:8em;width:auto">
+        <button class="small" data-clear="${i.id}">Clear</button>
+      </div></div>`).join('');
+}
+
+async function renderSubscriptions() {
+  const { subscriptions } = await api('/money/subscriptions');
+  $('subscriptions').innerHTML = subscriptions.length ? subscriptions.map((s) => `
+    <div class="row">
+      <div>${esc(s.payee)} <span class="tag">${esc(s.cadence)}</span>
+        <div class="detail mono">next ${esc(new Date(`${s.next_due}T12:00:00`).toLocaleDateString(undefined, { day: 'numeric', month: 'short' }))}${s.source === 'owner' ? ' · marked by you' : ''}</div></div>
+      <div class="amt">${rs(s.typical_paise)}</div>
+      <div class="controls"><button class="small" data-dismiss="${esc(s.payee_key)}">Not a subscription</button></div>
+    </div>`).join('') : '<p class="empty">None spotted yet - it takes a couple of billing cycles.</p>';
+}
+
 async function renderMailbox() {
   const s = await api('/money/status');
   if (!s.configured) { $('mailbox').textContent = 'No mailbox configured - see JARVIS_MONEY_IMAP_USER.'; return; }
@@ -352,7 +386,7 @@ async function load() {
     }
     state.data = data.start.slice(0, 7) === state.month ? data : await api(`/money/period?period=${state.month}`);
     render();
-    await Promise.all([renderToSort(), renderMailbox()]);
+    await Promise.all([renderToSort(), renderMailbox(), renderWatch(), renderSubscriptions()]);
   } catch (error) {
     $('transactions').innerHTML = `<p class="error">${esc(error.message)}</p>`;
   }
@@ -378,6 +412,17 @@ document.querySelector('main').addEventListener('change', async (event) => {
 
 document.querySelector('main').addEventListener('click', async (event) => {
   const b = event.target.closest('button');
+  if (b && b.dataset.clear) {
+    const note = document.querySelector(`[data-clearnote="${b.dataset.clear}"]`).value.trim();
+    await api(`/money/watch/${b.dataset.clear}/clear`, { note: note || null });
+    await load();
+    return;
+  }
+  if (b && b.dataset.dismiss) {
+    await api('/money/subscriptions', { payee: b.dataset.dismiss, cadence: 'none' });
+    await load();
+    return;
+  }
   if (!b || !b.dataset.delete) return;
   if (!confirm('Delete this payment from the ledger?')) return;
   await api(`/money/transactions/${b.dataset.delete}`, undefined, 'DELETE');

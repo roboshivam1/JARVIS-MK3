@@ -41,6 +41,7 @@ import jarvis.common.client_protocol  # noqa: F401
 import jarvis.common.worker_protocol  # noqa: F401
 from jarvis.common.events import Event, EventKind
 from jarvis.common.ids import new_ulid, utc_now
+from jarvis.common.notifications import Notification
 from jarvis.common.log import get_logger
 from jarvis.common.schedules import Schedule, ScheduleKind
 from jarvis.common.settings import CoreSettings
@@ -67,6 +68,11 @@ from jarvis.core.life.service import LifeService
 from jarvis.core.db.repos.money import MoneyRepo
 from jarvis.core.money.mailbox import ImapMailbox
 from jarvis.core.money.service import MoneyService
+from jarvis.core.db.repos.money_watch import MoneyWatchRepo
+from jarvis.core.money.watchdog import Watchdog
+from jarvis.jobs.money import (
+    DAILY_JOB_TYPE, DAILY_SCHEDULE, REVIEW_JOB_TYPE, REVIEW_SCHEDULE,
+)
 from jarvis.jobs.life import CHECKIN_JOB_TYPE, CHECKIN_SCHEDULE
 from jarvis.core.initiative.engine import InitiativeEngine, next_cron_time
 from jarvis.core.initiative.notifier import Notifier
@@ -196,8 +202,12 @@ class CoreApp:
         mailbox = (ImapMailbox(self.settings.money_imap_host,
                                self.settings.money_imap_user.strip(), imap_password)
                    if self.settings.money_imap_user.strip() and imap_password else None)
-        self.money = MoneyService(MoneyRepo(self.db), self.settings.tz,
-                                  mailbox=mailbox, projects=self.projects_repo)
+        money_repo = MoneyRepo(self.db)
+        watchdog = Watchdog(money_repo, MoneyWatchRepo(self.db), self.settings.tz,
+                            notify=self._money_notify,
+                            unusual_floor_paise=self.settings.money_unusual_floor_rs * 100)
+        self.money = MoneyService(money_repo, self.settings.tz, mailbox=mailbox,
+                                  projects=self.projects_repo, watchdog=watchdog)
 
         # -- initiative and approvals -----------------------------------------
         self.approval_service = ApprovalService(
@@ -222,6 +232,7 @@ class CoreApp:
         from jarvis.jobs.brief import register_brief_jobs
         from jarvis.jobs.projects import register_project_jobs
         from jarvis.jobs.life import register_life_jobs
+        from jarvis.jobs.money import register_money_jobs
         from jarvis.jobs.claude_code import register_claude_code_job_metadata
         from jarvis.jobs.browser import register_browser_job_metadata
         from jarvis.jobs.code import register_code_job_metadata
@@ -264,6 +275,7 @@ class CoreApp:
         register_brief_jobs(self.registry, self.brief)
         register_project_jobs(self.registry, self.llm, self.projects_repo, self.projects)
         register_life_jobs(self.registry, self.life, self.sessions, self.notifications)
+        register_money_jobs(self.registry, self.money, self.sessions, self.notifications)
 
         # -- reels ------------------------------------------------------------
         self.reels = ReelService(
@@ -376,6 +388,17 @@ class CoreApp:
             "migrations_applied": migrations_ran,
         })
 
+    async def _money_notify(self, text: str, priority: int) -> None:
+        """The watchdog's voice: a Telegram message in the default thread,
+        through the notifier, so quiet hours apply below urgent."""
+        if self.notifications is None or self.sessions is None:
+            return
+        session = await self.sessions.get_or_create_default("telegram")
+        await self.notifications.create(Notification(
+            client_kind="telegram", text=text, session_id=session.id,
+            priority=priority, trace_id=new_ulid(),
+        ))
+
     async def _seed_schedules(self) -> None:
         """Create default schedules if absent. ensure() leaves existing
         rows untouched, so the owner's edits survive every restart."""
@@ -428,6 +451,20 @@ class CoreApp:
                 self.settings.life_checkin_cron, self.settings.tz
             ),
         ))
+
+        for name, cron, job_type in (
+            (DAILY_SCHEDULE, self.settings.money_daily_cron, DAILY_JOB_TYPE),
+            (REVIEW_SCHEDULE, self.settings.money_review_cron, REVIEW_JOB_TYPE),
+        ):
+            await self.schedules.ensure(Schedule(
+                name=name,
+                kind=ScheduleKind.CRON,
+                cron_expr=cron,
+                job_type=job_type,
+                job_payload={"reason": "scheduled"},
+                priority=6,
+                next_fire_ts=next_cron_time(cron, self.settings.tz),
+            ))
 
         await self.schedules.ensure(Schedule(
             name="watcher tick",

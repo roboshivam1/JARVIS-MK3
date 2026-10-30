@@ -151,6 +151,16 @@ class CoreSettings(CommonSettings):
     # How often to look for new alerts, in seconds.
     money_poll_s: int = 300
 
+    # The watchdog. A payment below this (rupees) is never called unusual,
+    # however odd it is for that payee - Rs 150 at a Rs 40 chai stall is
+    # not worth a message. Above it, "unusual" is judged against his own
+    # history: 3x what he usually pays that payee, or a large first payment.
+    money_unusual_floor_rs: int = 500
+
+    # Morning subscription check, and Sunday's weekly review (cron, local).
+    money_daily_cron: str = "25 9 * * *"
+    money_review_cron: str = "0 10 * * 0"
+
     # -- Backups -------------------------------------------------------------
 
     # When the nightly backup runs. After the sleep cycle, so the day's

@@ -20,7 +20,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from jarvis.agentloop.loop import run_agent_loop
 from jarvis.agentloop.policies import PLUTUS, create_guard
 from jarvis.agentloop.toolset import InlineTool, Toolset
-from jarvis.core.db.repos.money import MoneyError
+from jarvis.core.db.repos.money import MoneyError, payee_key
 from jarvis.core.money.service import MoneyService, rupees
 from jarvis.llm.layer import LLMLayer, user_message
 from jarvis.llm.tiers import Tier
@@ -46,6 +46,11 @@ How you work:
 - Spending for Basement Supply, his business, is scope basement_supply.
   Parts for one of his projects can name the project.
 - Cash he mentions ("200 cash on chai") is money_add_cash.
+- The watch list holds failed and unusual payments. When he says one is
+  sorted ("the Zomato one came back"), clear it with money_clear_watch.
+- Subscriptions are detected from the ledger; he can add one by hand
+  ("Spotify is monthly") or dismiss one ("that's not a subscription")
+  with money_set_subscription.
 
 How you answer:
 - Short and exact. Amounts as "Rs 1,240". Lead with the answer.
@@ -103,6 +108,19 @@ class _Cash(BaseModel):
                              description="YYYY-MM-DD; empty for today.")
     scope: Literal["personal", "basement_supply"] = "personal"
     note: str | None = None
+
+
+class _Clear(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    item: str = Field(description="The watch item's id shown in brackets.")
+    note: str | None = Field(None, description="How it was resolved, in his words.")
+
+
+class _Subscription(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    payee: str = Field(min_length=1, description="The payee as the bank wrote it.")
+    cadence: Literal["monthly", "yearly", "none"] = Field(
+        description="'none' stops treating it as a subscription.")
 
 
 def build_toolset(money: MoneyService) -> Toolset:
@@ -175,7 +193,40 @@ def build_toolset(money: MoneyService) -> Toolset:
         return (f"Recorded [{txn['id'][-6:]}] {rupees(txn['amount_paise'])} cash to "
                 f"{txn['payee_raw']} on {txn['date']} - {txn['category'] or 'to sort'}.")
 
+    watch = money.watchdog
+
+    async def watchlist(_: _NoArgs) -> str:
+        if watch is None:
+            return "The watchdog is not running."
+        lines = await watch.watch_lines()
+        return "\n".join(lines) or "Nothing on the watch list."
+
+    async def clear(args: _Clear) -> str:
+        if watch is None:
+            return "The watchdog is not running."
+        return await watch.clear(args.item, args.note)
+
+    async def subscriptions(_: _NoArgs) -> str:
+        if watch is None:
+            return "The watchdog is not running."
+        lines = await watch.subscription_lines()
+        return "\n".join(lines) or "No subscriptions known yet."
+
+    async def set_subscription(args: _Subscription) -> str:
+        if watch is None:
+            return "The watchdog is not running."
+        return await watch.set_subscription(
+            payee_key(args.payee), None if args.cadence == "none" else args.cadence)
+
     for name, description, model, handler in (
+        ("money_watchlist", "Failed and unusual payments still waiting for him.", _NoArgs,
+         watchlist),
+        ("money_clear_watch", "Clear a watch item once he says it is resolved.", _Clear, clear),
+        ("money_subscriptions", "Known subscriptions: amount, cadence, next renewal.",
+         _NoArgs, subscriptions),
+        ("money_set_subscription", "Mark a payee as a monthly or yearly subscription, or "
+                                   "stop treating it as one.", _Subscription,
+         set_subscription),
         ("money_summary", "Totals for a period: spent, by category, top payees.", _Period, summary),
         ("money_transactions", "Individual payments, newest first, with their ids.", _List,
          transactions),

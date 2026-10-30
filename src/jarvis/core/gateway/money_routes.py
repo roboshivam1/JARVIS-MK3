@@ -18,6 +18,10 @@
 #   POST   /money/cash                      {"amount", "what", "category", "date"}
 #   POST   /money/alert                     paste an alert's text by hand
 #   POST   /money/poll                      read the mailbox now
+#   GET    /money/watch                     failed and unusual payments still open
+#   POST   /money/watch/{id}/clear          {"note": "..."}
+#   GET    /money/subscriptions             known subscriptions, next renewal first
+#   POST   /money/subscriptions             {"payee", "cadence": monthly|yearly|none}
 # =============================================================================
 
 from __future__ import annotations
@@ -27,7 +31,7 @@ from typing import Any, Literal
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, ConfigDict, Field
 
-from jarvis.core.db.repos.money import MoneyError
+from jarvis.core.db.repos.money import MoneyError, payee_key
 from jarvis.core.gateway.auth import BearerAuth
 from jarvis.core.money.service import MoneyService
 
@@ -62,6 +66,17 @@ class _Cash(BaseModel):
     category: str | None = None
     date: str | None = Field(None, pattern=r"^\d{4}-\d{2}-\d{2}$")
     scope: Scope = "personal"
+
+
+class _Clear(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    note: str | None = Field(None, max_length=200)
+
+
+class _Subscription(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    payee: str = Field(min_length=1)
+    cadence: Literal["monthly", "yearly", "none"]
 
 
 class _Alert(BaseModel):
@@ -164,5 +179,28 @@ def money_router(money: MoneyService, auth: BearerAuth) -> APIRouter:
     @router.post("/poll")
     async def poll() -> dict[str, Any]:
         return await money.poll()
+
+    @router.get("/watch")
+    async def watch() -> dict[str, Any]:
+        dog = money.watchdog
+        return {"items": await dog.repo.open_items() if dog else []}
+
+    @router.post("/watch/{item_id}/clear")
+    async def clear(item_id: str, body: _Clear) -> dict[str, Any]:
+        if money.watchdog is None:
+            raise HTTPException(status_code=503, detail="the watchdog is not running")
+        return {"summary": await money.watchdog.clear(item_id, body.note)}
+
+    @router.get("/subscriptions")
+    async def subscriptions() -> dict[str, Any]:
+        dog = money.watchdog
+        return {"subscriptions": await dog.repo.subscriptions() if dog else []}
+
+    @router.post("/subscriptions")
+    async def set_subscription(body: _Subscription) -> dict[str, Any]:
+        if money.watchdog is None:
+            raise HTTPException(status_code=503, detail="the watchdog is not running")
+        return {"summary": await money.watchdog.set_subscription(
+            payee_key(body.payee), None if body.cadence == "none" else body.cadence)}
 
     return router

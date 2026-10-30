@@ -32,6 +32,7 @@ from jarvis.core.money.parsers import ParsedDebit, message_text, parse_alert
 
 if TYPE_CHECKING:
     from jarvis.core.db.repos.projects import ProjectsRepo
+    from jarvis.core.money.watchdog import Watchdog
 
 log = get_logger("core.money")
 
@@ -56,8 +57,10 @@ def to_paise(amount: float | str) -> int:
 
 class MoneyService:
     def __init__(self, repo: MoneyRepo, tz: ZoneInfo, *, mailbox: MailSource | None = None,
-                 projects: "ProjectsRepo | None" = None) -> None:
+                 projects: "ProjectsRepo | None" = None,
+                 watchdog: "Watchdog | None" = None) -> None:
         self._repo = repo
+        self._watch = watchdog
         self._tz = tz
         self._mailbox = mailbox
         self._projects = projects
@@ -65,6 +68,10 @@ class MoneyService:
     @property
     def repo(self) -> MoneyRepo:
         return self._repo
+
+    @property
+    def watchdog(self) -> "Watchdog | None":
+        return self._watch
 
     def today(self, moment: datetime | None = None) -> date:
         return (moment or datetime.now(self._tz)).astimezone(self._tz).date()
@@ -92,7 +99,12 @@ class MoneyService:
             "account_last4": parsed.account_last4,
             "source": source,
         })
-        return await self._repo.get(txn_id) if txn_id else None
+        if txn_id is None:
+            return None
+        txn = await self._repo.get(txn_id)
+        if txn is not None and self._watch is not None:
+            await self._watch.on_recorded(txn)
+        return txn
 
     async def ingest_text(self, text: str, source: str = "web") -> dict[str, Any] | None:
         """A bank alert pasted or forwarded as text."""
@@ -302,7 +314,69 @@ class MoneyService:
         error = await self._repo.state("mail_last_error")
         if error:
             lines.append(f"the bank-alert mailbox is failing: {error[:120]}")
+        if self._watch is not None:
+            items = await self._watch.repo.open_items()
+            if items:
+                lines.append(f"{len(items)} payment(s) on the watch list: "
+                             + "; ".join(i["reason"] for i in items[:3]))
+            for s in await self._watch.repo.subscriptions():
+                due = date.fromisoformat(s["next_due"])
+                if 0 <= (due - today).days <= 1:
+                    when = "today" if due == today else "tomorrow"
+                    lines.append(f"{s['payee']} renews {when} (about "
+                                 f"{rupees(s['typical_paise'])})")
         return lines
+
+    async def weekly_review(self, moment: datetime | None = None) -> str:
+        """Sunday's message: the week against the one before, the biggest
+        payments, and what is waiting on him."""
+        today = self.today(moment)
+        end = today - timedelta(days=1)
+        start = end - timedelta(days=6)
+        prev_end = start - timedelta(days=1)
+        prev_start = prev_end - timedelta(days=6)
+        week = await self.summary(start.isoformat(), end.isoformat())
+        before = await self.summary(prev_start.isoformat(), prev_end.isoformat())
+        span = f"{start.strftime('%d %b')} - {end.strftime('%d %b')}"
+        if not week["count"]:
+            head = f"Money this week ({span}): nothing spent, sir."
+            lines = [head]
+        else:
+            delta = week["total_paise"] - before["total_paise"]
+            trend = ("" if not before["count"] else
+                     f", {rupees(abs(delta))} {'more' if delta > 0 else 'less'} than the week "
+                     f"before" if delta else ", the same as the week before")
+            lines = [f"Money this week ({span}): {rupees(week['total_paise'])} over "
+                     f"{week['count']} payments{trend}.", ""]
+            for cat, paise in week["by_category"].items():
+                was = before["by_category"].get(cat, 0)
+                change = paise - was
+                note = (f" ({'+' if change > 0 else '-'}{rupees(abs(change))})"
+                        if before["count"] and change else "")
+                lines.append(f"- {cat}: {rupees(paise)}{note}")
+            biggest = sorted((t for t in week["transactions"]
+                              if t["status"] == "success" and t["is_spend"]),
+                             key=lambda t: -t["amount_paise"])[:3]
+            if biggest:
+                lines += ["", "Biggest: " + ", ".join(
+                    f"{rupees(t['amount_paise'])} to {t['payee']}" for t in biggest) + "."]
+        waiting: list[str] = []
+        sort = await self._repo.to_sort()
+        if sort:
+            waiting.append(f"{len(sort)} payee(s) to sort")
+        if self._watch is not None:
+            items = await self._watch.repo.open_items()
+            if items:
+                waiting.append(f"{len(items)} payment(s) on the watch list")
+            soon = [s for s in await self._watch.repo.subscriptions()
+                    if 0 <= (date.fromisoformat(s["next_due"]) - today).days <= 7]
+            if soon:
+                waiting.append("renewing this week: " + ", ".join(
+                    f"{s['payee']} {rupees(s['typical_paise'])} "
+                    f"({date.fromisoformat(s['next_due']).strftime('%a')})" for s in soon))
+        if waiting:
+            lines += ["", "Waiting on you: " + "; ".join(waiting) + "."]
+        return "\n".join(lines)
 
     async def status(self) -> dict[str, Any]:
         return {
