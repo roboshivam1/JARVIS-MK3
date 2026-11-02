@@ -30,6 +30,7 @@ ENGINEER = "subagent.engineer"
 WRITER = "subagent.writer"
 ARCHIVIST = "subagent.archivist"
 PLUTUS = "subagent.plutus"
+HYGIEIA = "subagent.hygieia"
 
 
 DEFAULT_POLICIES: dict[str, ActorPolicy] = {
@@ -65,6 +66,8 @@ DEFAULT_POLICIES: dict[str, ActorPolicy] = {
             # Money goes through PLUTUS: JARVIS asks, PLUTUS answers. He
             # never reads the ledger himself.
             "ask_plutus",
+            # Health goes through HYGIEIA the same way.
+            "ask_hygieia",
         ),
         description=(
             "The front mind. Talks, remembers, and delegates. No hands: "
@@ -122,6 +125,14 @@ DEFAULT_POLICIES: dict[str, ActorPolicy] = {
             "PLUTUS. Keeps the owner's books: reads and corrects the money "
             "ledger, nothing else. No web, no memory, and no tool that "
             "could move money exists for it to call."
+        ),
+    ),
+    HYGIEIA: ActorPolicy(
+        actor=HYGIEIA,
+        tools=("health_*",),
+        description=(
+            "HYGIEIA. Keeps the owner's health records: meal nutrition, the "
+            "food memory, the mess menu, sleep and his targets. Nothing else."
         ),
     ),
     ARCHIVIST: ActorPolicy(

@@ -70,6 +70,12 @@ from jarvis.core.money.mailbox import ImapMailbox
 from jarvis.core.money.service import MoneyService
 from jarvis.core.db.repos.money_watch import MoneyWatchRepo
 from jarvis.core.money.watchdog import Watchdog
+from jarvis.core.db.repos.health import HealthRepo
+from jarvis.core.health.service import HealthService
+from jarvis.jobs.health import CHECKIN_JOB_TYPE as HEALTH_CHECKIN_JOB
+from jarvis.jobs.health import CHECKIN_SCHEDULE as HEALTH_CHECKIN_SCHEDULE
+from jarvis.jobs.health import REVIEW_JOB_TYPE as HEALTH_REVIEW_JOB
+from jarvis.jobs.health import REVIEW_SCHEDULE as HEALTH_REVIEW_SCHEDULE
 from jarvis.jobs.money import (
     DAILY_JOB_TYPE, DAILY_SCHEDULE, REVIEW_JOB_TYPE, REVIEW_SCHEDULE,
 )
@@ -127,6 +133,7 @@ class CoreApp:
         self.life_repo: LifeRepo | None = None
         self.life: LifeService | None = None
         self.money: MoneyService | None = None
+        self.health: HealthService | None = None
         self.schedules: SchedulesRepo | None = None
         self.watchers: WatchersRepo | None = None
         self.initiative: InitiativeEngine | None = None
@@ -208,6 +215,9 @@ class CoreApp:
                             unusual_floor_paise=self.settings.money_unusual_floor_rs * 100)
         self.money = MoneyService(money_repo, self.settings.tz, mailbox=mailbox,
                                   projects=self.projects_repo, watchdog=watchdog)
+        self.health = HealthService(HealthRepo(self.db), self.llm, self.settings.tz,
+                                    money=money_repo)
+        self.life.set_meal_hook(self.health.on_meals)
 
         # -- initiative and approvals -----------------------------------------
         self.approval_service = ApprovalService(
@@ -233,6 +243,7 @@ class CoreApp:
         from jarvis.jobs.projects import register_project_jobs
         from jarvis.jobs.life import register_life_jobs
         from jarvis.jobs.money import register_money_jobs
+        from jarvis.jobs.health import register_health_jobs
         from jarvis.jobs.claude_code import register_claude_code_job_metadata
         from jarvis.jobs.browser import register_browser_job_metadata
         from jarvis.jobs.code import register_code_job_metadata
@@ -271,11 +282,13 @@ class CoreApp:
             projects=self.projects_repo,
             life=self.life,
             money=self.money,
+            health=self.health,
         )
         register_brief_jobs(self.registry, self.brief)
         register_project_jobs(self.registry, self.llm, self.projects_repo, self.projects)
         register_life_jobs(self.registry, self.life, self.sessions, self.notifications)
         register_money_jobs(self.registry, self.money, self.sessions, self.notifications)
+        register_health_jobs(self.registry, self.health, self.sessions, self.notifications)
 
         # -- reels ------------------------------------------------------------
         self.reels = ReelService(
@@ -303,6 +316,7 @@ class CoreApp:
             projects=self.projects,
             life=self.life,
             money=self.money,
+            health=self.health,
         )
         self.session_mgr = SessionManager(
             self.sessions, self.events, orchestrator,
@@ -339,6 +353,7 @@ class CoreApp:
             life_repo=self.life_repo,
             life=self.life,
             money=self.money,
+            health=self.health,
         )
 
         # -- clients ----------------------------------------------------------
@@ -455,6 +470,8 @@ class CoreApp:
         for name, cron, job_type in (
             (DAILY_SCHEDULE, self.settings.money_daily_cron, DAILY_JOB_TYPE),
             (REVIEW_SCHEDULE, self.settings.money_review_cron, REVIEW_JOB_TYPE),
+            (HEALTH_CHECKIN_SCHEDULE, self.settings.health_checkin_cron, HEALTH_CHECKIN_JOB),
+            (HEALTH_REVIEW_SCHEDULE, self.settings.health_review_cron, HEALTH_REVIEW_JOB),
         ):
             await self.schedules.ensure(Schedule(
                 name=name,

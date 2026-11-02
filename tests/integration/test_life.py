@@ -190,7 +190,7 @@ async def test_trends(world: SimpleNamespace) -> None:
     monday = next(d for d in stats["days"] if d["date"] == "2026-10-26")
     assert monday["gym_done"] and monday["minutes"]["learning"] == 30 and monday["done"] == 1
     assert stats["wake_by"] == "07:00"
-    week = await world.life.week_text()
+    week = await world.life.week_text(datetime(2026, 10, 27, 20, 0, tzinfo=JAIPUR))
     assert "target 07:00" in week
 
 

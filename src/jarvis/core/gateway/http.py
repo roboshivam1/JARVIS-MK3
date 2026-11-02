@@ -57,12 +57,14 @@ from jarvis.core.gateway.people_routes import people_router
 from jarvis.core.gateway.projects_routes import projects_router
 from jarvis.core.gateway.life_routes import life_router
 from jarvis.core.gateway.money_routes import money_router
+from jarvis.core.gateway.health_routes import health_router
 from jarvis.core.people.service import PeopleService
 from jarvis.core.db.repos.projects import ProjectsRepo
 from jarvis.core.projects.service import ProjectService
 from jarvis.core.db.repos.life import LifeRepo
 from jarvis.core.life.service import LifeService
 from jarvis.core.money.service import MoneyService
+from jarvis.core.health.service import HealthService
 from jarvis.core.queue.registry_workers import WorkerRegistry
 
 log = get_logger("core.gateway")
@@ -103,6 +105,8 @@ class GatewayDeps:
     life: "LifeService | None" = None
     # The money ledger (PLUTUS).
     money: "MoneyService | None" = None
+    # Health (HYGIEIA).
+    health: "HealthService | None" = None
 
 
 async def build_status_snapshot(deps: GatewayDeps) -> dict[str, Any]:
@@ -193,6 +197,14 @@ def create_app(deps: GatewayDeps) -> FastAPI:
         authed requests - as /app/people."""
         return FileResponse(
             Path(__file__).parent / "static" / "projects.html",
+            media_type="text/html",
+        )
+
+    @app.get("/app/health")
+    async def health_page() -> FileResponse:
+        """HYGIEIA's page: the day's nutrition, trends, sleep, the menu."""
+        return FileResponse(
+            Path(__file__).parent / "static" / "health.html",
             media_type="text/html",
         )
 
@@ -339,5 +351,8 @@ def create_app(deps: GatewayDeps) -> FastAPI:
 
     if deps.money is not None:
         app.include_router(money_router(deps.money, auth))
+
+    if deps.health is not None:
+        app.include_router(health_router(deps.health, auth))
 
     return app

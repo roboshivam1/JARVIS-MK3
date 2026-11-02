@@ -49,6 +49,7 @@ from jarvis.llm.tiers import Tier
 if TYPE_CHECKING:
     from jarvis.core.life.service import LifeService
     from jarvis.core.money.service import MoneyService
+    from jarvis.core.health.service import HealthService
     from jarvis.llm.layer import LLMLayer
 
 log = get_logger("core.initiative.brief")
@@ -62,7 +63,7 @@ BRIEF_CLIENT = "telegram"
 # successes are noise in a brief; its failures are not.
 _ROUTINE = frozenset({
     "memory.sleep_cycle", "system.backup", "watch.check", BRIEF_JOB_TYPE,
-    "life.checkin", "money.daily", "money.review",
+    "life.checkin", "money.daily", "money.review", "health.checkin", "health.review",
 })
 # Reels report under their own heading, not as jobs.
 _OWN_SECTION = frozenset({"reel.make"})
@@ -129,6 +130,7 @@ class BriefService:
         projects: ProjectsRepo | None = None,
         life: "LifeService | None" = None,
         money: "MoneyService | None" = None,
+        health: "HealthService | None" = None,
     ) -> None:
         self._db = db
         self._people = people
@@ -142,6 +144,7 @@ class BriefService:
         self._projects = projects
         self._life = life
         self._money = money
+        self._health = health
 
     # -- the whole thing ------------------------------------------------------
 
@@ -201,6 +204,11 @@ class BriefService:
         facts.add("Overnight", await self._overnight(moment, since))
         facts.add("Projects", await self._project_lines(moment, local.date()))
         facts.add("Reels", await self._reel_lines())
+        if self._health is not None:
+            try:
+                facts.add("Health", await self._health.brief_lines(moment))
+            except Exception:
+                log.warning("health lines unavailable", exc_info=True)
         if self._money is not None:
             try:
                 facts.add("Money", await self._money.brief_lines(moment))

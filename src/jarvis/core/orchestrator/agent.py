@@ -61,6 +61,8 @@ from jarvis.core.projects.service import ExtractionFailed as ProjectExtractionFa
 from jarvis.core.projects.service import ProjectService
 from jarvis.core.life.service import LifeService
 from jarvis.core.money.plutus import ask_plutus
+from jarvis.core.health.hygieia import ask_hygieia
+from jarvis.core.health.service import HealthService
 from jarvis.core.money.service import MoneyService
 from jarvis.core.life.service import ReportFailed as LifeReportFailed
 from jarvis.jobs.projects import DOCUMENT_JOB_TYPE as PROJECT_DOCUMENT_JOB
@@ -285,6 +287,17 @@ class _PlutusArgs(BaseModel):
     )
 
 
+class _HygieiaArgs(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    request: str = Field(
+        min_length=3,
+        description=("The owner's question or instruction about his eating, nutrition or "
+                     "sleep, in full: 'how much protein today?', 'what should I eat "
+                     "tonight?', 'that Maggi was half a pack', 'I weigh 68 kg'."),
+    )
+
+
 class _ReelRefArgs(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -328,6 +341,7 @@ class Orchestrator:
         projects: "ProjectService | None" = None,
         life: "LifeService | None" = None,
         money: "MoneyService | None" = None,
+        health: "HealthService | None" = None,
     ) -> None:
         self._llm = llm
         self._settings = settings
@@ -346,6 +360,7 @@ class Orchestrator:
         self._projects = projects
         self._life = life
         self._money = money
+        self._health = health
 
     # -- per-turn toolset -----------------------------------------------------
 
@@ -911,6 +926,30 @@ class Orchestrator:
                 ),
                 args_model=_PlutusArgs,
                 handler=plutus,
+            ))
+
+        # -- health -----------------------------------------------------------
+        #
+        # HYGIEIA keeps his nutrition and sleep behind her own wall. Meals
+        # are still logged with life_report; she hears about each one.
+        if self._health is not None:
+            health = self._health
+
+            async def hygieia(args: _HygieiaArgs) -> str:
+                return await ask_hygieia(self._llm, health, args.request, trace_id=trace_id)
+
+            tools.register(InlineTool(
+                name="ask_hygieia",
+                description=(
+                    "HYGIEIA keeps the owner's health records: the estimated nutrition of "
+                    "every meal he logs, his daily targets and limits, the mess menu, the "
+                    "foods he eats, and his sleep. Ask her anything about his eating or "
+                    "sleep, and pass on corrections and facts about him (weight, goal). "
+                    "Meals themselves are logged with life_report, not here. Pass his "
+                    "words in full and relay her answer."
+                ),
+                args_model=_HygieiaArgs,
+                handler=hygieia,
             ))
 
         # -- reels ------------------------------------------------------------

@@ -161,6 +161,12 @@ class CoreSettings(CommonSettings):
     money_daily_cron: str = "25 9 * * *"
     money_review_cron: str = "0 10 * * 0"
 
+    # -- Health (HYGIEIA) -----------------------------------------------------
+
+    # The 5 pm check-in (what is left for the day) and the Sunday review.
+    health_checkin_cron: str = "0 17 * * *"
+    health_review_cron: str = "30 10 * * 0"
+
     # -- Backups -------------------------------------------------------------
 
     # When the nightly backup runs. After the sleep cycle, so the day's

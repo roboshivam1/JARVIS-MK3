@@ -1,0 +1,437 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>JARVIS · Health</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+/* ==========================================================================
+   Health - HYGIEIA's page, another section of the same Gazette.
+   Left: one day against its targets. Right: two weeks, sleep, what he
+   eats, and the settings behind the numbers.
+   ========================================================================== */
+
+:root {
+  --ink: #ece5d8;
+  --paper: #17171a;
+  --paper-raised: #1e1e22;
+  --rule: #3a3a40;
+  --muted: #8a8a92;
+  --accent: #d4685f;
+  --accent-dim: #8f4842;
+  --good: #7fa37a;
+  --bar: #c9b79c;
+  --serif: 'Source Serif 4', Georgia, serif;
+  --mono: 'JetBrains Mono', ui-monospace, monospace;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--paper); color: var(--ink); font-family: var(--serif);
+  font-size: 16px; line-height: 1.6; min-height: 100dvh;
+}
+:focus-visible { outline: 1px solid var(--accent); outline-offset: 2px; }
+
+header {
+  border-bottom: 1px solid var(--rule); padding: 14px 24px 12px;
+  display: flex; align-items: baseline; gap: 24px; flex-wrap: wrap;
+}
+.masthead {
+  font-family: var(--mono); font-size: 17px; font-weight: 600; letter-spacing: 0.34em;
+  line-height: 1; color: var(--ink); text-decoration: none;
+}
+.section-name, header a.nav {
+  font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--muted); text-decoration: none;
+}
+.section-name { color: var(--accent); margin-right: auto; }
+header a.nav:hover { color: var(--accent); }
+
+main {
+  padding: 28px 40px 80px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 48px; align-items: start;
+}
+section + section { margin-top: 40px; }
+h2 {
+  font-family: var(--mono); font-size: 10px; font-weight: 600; letter-spacing: 0.18em;
+  text-transform: uppercase; color: var(--accent); padding-bottom: 6px;
+  border-bottom: 1px solid var(--rule); margin-bottom: 12px;
+  display: flex; justify-content: space-between; align-items: baseline;
+}
+.empty, .hint { color: var(--muted); font-size: 15px; }
+.mono { font-family: var(--mono); font-size: 12px; }
+.detail { color: var(--muted); font-size: 14px; }
+
+input[type=text], input[type=number], select, textarea {
+  background: var(--paper-raised); border: 1px solid var(--rule); color: var(--ink);
+  font-family: var(--serif); font-size: 15px; padding: 6px 10px; outline: none; width: 100%;
+}
+select, input[type=number] { font-family: var(--mono); font-size: 12px; }
+textarea { resize: vertical; font-size: 14px; }
+input:focus, select:focus, textarea:focus { border-color: var(--accent-dim); }
+button {
+  background: transparent; border: 1px solid var(--rule); color: var(--ink);
+  font-family: var(--mono); font-size: 11px; letter-spacing: 0.12em;
+  text-transform: uppercase; padding: 8px 13px; cursor: pointer;
+}
+button:hover { border-color: var(--accent); color: var(--accent); }
+button.small { padding: 4px 9px; font-size: 10px; }
+.inline { display: flex; gap: 8px; align-items: center; margin-top: 8px; flex-wrap: wrap; }
+.inline input[type=text] { flex: 1; min-width: 8em; width: auto; }
+.status { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+.error { color: var(--accent); }
+
+.daynav { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.daynav h3 { font-size: 26px; font-weight: 600; line-height: 1.1; flex: 1; }
+.standing { color: var(--muted); font-size: 15px; margin-bottom: 18px; }
+
+.meter { display: grid; grid-template-columns: 7.5em 1fr 9em; gap: 10px; align-items: center; padding: 5px 0; }
+.meter .track { height: 10px; background: var(--paper-raised); border: 1px solid var(--rule); position: relative; }
+.meter .fill { position: absolute; inset: 0 auto 0 0; background: var(--bar); }
+.meter .fill.done { background: var(--good); }
+.meter .fill.over { background: var(--accent); }
+.meter .num { font-family: var(--mono); font-size: 12px; text-align: right; }
+.meter .kind { font-family: var(--mono); font-size: 9px; color: var(--muted); display: block; letter-spacing: 0.1em; text-transform: uppercase; }
+
+.meal { padding: 10px 0; border-bottom: 1px dotted var(--rule); }
+.meal .top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.tag { font-family: var(--mono); font-size: 10px; color: var(--muted); border: 1px solid var(--rule); padding: 0 5px; }
+.tag.bad { color: var(--accent); border-color: var(--accent-dim); }
+table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 6px; }
+td { padding: 3px 6px 3px 0; border-bottom: 1px dotted var(--rule); }
+td.n { font-family: var(--mono); font-size: 11px; text-align: right; white-space: nowrap; }
+th { font-family: var(--mono); font-size: 9px; color: var(--muted); font-weight: 400; text-align: right; letter-spacing: 0.08em; text-transform: uppercase; padding: 0 0 4px 8px; }
+th:first-child { text-align: left; }
+
+svg { display: block; width: 100%; height: auto; overflow: visible; }
+svg text { font-family: var(--mono); font-size: 9px; fill: var(--muted); }
+
+.fields { display: grid; grid-template-columns: 9em 1fr; gap: 6px 12px; align-items: center; }
+.fields label { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.menu-grid { display: grid; grid-template-columns: 5.5em repeat(4, 1fr); gap: 4px; margin-top: 10px; }
+.menu-grid .h { font-family: var(--mono); font-size: 10px; color: var(--muted); text-transform: uppercase; }
+.menu-grid textarea { font-size: 12px; min-height: 5.5em; padding: 4px 6px; }
+details summary { cursor: pointer; }
+
+#gate { position: fixed; inset: 0; background: var(--paper); display: none; place-items: center; z-index: 200; }
+#gate.open { display: grid; }
+#gate .inner { text-align: center; max-width: 340px; width: 100%; padding: 0 20px; }
+#gate input { margin-top: 18px; font-family: var(--mono); font-size: 13px; }
+
+@media (max-width: 900px) {
+  main { grid-template-columns: 1fr; padding: 18px 16px calc(60px + env(safe-area-inset-bottom)); gap: 36px; }
+  header { padding: 10px 16px 8px; gap: 14px; }
+  .meter { grid-template-columns: 6.5em 1fr 7.5em; }
+  .menu-grid { grid-template-columns: 1fr; }
+  .menu-grid .h:not(.day) { display: none; }
+  input[type=text], textarea { font-size: 16px; }
+}
+</style>
+</head>
+<body>
+
+<div id="gate">
+  <div class="inner">
+    <div class="masthead">JARVIS</div>
+    <input id="token-input" type="password" placeholder="access token" autocomplete="off">
+  </div>
+</div>
+
+<header>
+  <a class="masthead" href="/app">JARVIS</a>
+  <span class="section-name">Health</span>
+  <a class="nav" href="/app/life">Life</a>
+  <a class="nav" href="/app/money">Money</a>
+  <a class="nav" href="/app/projects">Projects</a>
+  <a class="nav" href="/app/people">People</a>
+  <a class="nav" href="/app">Conversation</a>
+</header>
+
+<main>
+  <div>
+    <div class="daynav">
+      <button class="small" id="prev" aria-label="Previous day">‹</button>
+      <h3 id="day-title">…</h3>
+      <button class="small" id="next" aria-label="Next day">›</button>
+      <button class="small" id="today-btn">Today</button>
+    </div>
+    <p class="standing" id="standing"></p>
+    <section>
+      <h2>Targets and limits</h2>
+      <div id="meters"></div>
+      <p class="hint" id="weight-hint" hidden>Protein and calorie targets need your weight - set it under Profile.</p>
+    </section>
+    <section>
+      <h2>Meals</h2>
+      <p class="hint">Log meals by telling JARVIS, as before. Each one is estimated here.</p>
+      <div id="meals"></div>
+    </section>
+  </div>
+
+  <div>
+    <section>
+      <h2>Protein, last 14 days</h2>
+      <div id="protein-chart"></div>
+    </section>
+    <section>
+      <h2>Sodium, last 14 days</h2>
+      <div id="sodium-chart"></div>
+    </section>
+    <section>
+      <h2>Sleep, last 14 nights</h2>
+      <div id="sleep-chart"></div>
+    </section>
+    <section>
+      <h2>What you eat <select id="place-filter" style="width:auto">
+        <option value="">everywhere</option><option>mess</option><option>campus</option>
+        <option>outside</option><option>room</option><option>home</option></select></h2>
+      <div id="foods"></div>
+    </section>
+    <section>
+      <h2>Profile</h2>
+      <div class="fields" id="profile"></div>
+      <p class="status" id="profile-status"></p>
+    </section>
+    <section>
+      <details>
+        <summary><h2 style="display:inline-flex;border:none">Mess menu</h2></summary>
+        <p class="hint">One line per meal, items separated by commas. "Every day" rows are added to each day.</p>
+        <div class="menu-grid" id="menu"></div>
+        <p class="status" id="menu-status"></p>
+      </details>
+    </section>
+  </div>
+</main>
+
+<script>
+'use strict';
+
+const $ = (id) => document.getElementById(id);
+const state = { token: localStorage.getItem('jarvis_token') || '', date: null, today: null };
+const SLOTS = ['breakfast', 'lunch', 'snack', 'dinner'];
+const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
+const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => (
+  { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const n0 = (v) => Math.round(Number(v) || 0).toLocaleString('en-IN');
+const shift = (iso, n) => {
+  const d = new Date(`${iso}T12:00:00`);
+  d.setDate(d.getDate() + n);
+  return d.toISOString().slice(0, 10);
+};
+
+async function api(path, body, method) {
+  const options = { headers: { Authorization: `Bearer ${state.token}` } };
+  if (method) options.method = method;
+  if (body !== undefined) {
+    options.method = method || 'POST';
+    options.headers['Content-Type'] = 'application/json';
+    options.body = JSON.stringify(body);
+  }
+  const response = await fetch(path, options);
+  if (response.status === 401) {
+    localStorage.removeItem('jarvis_token');
+    state.token = '';
+    openGate();
+    throw new Error('The access token was rejected.');
+  }
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const detail = Array.isArray(data.detail) ? data.detail.map((d) => d.msg).join('; ') : data.detail;
+    throw new Error(detail || `Request failed with status ${response.status}.`);
+  }
+  return data;
+}
+
+function openGate() { $('gate').classList.add('open'); $('token-input').focus(); }
+$('token-input').addEventListener('keydown', (event) => {
+  if (event.key !== 'Enter') return;
+  const token = event.target.value.trim();
+  if (!token) return;
+  state.token = token;
+  localStorage.setItem('jarvis_token', token);
+  $('gate').classList.remove('open');
+  load();
+});
+
+// -- one day ---------------------------------------------------------------
+
+function meter(label, value, goal, unit, isLimit) {
+  if (!goal) {
+    return `<div class="meter"><span>${label}<span class="kind">${isLimit ? 'limit' : 'target'}</span></span>
+      <div class="track"></div><span class="num">${n0(value)} ${unit} / -</span></div>`;
+  }
+  const ratio = value / goal;
+  const cls = isLimit ? (ratio > 1 ? 'over' : '') : (ratio >= 0.95 ? 'done' : '');
+  return `<div class="meter"><span>${label}<span class="kind">${isLimit ? 'limit' : 'target'}</span></span>
+    <div class="track"><div class="fill ${cls}" style="width:${Math.min(100, ratio * 100)}%"></div></div>
+    <span class="num">${n0(value)} / ${n0(goal)} ${unit}</span></div>`;
+}
+
+function renderDay(d) {
+  const when = new Date(`${d.date}T12:00:00`);
+  const label = d.date === d.today ? 'Today' : d.date === shift(d.today, -1) ? 'Yesterday'
+    : when.toLocaleDateString(undefined, { weekday: 'long' });
+  $('day-title').innerHTML = `${esc(label)}<span class="detail mono" style="display:block;font-weight:400">${esc(when.toLocaleDateString(undefined, { day: 'numeric', month: 'long' }))}</span>`;
+  $('next').disabled = d.date >= d.today;
+  $('standing').textContent = d.standing || (d.logged ? '' : 'No meals logged.');
+  const t = d.targets, x = d.totals;
+  $('weight-hint').hidden = Boolean(t.protein_g);
+  $('meters').innerHTML = [
+    meter('Protein', x.protein_g, t.protein_g, 'g', false),
+    meter('Calories', x.kcal, t.kcal, 'kcal', false),
+    meter('Fibre', x.fibre_g, t.fibre_g, 'g', false),
+    meter('Sodium', x.sodium_mg, t.sodium_mg, 'mg', true),
+    meter('Added sugar', x.sugar_g, t.sugar_g, 'g', true),
+  ].join('') + (x.junk ? `<p class="detail mono" style="margin-top:6px">${x.junk} fried / processed item(s)</p>` : '');
+
+  $('meals').innerHTML = d.meals.length ? d.meals.map((m) => {
+    if (m.status !== 'eaten') {
+      return `<div class="meal"><div class="top"><span>${esc(m.slot)}</span><span class="tag">skipped</span></div></div>`;
+    }
+    const head = `<div class="top"><span>${esc(m.slot)} <span class="detail">${esc(m.what || '')}${m.place ? ' · ' + esc(m.place) : ''}</span></span>
+      ${m.kcal === null ? '<span class="tag bad">no estimate</span>'
+        : `<span class="tag ${m.confidence === 'low' ? 'bad' : ''}">${esc(m.confidence)} confidence</span>`}</div>`;
+    const table = m.items.length ? `<table><tr><th>item</th><th>kcal</th><th>protein</th><th>sodium</th><th>sugar</th></tr>
+      ${m.items.map((i) => `<tr><td>${esc(i.name)} <span class="detail">x${i.servings} ${esc(i.serving)}</span>${i.junk ? ' <span class="tag bad">junk</span>' : ''}</td>
+        <td class="n">${n0(i.kcal)}</td><td class="n">${n0(i.protein_g)} g</td><td class="n">${n0(i.sodium_mg)} mg</td><td class="n">${n0(i.sugar_g)} g</td></tr>`).join('')}</table>` : '';
+    const fix = `<div class="inline"><input type="text" data-fixtext="${m.id}" placeholder="correct it: half a plate, 2 eggs not 3…">
+      <button class="small" data-fix="${m.id}">Re-estimate</button></div>`;
+    return `<div class="meal">${head}${table}${fix}</div>`;
+  }).join('') : '<p class="empty">Nothing logged for this day.</p>';
+}
+
+async function loadDay() {
+  const d = await api(`/health-data/day?date=${state.date || ''}`);
+  state.today = d.today;
+  state.date = d.date;
+  renderDay(d);
+}
+
+$('prev').addEventListener('click', () => { state.date = shift(state.date, -1); loadDay(); });
+$('next').addEventListener('click', () => { state.date = shift(state.date, 1); loadDay(); });
+$('today-btn').addEventListener('click', () => { state.date = state.today; loadDay(); });
+
+$('meals').addEventListener('click', async (event) => {
+  const b = event.target.closest('button');
+  if (!b || !b.dataset.fix) return;
+  const input = document.querySelector(`[data-fixtext="${b.dataset.fix}"]`);
+  if (input.value.trim().length < 3) return;
+  b.disabled = true;
+  b.textContent = 'Working…';
+  try {
+    await api(`/health-data/meals/${b.dataset.fix}/fix`, { correction: input.value.trim() });
+    await refresh();
+  } catch (error) { alert(error.message); b.disabled = false; b.textContent = 'Re-estimate'; }
+});
+
+// -- two weeks ---------------------------------------------------------------
+
+function barChart(values, labels, goal, isLimit, fmt) {
+  const W = 560, H = 120, padL = 40, padB = 16;
+  const top = Math.max(goal || 0, ...values, 1) * 1.1;
+  const bw = (W - padL) / values.length;
+  const y = (v) => H - padB - (v / top) * (H - padB - 4);
+  const bars = values.map((v, i) => {
+    if (!v) return '';
+    const bad = goal && (isLimit ? v > goal : v < goal * 0.95);
+    return `<rect x="${padL + i * bw + 2}" y="${y(v)}" width="${bw - 4}" height="${H - padB - y(v)}" fill="${bad ? (isLimit ? 'var(--accent)' : 'var(--bar)') : 'var(--good)'}"><title>${labels[i]}: ${fmt(v)}</title></rect>`;
+  }).join('');
+  const line = goal ? `<line x1="${padL}" x2="${W}" y1="${y(goal)}" y2="${y(goal)}" stroke="var(--accent-dim)" stroke-dasharray="4 4"/><text x="0" y="${y(goal) + 3}">${fmt(goal)}</text>` : '';
+  const ticks = labels.map((l, i) => (i % 3 === 0 ? `<text x="${padL + (i + 0.5) * bw}" y="${H}" text-anchor="middle">${l}</text>` : '')).join('');
+  return `<svg viewBox="0 0 ${W} ${H}">${line}${bars}${ticks}</svg>`;
+}
+
+async function loadTrend() {
+  const t = await api('/health-data/trend?days=14');
+  const labels = t.days.map((d) => d.date.slice(8));
+  const logged = t.days.some((d) => d.logged);
+  $('protein-chart').innerHTML = logged
+    ? barChart(t.days.map((d) => d.protein_g), labels, t.targets.protein_g, false, (v) => `${Math.round(v)} g`)
+    : '<p class="empty">No meals logged yet.</p>';
+  $('sodium-chart').innerHTML = logged
+    ? barChart(t.days.map((d) => d.sodium_mg), labels, t.targets.sodium_mg, true, (v) => `${Math.round(v)}`)
+    : '<p class="empty">No meals logged yet.</p>';
+  const hours = t.sleep.map((n) => (n.minutes ? n.minutes / 60 : 0));
+  $('sleep-chart').innerHTML = hours.some(Boolean)
+    ? barChart(hours, t.sleep.map((n) => n.night_of.slice(8)), 7, false, (v) => `${v.toFixed(1)} h`)
+    : '<p class="empty">No sleep logged yet - tell JARVIS when you sleep and wake.</p>';
+}
+
+async function loadFoods() {
+  const place = $('place-filter').value;
+  const { foods } = await api(`/health-data/foods${place ? `?place=${place}` : ''}`);
+  const eaten = foods.filter((f) => f.times_eaten || place);
+  $('foods').innerHTML = eaten.length ? `<table><tr><th>food</th><th>kcal</th><th>protein</th><th>sodium</th><th>had</th></tr>
+    ${eaten.slice(0, 40).map((f) => `<tr><td>${esc(f.name)} <span class="detail">${esc(f.serving)}${f.place ? ' · ' + esc(f.place) : ''}</span>${f.junk ? ' <span class="tag bad">junk</span>' : ''}${f.source === 'owner' ? ' <span class="tag">yours</span>' : ''}</td>
+      <td class="n">${n0(f.kcal)}</td><td class="n">${n0(f.protein_g)} g</td><td class="n">${n0(f.sodium_mg)}</td><td class="n">${f.times_eaten}x</td></tr>`).join('')}</table>`
+    : '<p class="empty">Nothing learned yet - it fills in as you log meals.</p>';
+}
+$('place-filter').addEventListener('change', loadFoods);
+
+// -- settings ----------------------------------------------------------------
+
+async function loadProfile() {
+  const { profile, targets } = await api('/health-data/profile');
+  const field = (key, label, type = 'number') => `<label>${label}</label>
+    <input type="${type}" data-key="${key}" value="${esc(profile[key] || '')}">`;
+  $('profile').innerHTML = [
+    field('weight_kg', 'Weight (kg)'), field('height_cm', 'Height (cm)'), field('age', 'Age'),
+    `<label>Goal</label><select data-key="goal">${['gain_muscle', 'maintain', 'lose_fat'].map((g) =>
+      `<option ${profile.goal === g ? 'selected' : ''}>${g}</option>`).join('')}</select>`,
+    field('training_days', 'Training days / week'),
+    field('target_protein_g', 'Protein target override'),
+    field('target_sodium_mg', 'Sodium limit override'),
+  ].join('');
+  $('profile-status').textContent = `Targets: protein ${targets.protein_g ? n0(targets.protein_g) + ' g' : '- (needs weight)'}, ` +
+    `calories ${targets.kcal ? n0(targets.kcal) : '-'}, fibre ${n0(targets.fibre_g)} g · limits: sodium ${n0(targets.sodium_mg)} mg, ` +
+    `added sugar ${n0(targets.sugar_g)} g, junk ${targets.junk_per_week}/week.`;
+}
+
+$('profile').addEventListener('change', async (event) => {
+  const el = event.target;
+  if (!el.dataset.key) return;
+  try {
+    const r = await api('/health-data/profile', { key: el.dataset.key, value: el.value || null });
+    $('profile-status').textContent = r.summary;
+    await Promise.all([loadDay(), loadTrend()]);
+  } catch (error) { $('profile-status').textContent = error.message; }
+});
+
+async function loadMenu() {
+  const { menu } = await api('/health-data/menu');
+  const cell = (weekday, slot) => (menu.find((r) => r.weekday === weekday && r.slot === slot) || {}).items || '';
+  let html = '<span></span>' + SLOTS.map((s) => `<span class="h">${s}</span>`).join('');
+  for (const [weekday, label] of [[null, 'Every day'], ...DAYS.map((d, i) => [i, d.slice(0, 3)])]) {
+    html += `<span class="h day">${label}</span>` + SLOTS.map((s) =>
+      `<textarea data-weekday="${weekday ?? ''}" data-slot="${s}" aria-label="${label} ${s}">${esc(cell(weekday, s))}</textarea>`).join('');
+  }
+  $('menu').innerHTML = html;
+}
+
+$('menu').addEventListener('change', async (event) => {
+  const el = event.target;
+  if (!el.dataset.slot) return;
+  try {
+    await api('/health-data/menu', { weekday: el.dataset.weekday === '' ? null : Number(el.dataset.weekday),
+      slot: el.dataset.slot, items: el.value }, 'PUT');
+    $('menu-status').textContent = 'Saved.';
+  } catch (error) { $('menu-status').textContent = error.message; }
+});
+
+async function refresh() {
+  await Promise.all([loadDay(), loadTrend(), loadFoods()]);
+}
+
+async function load() {
+  if (!state.token) { openGate(); return; }
+  try { await Promise.all([refresh(), loadProfile(), loadMenu()]); }
+  catch (error) { $('meals').innerHTML = `<p class="error">${esc(error.message)}</p>`; }
+}
+
+load();
+</script>
+</body>
+</html>

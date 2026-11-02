@@ -21,7 +21,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Awaitable, Callable
 from zoneinfo import ZoneInfo
 
 from pydantic import ValidationError
@@ -68,6 +68,9 @@ want to finish one Coursera module") - dated to that day.
 NOW: {now}"""
 
 
+MealHook = Callable[[list[str], str], Awaitable[str]]
+
+
 class ReportFailed(RuntimeError):
     """The model returned nothing usable. Nothing was stored."""
 
@@ -76,11 +79,13 @@ class ReportFailed(RuntimeError):
 class ReportOutcome:
     report_id: str | None
     lines: list[str]
+    note: str = ""          # e.g. HYGIEIA's "protein 18 of 115 g so far"
 
     def summary(self) -> str:
         if not self.lines:
             return "Nothing in that to log."
-        return "Logged: " + "; ".join(self.lines) + "."
+        text = "Logged: " + "; ".join(self.lines) + "."
+        return f"{text} {self.note}" if self.note else text
 
 
 def _minutes(start: str | None, end: str | None) -> int | None:
@@ -106,6 +111,12 @@ class LifeService:
         self._llm = llm
         self._tz = tz
         self._projects = projects
+        self._meal_hook: MealHook | None = None
+
+    def set_meal_hook(self, hook: "MealHook") -> None:
+        """Called with the ids of meals a report stored. Its answer is added
+        to the reply - this is how HYGIEIA hears about every meal."""
+        self._meal_hook = hook
 
     # -- the clock ------------------------------------------------------------
 
@@ -155,8 +166,15 @@ class LifeService:
         if report.empty:
             return ReportOutcome(None, [])
         report_id = await self._repo.new_report(text, source)
-        recorded = await self._apply(report, handles, report_id, local)
-        outcome = ReportOutcome(report_id, recorded)
+        meal_ids: list[str] = []
+        recorded = await self._apply(report, handles, report_id, local, meal_ids)
+        note = ""
+        if meal_ids and self._meal_hook is not None:
+            try:
+                note = await self._meal_hook(meal_ids, trace_id)
+            except Exception:
+                log.exception("meal hook failed")
+        outcome = ReportOutcome(report_id, recorded, note)
         await self._repo.set_report_summary(report_id, outcome.summary())
         return outcome
 
@@ -203,7 +221,8 @@ class LifeService:
         return ExtractedReport(**clean)
 
     async def _apply(self, report: ExtractedReport, handles: dict[str, str],
-                     report_id: str, local: datetime) -> list[str]:
+                     report_id: str, local: datetime,
+                     meal_ids: list[str] | None = None) -> list[str]:
         now_clock = local.strftime("%H:%M")
         lines: list[str] = []
         if report.wake:
@@ -217,8 +236,10 @@ class LifeService:
             if line:
                 lines.append(line)
         for meal in report.meals:
-            await self._repo.add_meal(meal.date, meal.slot, meal.status, meal.what,
-                                      meal.place, report_id)
+            meal_id = await self._repo.add_meal(meal.date, meal.slot, meal.status, meal.what,
+                                                meal.place, report_id)
+            if meal_ids is not None:
+                meal_ids.append(meal_id)
             lines.append(f"{meal.slot} {'skipped' if meal.status == 'skipped' else 'eaten'}")
         for handle in report.done:
             item_id = handles.get(handle)
@@ -434,9 +455,9 @@ class LifeService:
         return {"days": list(by_day.values()), "projects": projects,
                 "wake_by": await self._repo.setting(WAKE_BY)}
 
-    async def week_text(self) -> str:
+    async def week_text(self, moment: datetime | None = None) -> str:
         """The last seven days, for when he asks how his week went."""
-        data = await self.stats(7)
+        data = await self.stats(7, moment)
         days = data["days"]
         wakes = [d["wake"] for d in days if d["wake"]]
         gym_planned = sum(d["gym_planned"] for d in days)
