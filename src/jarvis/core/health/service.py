@@ -294,11 +294,12 @@ class HealthService:
         return {"date": day, "meals": meals, "logged": len(eaten),
                 "unknown": len(eaten) - len(known), "totals": totals}
 
-    async def standing_line(self, day: str) -> str:
+    async def standing_line(self, day: str, label: str | None = None) -> str:
         t = await self.targets()
         d = await self.day_totals(day)
         x = d["totals"]
-        label = "Today" if day == self.today().isoformat() else f"On {day}"
+        if label is None:
+            label = "Today" if day == self.today().isoformat() else f"On {day}"
         parts = [f"protein {_fmt(x['protein_g'])}"
                  + (f" of {_fmt(t.protein_g)} g" if t.protein_g else " g")]
         if t.kcal:
@@ -324,7 +325,7 @@ class HealthService:
             except Exception:
                 log.warning("menu foods could not be learned", exc_info=True)
         x = d["totals"]
-        lines = ["Five o'clock check, sir. " + (await self.standing_line(today.isoformat()))]
+        lines = ["Five o'clock check, sir. " + (await self.standing_line(today.isoformat(), label="Today"))]
         protein_left = (t.protein_g - x["protein_g"]) if t.protein_g else None
         fibre_left = t.fibre_g - x["fibre_g"]
         sodium_used = x["sodium_mg"] / t.sodium_mg

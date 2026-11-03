@@ -374,6 +374,7 @@ class CoreApp:
                 brief=self.brief,
                 schedules=self.schedules,
                 life=self.life,
+                artifacts=self.artifacts,
             )
             self.notifier.register_deliverer("telegram", self.telegram)
             self.reels.attach(self.telegram)

@@ -26,6 +26,7 @@
 from __future__ import annotations
 
 import asyncio
+import base64
 from dataclasses import dataclass
 from typing import Any
 
@@ -60,6 +61,14 @@ CONTEXT_TURNS = 20
 # prompt costs more than handing it to DAEDALUS, who can actually
 # compute over it.
 _MAX_INLINE_BYTES = 100_000
+
+# Images go to the model as pictures, in the turn they arrive and only
+# that turn. History replays the text, never the pixels: a photo resent
+# with every later message would cost the same again on each one.
+# The provider takes 10MB per image once base64-encoded, which is about
+# 7.5MB of file; past that the image is described like any other file.
+_MAX_IMAGE_BYTES = 7_000_000
+_MAX_IMAGES_PER_TURN = 5
 
 
 @dataclass(frozen=True)
@@ -154,9 +163,15 @@ class SessionManager:
         # through, which is a confusing thing to hear about a file you
         # just watched upload.
         if attachments and self._artifacts is not None:
-            described = await self._describe_attachments(attachments)
+            described, images = await self._describe_attachments(attachments)
+            text_part = messages[-1]["content"]
             if described:
-                messages[-1]["content"] += "\n\n" + described
+                text_part += "\n\n" + described
+            # Pictures first, then the words about them - the order the
+            # provider recommends, and the one a person would read in.
+            messages[-1]["content"] = (
+                [*images, {"type": "text", "text": text_part}] if images else text_part
+            )
 
         profile_doc = await self._profile.current() if self._profile else ""
         retrieved_memory = ""
@@ -294,19 +309,62 @@ class SessionManager:
         log.info("interrupted in-flight turn", extra={"session_id": session_id})
 
 
-    async def _describe_attachments(self, artifact_ids: list[str]) -> str:
+    async def _describe_attachments(
+        self, artifact_ids: list[str],
+    ) -> tuple[str, list[dict[str, Any]]]:
         """Render attached files into the message.
 
-        Text-shaped files are INLINED, because the point of attaching a
-        CSV is usually that JARVIS should read it. Binary files get a
-        line describing them plus their id, which is enough for him to
-        hand them to a subagent - DAEDALUS can load a spreadsheet the
-        model cannot.
+        Returns (text, image blocks). Images the model can see go in as
+        IMAGE BLOCKS - he looks at them. Text-shaped files are INLINED,
+        because the point of attaching a CSV is usually that JARVIS
+        should read it. Anything else gets a line describing it plus its
+        id, which is enough for him to hand it to a subagent - DAEDALUS
+        can load a spreadsheet the model cannot.
         """
+        assert self._artifacts is not None
         parts: list[str] = []
+        images: list[dict[str, Any]] = []
         for artifact_id in artifact_ids:
             artifact = await self._artifacts.get(artifact_id)
             if artifact is None:
+                continue
+
+            if image_media_type(artifact.mime, artifact.name) is not None:
+                try:
+                    data = self._artifacts.read_bytes(artifact)
+                except Exception:
+                    log.warning("attached image unreadable", exc_info=True)
+                    data = b""
+                # Trust the bytes, not the label: a PNG named .jpg is
+                # refused outright by the provider if declared wrongly.
+                media_type = sniff_image(data)
+                if media_type is None:
+                    parts.append(
+                        f"[Attached: {artifact.name}, artifact id {artifact.id}. "
+                        f"An image in a format you cannot view (only JPEG, PNG, "
+                        f"GIF and WebP) - ask him to send it as a JPEG or screenshot.]"
+                    )
+                elif len(data) > _MAX_IMAGE_BYTES:
+                    parts.append(
+                        f"[Attached: {artifact.name}, artifact id {artifact.id}. "
+                        f"An image too large to view ({len(data) // 1_000_000} MB) - "
+                        f"ask him to send a smaller copy.]"
+                    )
+                elif len(images) >= _MAX_IMAGES_PER_TURN:
+                    parts.append(
+                        f"[Attached: {artifact.name}, artifact id {artifact.id}. "
+                        f"Not shown: only the first {_MAX_IMAGES_PER_TURN} images "
+                        f"of a message are.]"
+                    )
+                else:
+                    images.append({"type": "image", "source": {
+                        "type": "base64", "media_type": media_type,
+                        "data": base64.b64encode(data).decode("ascii"),
+                    }})
+                    parts.append(
+                        f"[Attached image {len(images)}: {artifact.name}, "
+                        f"artifact id {artifact.id} - shown above.]"
+                    )
                 continue
 
             inlineable = (
@@ -333,7 +391,32 @@ class SessionManager:
                     f"Not readable as text - pass this id to a subagent "
                     f"that can handle it.]"
                 )
-        return "\n\n".join(parts)
+        return "\n\n".join(parts), images
+
+
+_IMAGE_SUFFIXES = (".jpg", ".jpeg", ".png", ".gif", ".webp", ".heic", ".heif")
+
+
+def image_media_type(mime: str, name: str) -> str | None:
+    """Is this attachment meant as a picture? By label only - the bytes
+    are checked separately by sniff_image before anything is sent."""
+    if mime.startswith("image/") or name.lower().endswith(_IMAGE_SUFFIXES):
+        return mime if mime.startswith("image/") else "image/*"
+    return None
+
+
+def sniff_image(data: bytes) -> str | None:
+    """The media type the provider will accept for these bytes, from
+    their first few bytes; None for anything else (HEIC included)."""
+    if data[:3] == b"\xff\xd8\xff":
+        return "image/jpeg"
+    if data[:8] == b"\x89PNG\r\n\x1a\n":
+        return "image/png"
+    if data[:6] in (b"GIF87a", b"GIF89a"):
+        return "image/gif"
+    if data[:4] == b"RIFF" and data[8:12] == b"WEBP":
+        return "image/webp"
+    return None
 
 
 def _turns_to_messages(turns: list[Turn]) -> list[dict[str, Any]]:
@@ -346,10 +429,16 @@ def _turns_to_messages(turns: list[Turn]) -> list[dict[str, Any]]:
         if not turn.content.strip():
             continue
         role = turn.role.value
+        content = turn.content
+        # Attachments are only ever SHOWN in their own turn; in history,
+        # a marker says they were there, so a later "what was in that
+        # photo?" is answered from his earlier reply instead of a guess.
+        if turn.attachments and turn is not turns[-1]:
+            content += f"\n\n[sent with {len(turn.attachments)} attachment(s)]"
         if messages and messages[-1]["role"] == role:
-            messages[-1]["content"] += "\n\n" + turn.content
+            messages[-1]["content"] += "\n\n" + content
         else:
-            messages.append({"role": role, "content": turn.content})
+            messages.append({"role": role, "content": content})
     while messages and messages[0]["role"] != "user":
         messages.pop(0)
     return messages

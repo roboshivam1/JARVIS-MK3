@@ -265,7 +265,8 @@ class _LifeReportArgs(BaseModel):
         min_length=2,
         description=("What he said about his day, in his own words and in full: "
                      "waking, sleep, gym, meals, study, project work, learning, "
-                     "things done, targets for another day."),
+                     "things done, targets for another day. For a photo of a "
+                     "meal, add what is on the plate with rough portions."),
     )
 
 

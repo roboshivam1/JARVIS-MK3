@@ -68,8 +68,11 @@ class ScriptedLLM:
                        **kwargs: Any) -> Any:
         tool = kwargs["tool_choice"]["name"]
         self.prompts.setdefault(tool, []).append(messages[0]["content"])
+        queue = self.queues.get(tool, [])
+        # The menu is learned in chunks; past the scripted ones, nothing new.
+        args = queue.pop(0) if queue else {"foods": []}
         return SimpleNamespace(stop_reason="tool_use", tool_calls=[
-            ToolCall(id="t1", name=tool, args=self.queues[tool].pop(0))])
+            ToolCall(id="t1", name=tool, args=args)])
 
 
 @pytest.fixture

@@ -23,6 +23,14 @@
 #
 # Commands: /start, /new, /status, /approvals, /quiet, /reel, /skip
 #
+# PHOTOS AND FILES: a photo (or an image sent as a file) is stored as an
+# artifact and attached to the turn, with its caption as the message.
+# JARVIS sees the picture itself. Other files are attached the same way
+# and reach him as text or as an id to hand to a subagent. An album
+# arrives from Telegram as one message per picture; those are gathered
+# for a moment and become ONE turn, so a three-photo album is one
+# question, not three that interrupt each other.
+#
 # REELS: drafts arrive as the contact sheet, the voice track and the
 # script, with Approve / Notes / Cancel. The buttons name the EPISODE,
 # not the approval gate, so they keep working if the gate is re-raised.
@@ -53,6 +61,7 @@ from jarvis.common.ids import new_ulid
 from jarvis.common.log import get_logger
 from jarvis.common.reels import EPISODE_TYPE_LABELS, REEL_REVIEW_TOOL, ReviewAction
 from jarvis.core.approvals.service import ApprovalService
+from jarvis.core.db.repos.artifacts import ArtifactsRepo
 from jarvis.core.db.repos.approvals import ApprovalsRepo
 from jarvis.core.db.repos.schedules import SchedulesRepo
 from jarvis.core.db.repos.sessions import SessionsRepo
@@ -61,8 +70,6 @@ from jarvis.core.initiative.engine import next_cron_time
 from jarvis.core.life.service import LifeService
 from jarvis.core.initiative.policy import NotificationPolicy
 from jarvis.llm.transcription import Transcriber
-from jarvis.core.initiative.policy import NotificationPolicy
-from jarvis.core.initiative.policy import NotificationPolicy
 from jarvis.core.reels.service import BriefRejected, PropCard, ReelBusy, ReelService
 from jarvis.core.sessionmgr import SessionManager
 
@@ -72,6 +79,10 @@ CLIENT_KIND = "telegram"
 _EDIT_INTERVAL_S = 1.2
 _TG_LIMIT = 4096
 _STREAM_CAP = 4000
+# Bots may download files up to 20MB from Telegram.
+_TG_DOWNLOAD_LIMIT = 20_000_000
+# How long an album's pictures are gathered before the turn starts.
+_ALBUM_WAIT_S = 1.5
 
 StatusProvider = Callable[[], Awaitable[dict[str, Any]]]
 
@@ -192,6 +203,7 @@ class TelegramBridge:
         brief: "BriefService | None" = None,
         schedules: "SchedulesRepo | None" = None,
         life: "LifeService | None" = None,
+        artifacts: "ArtifactsRepo | None" = None,
     ) -> None:
         if owner_id <= 0:
             raise ValueError(
@@ -210,6 +222,11 @@ class TelegramBridge:
         self._brief = brief
         self._schedules = schedules
         self._life = life
+        self._artifacts = artifacts
+        # Albums being gathered: media group id -> (first message,
+        # artifact ids so far, caption, downloads still running).
+        self._albums: dict[str, _Album] = {}
+        self._background: set[asyncio.Task[None]] = set()
         # Set by a Notes tap: (episode id, chat id, message id, prop id -
         # empty for the draft itself). The next thing the owner sends
         # becomes the notes for that draft or prop.
@@ -595,10 +612,14 @@ class TelegramBridge:
             await self._handle_voice(message)
             return
 
+        if message.photo or message.document is not None:
+            await self._handle_file(message)
+            return
+
         text = (message.text or "").strip()
         if not text:
             await message.answer(
-                "Text or a voice note, sir - I cannot read the rest yet."
+                "Text, voice notes, photos or files, sir - I cannot read the rest yet."
             )
             return
 
@@ -610,10 +631,15 @@ class TelegramBridge:
             await self._handle_command(message, text)
             return
 
+        await self._turn(message, text)
+
+    async def _turn(self, message: Message, text: str,
+                    attachments: list[str] | None = None) -> None:
+        """One turn with a streamed reply - typed, captioned or spoken."""
         reply = _StreamingReply(self._bot, message.chat.id)
         try:
             result = await self._mgr.handle_user_message(
-                CLIENT_KIND, text, on_text=reply.on_text
+                CLIENT_KIND, text, on_text=reply.on_text, attachments=attachments,
             )
         except Exception as exc:
             log.error("turn failed", exc_info=True)
@@ -627,6 +653,86 @@ class TelegramBridge:
             return
         assert result.reply is not None
         await reply.finalize(result.reply.content)
+
+    async def _handle_file(self, message: Message) -> None:
+        """A photo or a file: store it, then take it as a turn - at once,
+        or with the rest of its album."""
+        if self._artifacts is None:
+            await message.answer("I have nowhere to keep files yet, sir.")
+            return
+        caption = (message.caption or "").strip()
+        group = message.media_group_id
+        album: _Album | None = None
+        if group is not None:
+            album = self._albums.get(group)
+            if album is None:
+                album = self._albums[group] = _Album(message)
+                task = asyncio.create_task(self._finish_album(group))
+                self._background.add(task)
+                task.add_done_callback(self._background.discard)
+            album.pending += 1
+            if caption:
+                album.caption = caption
+
+        try:
+            artifact_id = await self._store_file(message)
+        except _FileRefused as exc:
+            await message.answer(str(exc))
+            artifact_id = None
+        except Exception:
+            log.error("could not fetch a file from telegram", exc_info=True)
+            await message.answer("I could not fetch that file, sir.")
+            artifact_id = None
+        finally:
+            if album is not None:
+                album.pending -= 1
+
+        if album is not None:
+            if artifact_id is not None:
+                album.ids.append(artifact_id)
+            return
+        if artifact_id is not None:
+            await self._turn(message, caption or _NO_CAPTION, [artifact_id])
+
+    async def _finish_album(self, group: str) -> None:
+        """Wait for an album's pictures to stop arriving, then send them
+        as one turn."""
+        await asyncio.sleep(_ALBUM_WAIT_S)
+        album = self._albums[group]
+        while album.pending:
+            await asyncio.sleep(0.3)
+        del self._albums[group]
+        if album.ids:
+            await self._turn(album.message, album.caption or _NO_CAPTION, album.ids)
+
+    async def _store_file(self, message: Message) -> str:
+        """Download the photo or file and keep it as an artifact."""
+        assert self._artifacts is not None
+        if message.photo:
+            # Telegram sends several sizes; the last is the largest.
+            size = message.photo[-1]
+            file_id, nbytes = size.file_id, size.file_size
+            name, mime = f"photo-{message.message_id}.jpg", "image/jpeg"
+        else:
+            document = message.document
+            assert document is not None
+            file_id, nbytes = document.file_id, document.file_size
+            name = _safe_name(document.file_name or f"file-{message.message_id}")
+            mime = document.mime_type or "application/octet-stream"
+        if nbytes and nbytes > _TG_DOWNLOAD_LIMIT:
+            raise _FileRefused(
+                "That file is over 20 MB, sir - Telegram will not hand me "
+                "anything that large. The web client takes bigger files."
+            )
+        file = await self._bot.get_file(file_id)
+        if file.file_path is None:
+            raise RuntimeError("telegram returned no file path")
+        buffer = await self._bot.download_file(file.file_path)
+        content = buffer.read() if buffer else b""
+        artifact = await self._artifacts.write(
+            name=name, mime=mime, content=content, created_by="client.telegram",
+        )
+        return artifact.id
 
     async def _handle_voice(self, message: Message) -> None:
         """Transcribe a voice note and treat it as a message.
@@ -677,23 +783,7 @@ class TelegramBridge:
             await self._take_reel_notes(message, text)
             return
 
-        reply = _StreamingReply(self._bot, message.chat.id)
-        try:
-            result = await self._mgr.handle_user_message(
-                CLIENT_KIND, text, on_text=reply.on_text
-            )
-        except Exception as exc:
-            log.error("voice turn failed", exc_info=True)
-            await reply.finalize(
-                f"Something broke while I was thinking, sir: "
-                f"{type(exc).__name__}."
-            )
-            return
-
-        if result.interrupted:
-            return
-        assert result.reply is not None
-        await reply.finalize(result.reply.content)
+        await self._turn(message, text)
 
     async def _handle_command(self, message: Message, text: str) -> None:
         command = text.split()[0].lower()
@@ -879,6 +969,29 @@ class TelegramBridge:
             await message.answer(
                 body[:_TG_LIMIT], reply_markup=_approval_keyboard(request.id)
             )
+
+
+_NO_CAPTION = "(sent without a message)"
+
+
+class _FileRefused(Exception):
+    """A file we will not fetch; the message is for the owner."""
+
+
+class _Album:
+    """Pictures of one Telegram album, gathered into a single turn."""
+
+    def __init__(self, message: Message) -> None:
+        self.message = message
+        self.ids: list[str] = []
+        self.caption = ""
+        self.pending = 0
+
+
+def _safe_name(name: str) -> str:
+    """A file name safe to store: no paths, nothing exotic, not too long."""
+    cleaned = re.sub(r"[^\w.\- ]", "_", name.rsplit("/", 1)[-1]).strip(" .")
+    return cleaned[:80] or "file"
 
 
 def _cron_clock(cron_expr: str) -> str:

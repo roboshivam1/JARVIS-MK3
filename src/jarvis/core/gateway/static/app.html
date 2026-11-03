@@ -262,6 +262,15 @@ button.recording {
   min-height: 0;
 }
 .attachments:not(:empty) { min-height: 20px; }
+.attachments { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.attachments .chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  border: 1px solid var(--rule); padding: 2px 6px 2px 2px;
+}
+.attachments .chip img { width: 32px; height: 32px; object-fit: cover; display: block; }
+.attachments .chip button { border: none; padding: 0 2px; font-size: 13px; line-height: 1; }
+.turn .pictures { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.turn .pictures img { max-width: 160px; max-height: 160px; object-fit: cover; border: 1px solid var(--rule); }
 
 /* -- drag and drop --------------------------------------------------------- */
 
@@ -800,7 +809,37 @@ function renderStatus(status) {
 
 // -- attachments ------------------------------------------------------------
 
-async function upload(file) {
+// Photos are shrunk in the browser before upload: the model looks at
+// nothing larger than about 1568 px on the long edge anyway, so a 4 MB
+// phone photo goes up as a ~300 KB JPEG and costs exactly the same to
+// look at. Drawing it on a canvas also turns an iPhone HEIC into a JPEG,
+// which the model can read and the HEIC it cannot.
+const MAX_EDGE = 1568;
+
+async function shrinkImage(file) {
+  if (!file.type.startsWith('image/') || file.type === 'image/gif') return file;
+  try {
+    const bitmap = await createImageBitmap(file);
+    const scale = Math.min(1, MAX_EDGE / Math.max(bitmap.width, bitmap.height));
+    const isJpeg = file.type === 'image/jpeg';
+    if (scale === 1 && file.size < 1_500_000 && (isJpeg || file.type === 'image/png')) {
+      return file;
+    }
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.round(bitmap.width * scale);
+    canvas.height = Math.round(bitmap.height * scale);
+    canvas.getContext('2d').drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    const blob = await new Promise(done => canvas.toBlob(done, 'image/jpeg', 0.88));
+    if (!blob) return file;
+    const stem = (file.name || 'image').replace(/\.[^.]+$/, '');
+    return new File([blob], `${stem}.jpg`, { type: 'image/jpeg' });
+  } catch {
+    return file;   // the server still describes what it cannot show
+  }
+}
+
+async function upload(original) {
+  const file = await shrinkImage(original);
   const form = new FormData();
   form.append('file', file);
   const response = await fetch('/upload', {
@@ -809,19 +848,44 @@ async function upload(file) {
     body: form,
   });
   if (!response.ok) {
-    addNotice({ text: `Upload failed: ${file.name}`, priority: 3 });
+    addNotice({ text: `Upload failed: ${original.name || 'image'}`, priority: 3 });
     return;
   }
   const artifact = await response.json();
+  if (file.type.startsWith('image/')) artifact.preview = URL.createObjectURL(file);
   state.attachments.push(artifact);
   renderAttachments();
 }
 
 function renderAttachments() {
-  $('attachments').textContent = state.attachments.length
-    ? 'attached: ' + state.attachments.map(a => a.name).join(', ')
-    : '';
+  const box = $('attachments');
+  box.textContent = '';
+  state.attachments.forEach((a, index) => {
+    const chip = document.createElement('span');
+    chip.className = 'chip';
+    if (a.preview) {
+      const img = document.createElement('img');
+      img.src = a.preview;
+      img.alt = a.name;
+      chip.appendChild(img);
+    }
+    chip.appendChild(document.createTextNode(a.name));
+    const remove = document.createElement('button');
+    remove.textContent = '\u00d7';
+    remove.title = 'Remove';
+    remove.onclick = () => { state.attachments.splice(index, 1); renderAttachments(); };
+    chip.appendChild(remove);
+    box.appendChild(chip);
+  });
 }
+
+// Paste a screenshot straight into the message box.
+$('input').addEventListener('paste', (event) => {
+  const files = [...(event.clipboardData?.files || [])];
+  if (!files.length) return;
+  event.preventDefault();
+  for (const file of files) upload(file);
+});
 
 $('attach').onclick = () => $('file-input').click();
 $('file-input').onchange = (event) => {
@@ -847,10 +911,26 @@ document.addEventListener('drop', (event) => {
 
 function submit() {
   const input = $('input');
-  const text = input.value.trim();
-  if (!text) return;
+  const typed = input.value.trim();
+  if (!typed && !state.attachments.length) return;
+  const text = typed || '(sent without a message)';
 
-  addTurn('owner', text);
+  const turn = addTurn('owner', typed || '');
+  const previews = state.attachments.filter(a => a.preview);
+  if (previews.length) {
+    const row = document.createElement('div');
+    row.className = 'pictures';
+    for (const a of previews) {
+      const img = document.createElement('img');
+      img.src = a.preview;
+      img.alt = a.name;
+      row.appendChild(img);
+    }
+    turn.querySelector('.body').appendChild(row);
+  } else if (!typed) {
+    turn.querySelector('.body').textContent =
+      'attached: ' + state.attachments.map(a => a.name).join(', ');
+  }
   send('client.user_message', {
     text,
     attachments: state.attachments.map(a => a.artifact_id),
