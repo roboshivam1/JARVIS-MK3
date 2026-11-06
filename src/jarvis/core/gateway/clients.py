@@ -266,6 +266,11 @@ class ClientConnection:
             and self._speaker.available
         )
         audio_seq = 0
+        # Every sentence being synthesised. audio_done must wait for all
+        # of them: sent early, it told voice clients the reply was over
+        # while sentences were still on their way, and a reply ending
+        # on a full stop had audio_done arrive before ANY audio.
+        speaking_tasks: list[asyncio.Task[None]] = []
 
         async def speak(sentence: str, seq: int) -> None:
             """Synthesise one sentence and send it, tagged with its
@@ -307,7 +312,7 @@ class ClientConnection:
                 # runs concurrently - awaiting it here would stall the
                 # text stream behind the audio - so the sequence has to
                 # be fixed before the race starts.
-                asyncio.create_task(speak(sentence, audio_seq))
+                speaking_tasks.append(asyncio.create_task(speak(sentence, audio_seq)))
                 audio_seq += 1
 
         try:
@@ -318,18 +323,24 @@ class ClientConnection:
             )
         except Exception as exc:
             log.error("turn failed", exc_info=True)
+            for task in speaking_tasks:
+                task.cancel()
             await self.send(CORE_ERROR, CoreError(
                 message=f"{type(exc).__name__}: {exc}"
             ))
             return
 
         if result.interrupted:
+            # A newer message took over: the old reply stops talking too.
+            for task in speaking_tasks:
+                task.cancel()
             return
         if speaking:
             trailing = buffer.flush()
             if trailing:
-                await speak(trailing, audio_seq)
+                speaking_tasks.append(asyncio.create_task(speak(trailing, audio_seq)))
                 audio_seq += 1
+            await asyncio.gather(*speaking_tasks, return_exceptions=True)
             await self.send(CORE_AUDIO_DONE, CoreAudioDone())
 
         assert result.reply is not None
